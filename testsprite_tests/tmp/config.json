@@ -1,0 +1,20 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000",
+  "loginUser": "mauromonit@gmail.com",
+  "loginPassword": "Tower@9644#",
+  "executionArgs": {
+    "projectName": "ClassTower",
+    "projectPath": "c:\\Users\\Mauro\\PROJETOS\\ClassTower",
+    "testIds": [
+      "TC005"
+    ],
+    "additionalInstruction": "Use credentials for Atendente: user@classtower.com.br / user123. Ensure to login via the form with data-testid 'email-input' and 'password-input', then click 'login-submit-button'. Once logged in, go to Encomendas, register a package with photo, and verify. Project is running on http://localhost:3000.",
+    "envs": {
+      "API_KEY": "sk-user-O8P5qT_lRfY5MjavyWa-QDD6Oozl6N55_2VTJxp6XWdMEPFW-8a7GKSGcBnk_jJuZdRdvejvwdtGWZf0PDU79oUoYGZ-Z6LjCTh4ycqVhQTNsvv24CL8YACqwsbwhVZuCSc"
+    }
+  },
+  "proxy": "http://934d4def-182d-4506-ab8e-775a8ab4b722:0lscRrSeCPDTbBPXRu8CGE8GnzxcvYOT@tun.testsprite.com:8080"
+}

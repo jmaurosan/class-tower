@@ -1,0 +1,391 @@
+[
+  {
+    "id": "TC001",
+    "title": "Role-based Authentication Success",
+    "description": "Verify users can authenticate successfully with valid credentials and their assigned roles are enforced across modules.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to login page"
+      },
+      {
+        "type": "action",
+        "description": "Input valid username and password for Admin role"
+      },
+      {
+        "type": "action",
+        "description": "Submit login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify login succeeds and user is redirected to Admin dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Log out"
+      },
+      {
+        "type": "action",
+        "description": "Input valid username and password for Attendant role"
+      },
+      {
+        "type": "action",
+        "description": "Submit login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify login succeeds and user has permission to perform package registration and incident logging"
+      },
+      {
+        "type": "action",
+        "description": "Log out"
+      },
+      {
+        "type": "action",
+        "description": "Input valid username and password for Resident role"
+      },
+      {
+        "type": "action",
+        "description": "Submit login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify login succeeds and user has read-only access to notices, packages, documents, and booking features"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Role-based Access Control Enforcement",
+    "description": "Validate that users cannot access modules or perform actions outside of their role permissions.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as Resident"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to access Admin dashboard or perform administrative actions"
+      },
+      {
+        "type": "assertion",
+        "description": "Access is denied or buttons/features are disabled/invisible"
+      },
+      {
+        "type": "action",
+        "description": "Login as Attendant"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to manage users or change system-wide settings"
+      },
+      {
+        "type": "assertion",
+        "description": "Access is denied or features not available"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Dashboard KPI Display Accuracy",
+    "description": "Verify that the dashboard displays real-time operational metrics accurately and updates without page reload.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as Admin and navigate to dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify occupancy rates, pending packages, and maintenance incidents metrics are displayed"
+      },
+      {
+        "type": "action",
+        "description": "Simulate package entry and maintenance incident logged by another user"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify dashboard updates metrics in real-time without page refresh"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Portal de Avisos Priority and Real-time Sync",
+    "description": "Check creation, prioritization, color coding, and instant sync of community notices among users.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as Attendant and create notices with low, medium, and high priority"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify notices display correct color codes based on priority"
+      },
+      {
+        "type": "action",
+        "description": "Confirm notices appear instantly in Resident view without refreshing the page"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Package Management Workflow",
+    "description": "Test package registration with photo capture, storage verification, and timestamped retrieval logging.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as Attendant and register a new package with photo capture"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify photo is stored in Supabase storage and associated with the package record"
+      },
+      {
+        "type": "action",
+        "description": "Retrieve package as Attendant and log the retrieval with timestamp"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify retrieval log is created with accurate timestamp and user attribution"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Package Management Error Handling",
+    "description": "Validate error handling when photo upload fails during package registration or retrieval logging.",
+    "category": "error handling",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Simulate network failure or storage service outage during photo upload"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to register a package with photo capture"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user is notified of upload failure and package is not registered"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to log package retrieval when storage service is unavailable"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify error is handled gracefully and logged appropriately"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Incident Logging and Audit Trail",
+    "description": "Validate incident creation, categorization, immutable history, and user attribution with audit logs.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as Attendant and open Diário de Bordo"
+      },
+      {
+        "type": "action",
+        "description": "Log a new maintenance incident with proper categorization"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify incident is attributed to the logged-in user and timestamped"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to edit or delete existing incident entries"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify history is immutable and audit trail remains intact"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Booking Calendar Workflow",
+    "description": "Test the booking request creation, admin approval workflow, and status confirmation updates.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as Resident and request a booking for a common area"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify booking appears in calendar as pending"
+      },
+      {
+        "type": "action",
+        "description": "Login as Admin and approve the booking"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify booking status updates to confirmed and Resident view updates in real-time"
+      },
+      {
+        "type": "action",
+        "description": "Attempt booking conflict by overlapping another booking for same time and space"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify system prevents double bookings with an error message"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Unit and Floor Management Data Integrity",
+    "description": "Check unit and floor explorer displays complete information with responsible personnel and occupancy map accuracy.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access Salas module as Admin"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify all units and floors display correct assigned personnel and contact info"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify visual occupancy map reflects current occupancy accurately"
+      },
+      {
+        "type": "action",
+        "description": "Modify unit occupancy status and personnel details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify changes are saved and reflected in UI and dashboard KPIs"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Document Repository Upload and Access Control",
+    "description": "Validate upload of various file types, categorized organization and role-based access permissions for document retrieval.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as Admin and upload categorized document files (pdf, docx, images)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify files are uploaded and stored correctly in Supabase Storage"
+      },
+      {
+        "type": "action",
+        "description": "Set access permissions for uploaded documents based on user roles"
+      },
+      {
+        "type": "action",
+        "description": "Login as Resident and attempt to access permitted and non-permitted documents"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Resident can only access authorized documents and unauthorized access is denied"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Vendor Directory Management and Status Update",
+    "description": "Check creation, updating, evaluation, and status management of vendor and service provider entries.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as Admin and add new vendor record with details"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify vendor is listed in directory with correct status and details"
+      },
+      {
+        "type": "action",
+        "description": "Update vendor status (active/inactive) and add service evaluation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify updates are saved and displayed accurately"
+      },
+      {
+        "type": "action",
+        "description": "Login as Resident and view vendor directory"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify only active vendors and evaluations are visible"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Real-time Data Synchronization Across Modules",
+    "description": "Ensure all modules update their displays and data in real-time without requiring page reloads.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as multiple users simultaneously (Admin, Attendant, Resident)"
+      },
+      {
+        "type": "action",
+        "description": "Perform actions such as package registration, incident logging, notice creation, and booking approvals by one user"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify all other users see the updates reflected immediately in their views without manual refresh"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Audit Logs Integrity Verification",
+    "description": "Verify audit logs capture all critical user actions with correct timestamps and user identification, ensuring legal security compliance.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Perform various actions including package registration, incident creation, booking approval as different roles"
+      },
+      {
+        "type": "assertion",
+        "description": "Check audit logs for accurate records of these actions with timestamps and user details"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to modify or delete audit logs"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify audit logs are immutable and modifications are not permitted"
+      }
+    ]
+  }
+]

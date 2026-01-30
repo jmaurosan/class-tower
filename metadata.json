@@ -1,0 +1,7 @@
+{
+  "name": "Class Tower - Gestão Condominial",
+  "description": "Sistema completo de gestão predial e condominial com dashboard executivo, controle de vistorias, agendamentos e diário de bordo digital.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

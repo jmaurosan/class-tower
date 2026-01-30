@@ -1,0 +1,75 @@
+{
+  "tech_stack": [
+    "TypeScript",
+    "React",
+    "Vite",
+    "Tailwind CSS",
+    "Supabase"
+  ],
+  "features": [
+    {
+      "name": "Dashboard",
+      "description": "Real-time building operational dashboard and metrics",
+      "files": [
+        "src/pages/Dashboard.tsx"
+      ]
+    },
+    {
+      "name": "Portal de Avisos",
+      "description": "Community communication board with priority levels",
+      "files": [
+        "src/pages/Avisos.tsx"
+      ]
+    },
+    {
+      "name": "Encomendas",
+      "description": "Package management with photo storage and delivery tracking",
+      "files": [
+        "src/pages/Encomendas.tsx"
+      ]
+    },
+    {
+      "name": "Diário de Bordo",
+      "description": "Incident logging and maintenance tracking",
+      "files": [
+        "src/pages/DiarioBordo.tsx"
+      ]
+    },
+    {
+      "name": "Documentos",
+      "description": "Building document management system using Supabase Storage",
+      "files": [
+        "src/pages/Documentos.tsx"
+      ]
+    },
+    {
+      "name": "Agendamentos",
+      "description": "Booking calendar for units and facilities",
+      "files": [
+        "src/pages/Agendamentos.tsx"
+      ]
+    },
+    {
+      "name": "Salas",
+      "description": "Unit and floor management explorer",
+      "files": [
+        "src/pages/Salas.tsx"
+      ]
+    },
+    {
+      "name": "Empresas",
+      "description": "Vendor and service provider directory",
+      "files": [
+        "src/pages/Empresas.tsx"
+      ]
+    },
+    {
+      "name": "Authentication",
+      "description": "Supabase-based RBAC authentication system",
+      "files": [
+        "src/hooks/useAuth.ts",
+        "src/pages/Login.tsx"
+      ]
+    }
+  ]
+}
