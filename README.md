@@ -1,20 +1,56 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 🏢 Class Tower - Sistema de Gestão Condominial
 
-# Run and deploy your AI Studio app
+Bem-vindo ao **Class Tower**, uma plataforma premium para gestão operacional de condomínios residenciais e comerciais.
 
-This contains everything you need to run your app locally.
+## 🚀 Funcionalidades
 
-View your app in AI Studio: https://ai.studio/apps/drive/1RG7zTP4Y895An8R-fWNnn61rf4sgzwMC
+- **Dashboard Real-time:** Visão geral de métricas vitais.
+- **Gestão de Encomendas:** Registro com foto, baixa digital e auditoria.
+- **Portal de Avisos:** Comunicação categorizada por urgência.
+- **Controle de Vistorias:** Laudos técnicos detalhados com status.
+- **Agendamentos:** Reserva de espaços e gestão de mudanças.
+- **Segurança (RLS):** Dados protegidos por nível de acesso (Admin, Atendente, Morador).
 
-## Run Locally
+## 🛠️ Tech Stack
 
-**Prerequisites:**  Node.js
+- **Frontend:** React + TypeScript + Vite
+- **Estilização:** Tailwind CSS + Design System Customizado
+- **Backend/DB:** Supabase (PostgreSQL, Auth, Storage, Realtime)
+- **PWA:** Vite Plugin PWA (Instalável em Mobile)
 
+## 📦 Como Rodar Localmente
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/jmaurosan/class-tower.git
+   ```
+
+2. Instale as dependências:
+   ```bash
+   npm install
+   ```
+
+3. Configure as variáveis de ambiente:
+   Crie um arquivo `.env.local` na raiz e adicione:
+   ```env
+   VITE_SUPABASE_URL=sua_url_supabase
+   VITE_SUPABASE_ANON_KEY=sua_key_anon_supabase
+   GEMINI_API_KEY=sua_api_key (opcional se usar IA no Edge)
+   ```
+
+4. Execute o projeto:
+   ```bash
+   npm run dev
+   ```
+
+## ☁️ Como Fazer Deploy na Vercel
+
+1. Crie uma conta na [Vercel](https://vercel.com).
+2. Clique em **"Add New Project"** e importe este repositório do GitHub.
+3. Nas configurações do projeto ("Environment Variables"), adicione:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `GEMINI_API_KEY` (se necessário)
+4. Clique em **Deploy**.
+
+> **Nota:** As rotas de SPA já estão configuradas via `vercel.json`.
