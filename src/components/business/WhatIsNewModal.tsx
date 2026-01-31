@@ -1,37 +1,9 @@
 
 import React from 'react';
 
-interface NewsItem {
-  version: string;
-  date: string;
-  title: string;
-  description: string;
-  icon: string;
-}
+import { changelog } from '../../config/changelog';
 
-const news: NewsItem[] = [
-  {
-    version: '2.0.0',
-    date: '31/01/2026',
-    title: 'Sincronização Offline & Auditoria',
-    description: 'Agora o Class Tower funciona mesmo sem internet! Seus dados são salvos localmente e sincronizados automaticamente. Além disso, incluímos um rastro completo de auditoria para maior transparência.',
-    icon: 'sync_saved_locally'
-  },
-  {
-    version: '1.9.0',
-    date: '30/01/2026',
-    title: 'Cloud Storage & Vistorias',
-    description: 'Implementamos o upload real de documentos para o Supabase Storage e um novo módulo de vistorias técnicas com suporte a fotos.',
-    icon: 'cloud_upload'
-  },
-  {
-    version: '1.8.0',
-    date: '28/01/2026',
-    title: 'Real-time Sync',
-    description: 'Atualizações instantâneas em todo o sistema. Encomendas e avisos agora aparecem na tela sem necessidade de atualizar a página.',
-    icon: 'bolt'
-  }
-];
+const news = changelog;
 
 interface WhatIsNewModalProps {
   isOpen: boolean;

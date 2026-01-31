@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import WhatIsNewModal from './components/business/WhatIsNewModal';
 import Sidebar from './components/layout/Sidebar';
 import { SyncProvider } from './components/SyncProvider';
+import { currentVersion } from './config/changelog';
 import { useAuth } from './hooks/useAuth';
 import Agendamentos from './pages/Agendamentos';
 import AuditLogs from './pages/AuditLogs';
@@ -31,8 +32,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const lastSeen = localStorage.getItem('last_news_view');
-    const version = '2.0.0'; // Current version of news
-    if (lastSeen !== version) {
+    if (lastSeen !== currentVersion) {
       setHasNewUpdates(true);
     }
   }, []);
@@ -40,7 +40,7 @@ const App: React.FC = () => {
   const handleOpenNews = () => {
     setShowNews(true);
     setHasNewUpdates(false);
-    localStorage.setItem('last_news_view', '2.0.0'); // Mark current version as seen
+    localStorage.setItem('last_news_view', currentVersion);
   };
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
