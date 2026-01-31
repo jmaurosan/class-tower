@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import WhatIsNewModal from './components/business/WhatIsNewModal';
 import Sidebar from './components/layout/Sidebar';
 import { SyncProvider } from './components/SyncProvider';
 import { useAuth } from './hooks/useAuth';
@@ -25,6 +26,22 @@ const App: React.FC = () => {
   const { user, loading, logout, setUser, signIn } = useAuth();
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showNews, setShowNews] = useState(false);
+  const [hasNewUpdates, setHasNewUpdates] = useState(false);
+
+  useEffect(() => {
+    const lastSeen = localStorage.getItem('last_news_view');
+    const version = '2.0.0'; // Current version of news
+    if (lastSeen !== version) {
+      setHasNewUpdates(true);
+    }
+  }, []);
+
+  const handleOpenNews = () => {
+    setShowNews(true);
+    setHasNewUpdates(false);
+    localStorage.setItem('last_news_view', '2.0.0'); // Mark current version as seen
+  };
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -128,6 +145,17 @@ const App: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2 md:gap-4">
+              <button
+                onClick={handleOpenNews}
+                className="size-10 flex items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800 relative hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                title="Novidades"
+              >
+                <span className="material-symbols-outlined text-slate-500">celebration</span>
+                {hasNewUpdates && (
+                  <span className="absolute -top-1 -right-1 size-3 bg-red-500 rounded-full border-2 border-white dark:border-[#1d222a]" />
+                )}
+              </button>
+
               <button onClick={() => setIsDarkMode(!isDarkMode)} className="size-10 flex items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800">
                 <span className="material-symbols-outlined text-slate-500">{isDarkMode ? 'light_mode' : 'dark_mode'}</span>
               </button>
@@ -136,6 +164,7 @@ const App: React.FC = () => {
                 <span className="material-symbols-outlined">logout</span>
               </button>
             </div>
+            <WhatIsNewModal isOpen={showNews} onClose={() => setShowNews(false)} />
           </header>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar">
