@@ -175,27 +175,7 @@ const Login: React.FC<LoginProps> = ({ signIn, isDarkMode, toggleDarkMode }) => 
                   </button>
                 </form>
 
-                <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Dicas de teste:</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      data-testid="test-admin-btn"
-                      onClick={() => { setEmail('admin@classtower.com.br'); setPassword('admin123'); }}
-                      className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-primary/30 text-left transition-all"
-                    >
-                      <p className="text-[10px] font-black text-primary uppercase">Admin</p>
-                      <p className="text-[9px] text-slate-500">Acesso Total</p>
-                    </button>
-                    <button
-                      data-testid="test-user-btn"
-                      onClick={() => { setEmail('user@classtower.com.br'); setPassword('user123'); }}
-                      className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-primary/30 text-left transition-all"
-                    >
-                      <p className="text-[10px] font-black text-slate-500 uppercase">Atendente</p>
-                      <p className="text-[9px] text-slate-500">Acesso Parcial</p>
-                    </button>
-                  </div>
-                </div>
+
               </>
             ) : (
               <div className="animate-in fade-in slide-in-from-right-4 duration-500">
