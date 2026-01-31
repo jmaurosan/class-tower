@@ -21,12 +21,23 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
     { id: 'agendamentos', icon: 'calendar_today', label: 'Calendário', roles: ['admin', 'atendente'] },
     { id: 'diario', icon: 'menu_book', label: 'Ocorrências', roles: ['admin', 'atendente'] },
     { id: 'documentos', icon: 'folder_open', label: 'Documentos', roles: ['admin', 'sala'] },
+    { id: 'usuarios', icon: 'group', label: 'Equipe e Usuários', roles: ['admin'] },
     { id: 'salas', icon: 'meeting_room', label: 'Cadastro de Salas', roles: ['admin', 'atendente'] },
     { id: 'empresas', icon: 'engineering', label: 'Prestadores de Serviço', roles: ['admin', 'atendente', 'sala'] },
+    { id: 'audit-logs', icon: 'history', label: 'Logs de Auditoria', roles: ['admin'] },
   ];
 
   // Filtra itens permitidos para a role atual
   const visibleMenuItems = allMenuItems.filter(item => item.roles.includes(user.role));
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'admin': return 'Gestor Predial';
+      case 'atendente': return 'Colaborador';
+      case 'sala': return 'Morador / Sala';
+      default: return role;
+    }
+  };
 
   return (
     <aside className={`
@@ -109,7 +120,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
           />
           <div className="flex flex-col">
             <span className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[120px]">{user.name}</span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-500 uppercase">{user.role === 'admin' ? 'Gestor Predial' : 'Colaborador'}</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-500 uppercase">{getRoleLabel(user.role)}</span>
           </div>
         </div>
       </div>

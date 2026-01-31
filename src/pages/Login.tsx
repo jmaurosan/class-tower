@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { supabase } from '../services/supabase';
 
 interface LoginProps {
   signIn: (email: string, password: string) => Promise<void>;
@@ -12,6 +13,8 @@ const Login: React.FC<LoginProps> = ({ signIn, isDarkMode, toggleDarkMode }) => 
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [view, setView] = useState<'login' | 'forgot-password'>('login');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +23,6 @@ const Login: React.FC<LoginProps> = ({ signIn, isDarkMode, toggleDarkMode }) => 
 
     try {
       await signIn(email, password);
-      // O hook useAuth em App.tsx detectará a sessão e chamará setUser automaticamente
     } catch (err: any) {
       console.error('Login error:', err);
       if (err.message === 'Invalid login credentials') {
@@ -30,6 +32,27 @@ const Login: React.FC<LoginProps> = ({ signIn, isDarkMode, toggleDarkMode }) => 
       } else {
         setError('Ocorreu um erro ao tentar acessar o sistema. Tente novamente mais tarde.');
       }
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+      setSuccess('E-mail de recuperação enviado! Verifique sua caixa de entrada.');
+    } catch (err: any) {
+      console.error('Error reset password:', err);
+      setError('Erro ao enviar e-mail de recuperação. Verifique o e-mail digitado.');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -79,92 +102,163 @@ const Login: React.FC<LoginProps> = ({ signIn, isDarkMode, toggleDarkMode }) => 
           </button>
 
           <div className="max-w-sm mx-auto w-full space-y-8">
-            <div>
-              <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Bem-vindo</h3>
-              <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">Insira suas credenciais para acessar o painel.</p>
-            </div>
-
-            <form onSubmit={handleLogin} className="space-y-5">
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">E-mail Corporativo</label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">mail</span>
-                  <input
-                    required
-                    data-testid="email-input"
-                    type="email"
-                    placeholder="exemplo@classtower.com.br"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all text-sm"
-                  />
+            {view === 'login' ? (
+              <>
+                <div>
+                  <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Bem-vindo</h3>
+                  <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">Insira suas credenciais para acessar o painel.</p>
                 </div>
-              </div>
 
-              <div className="space-y-1">
-                <div className="flex justify-between items-center px-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Senha de Acesso</label>
-                  <button type="button" className="text-[10px] font-bold text-primary hover:underline">Esqueceu a senha?</button>
+                <form onSubmit={handleLogin} className="space-y-5">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">E-mail Corporativo</label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">mail</span>
+                      <input
+                        required
+                        data-testid="email-input"
+                        type="email"
+                        placeholder="exemplo@classtower.com.br"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center px-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Senha de Acesso</label>
+                      <button
+                        type="button"
+                        onClick={() => setView('forgot-password')}
+                        className="text-[10px] font-bold text-primary hover:underline"
+                      >
+                        Esqueceu a senha?
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
+                      <input
+                        required
+                        data-testid="password-input"
+                        type="password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 text-red-500 text-xs font-bold animate-in fade-in slide-in-from-top-1">
+                      <span className="material-symbols-outlined text-sm">error</span>
+                      {error}
+                    </div>
+                  )}
+
+                  <button
+                    disabled={isLoading}
+                    type="submit"
+                    data-testid="login-submit-button"
+                    className="w-full py-4 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {isLoading ? (
+                      <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    ) : (
+                      <>
+                        <span className="text-sm uppercase tracking-widest">Acessar Sistema</span>
+                        <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Dicas de teste:</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      data-testid="test-admin-btn"
+                      onClick={() => { setEmail('admin@classtower.com.br'); setPassword('admin123'); }}
+                      className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-primary/30 text-left transition-all"
+                    >
+                      <p className="text-[10px] font-black text-primary uppercase">Admin</p>
+                      <p className="text-[9px] text-slate-500">Acesso Total</p>
+                    </button>
+                    <button
+                      data-testid="test-user-btn"
+                      onClick={() => { setEmail('user@classtower.com.br'); setPassword('user123'); }}
+                      className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-primary/30 text-left transition-all"
+                    >
+                      <p className="text-[10px] font-black text-slate-500 uppercase">Atendente</p>
+                      <p className="text-[9px] text-slate-500">Acesso Parcial</p>
+                    </button>
+                  </div>
                 </div>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
-                  <input
-                    required
-                    data-testid="password-input"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all text-sm"
-                  />
-                </div>
-              </div>
-
-              {error && (
-                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 text-red-500 text-xs font-bold animate-in fade-in slide-in-from-top-1">
-                  <span className="material-symbols-outlined text-sm">error</span>
-                  {error}
-                </div>
-              )}
-
-              <button
-                disabled={isLoading}
-                type="submit"
-                data-testid="login-submit-button"
-                className="w-full py-4 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                ) : (
-                  <>
-                    <span className="text-sm uppercase tracking-widest">Acessar Sistema</span>
-                    <span className="material-symbols-outlined text-lg">arrow_forward</span>
-                  </>
-                )}
-              </button>
-            </form>
-
-            <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Dicas de teste:</p>
-              <div className="grid grid-cols-2 gap-3">
+              </>
+            ) : (
+              <div className="animate-in fade-in slide-in-from-right-4 duration-500">
                 <button
-                  data-testid="test-admin-btn"
-                  onClick={() => { setEmail('admin@classtower.com.br'); setPassword('admin123'); }}
-                  className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-primary/30 text-left transition-all"
+                  onClick={() => setView('login')}
+                  className="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors text-xs font-bold uppercase tracking-widest mb-6"
                 >
-                  <p className="text-[10px] font-black text-primary uppercase">Admin</p>
-                  <p className="text-[9px] text-slate-500">Acesso Total</p>
+                  <span className="material-symbols-outlined text-lg">arrow_back</span>
+                  Voltar ao Login
                 </button>
-                <button
-                  data-testid="test-user-btn"
-                  onClick={() => { setEmail('user@classtower.com.br'); setPassword('user123'); }}
-                  className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-primary/30 text-left transition-all"
-                >
-                  <p className="text-[10px] font-black text-slate-500 uppercase">Atendente</p>
-                  <p className="text-[9px] text-slate-500">Acesso Parcial</p>
-                </button>
+
+                <div>
+                  <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Recuperar Senha</h3>
+                  <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">Enviaremos um link de redefinição para o seu e-mail.</p>
+                </div>
+
+                <form onSubmit={handleForgotPassword} className="space-y-5 mt-8">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">E-mail de Cadastro</label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">mail</span>
+                      <input
+                        required
+                        type="email"
+                        placeholder="exemplo@classtower.com.br"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 text-red-500 text-xs font-bold">
+                      <span className="material-symbols-outlined text-sm">error</span>
+                      {error}
+                    </div>
+                  )}
+
+                  {success && (
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-2 text-emerald-600 text-xs font-bold">
+                      <span className="material-symbols-outlined text-sm">check_circle</span>
+                      {success}
+                    </div>
+                  )}
+
+                  <button
+                    disabled={isLoading}
+                    type="submit"
+                    className="w-full py-4 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {isLoading ? (
+                      <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    ) : (
+                      <>
+                        <span className="text-sm uppercase tracking-widest">Enviar Instruções</span>
+                        <span className="material-symbols-outlined text-lg">send</span>
+                      </>
+                    )}
+                  </button>
+                </form>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

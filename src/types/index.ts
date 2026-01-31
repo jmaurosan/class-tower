@@ -1,5 +1,5 @@
 
-export type Page = 'dashboard' | 'vistorias' | 'agendamentos' | 'diario' | 'empresas' | 'settings' | 'support' | 'encomendas' | 'vencimentos' | 'salas' | 'documentos' | 'audit-logs' | 'avisos';
+export type Page = 'dashboard' | 'vistorias' | 'agendamentos' | 'diario' | 'empresas' | 'settings' | 'support' | 'encomendas' | 'vencimentos' | 'salas' | 'documentos' | 'audit-logs' | 'avisos' | 'usuarios';
 
 export type UserRole = 'admin' | 'atendente' | 'sala';
 
@@ -122,4 +122,16 @@ export interface Empresa {
   status: 'Homologada' | 'Em Revisão' | 'Inativa';
   rating: number;
   sala_id?: string;
+}
+
+export interface AuditLog {
+  id: string;
+  created_at: string;
+  table_name: string;
+  record_id: string;
+  action: 'INSERT' | 'UPDATE' | 'DELETE';
+  executed_by?: string;
+  executed_by_name?: string;
+  old_data?: any;
+  new_data?: any;
 }

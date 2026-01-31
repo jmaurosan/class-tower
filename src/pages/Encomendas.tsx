@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
+import { useEncomendas } from '../hooks/useEncomendas';
 import { supabase } from '../services/supabase';
 import { Encomenda, User } from '../types';
 
@@ -7,8 +8,10 @@ interface EncomendasProps {
 }
 
 const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
-  const [encomendas, setEncomendas] = useState<Encomenda[]>([]);
-  const [loadingItems, setLoadingItems] = useState(true);
+  const isResident = user.role === 'sala';
+  // If resident, filter by their own room (sala_numero)
+  const { encomendas, loading: loadingItems, addEncomenda, updateStatus } = useEncomendas(isResident ? user.sala_numero : undefined);
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
@@ -18,58 +21,6 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
     status: 'Pendente',
     destinatarioOriginal: ''
   });
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  // Buscar dados reais do Supabase
-  const fetchEncomendas = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('encomendas')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      if (data) {
-        const mappedData: Encomenda[] = data.map(item => ({
-          id: item.id,
-          dataEntrada: new Date(item.created_at).toLocaleString('pt-BR'),
-          destinatario: item.destinatario,
-          remetente: item.remetente,
-          categoria: item.categoria,
-          caracteristicas: item.caracteristicas,
-          status: item.status,
-          fotoUrl: item.foto_url,
-          sala_id: item.sala_id,
-          dataRetirada: item.data_retirada ? new Date(item.data_retirada).toLocaleString('pt-BR') : undefined,
-          quemRetirou: item.quem_retirou
-        }));
-        setEncomendas(mappedData);
-      }
-    } catch (err) {
-      console.error('Erro ao buscar encomendas:', err);
-    } finally {
-      setLoadingItems(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchEncomendas();
-
-    // Inscrição Real-time
-    const channel = supabase
-      .channel('encomendas_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'encomendas' }, () => {
-        fetchEncomendas();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
 
   const startCamera = async () => {
     setIsCameraActive(true);
@@ -136,19 +87,16 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
         }
       }
 
-      const { error } = await supabase
-        .from('encomendas')
-        .insert([{
-          destinatario: newPackage.destinatario,
-          remetente: newPackage.remetente,
-          categoria: newPackage.categoria,
-          caracteristicas: `${newPackage.caracteristicas || ''} [Recebido em: ${newPackage.destinatarioOriginal || 'N/A'}]`,
-          status: 'Pendente',
-          foto_url: foto_url,
-          sala_id: newPackage.destinatario?.replace('Unidade ', '') || '0000'
-        }]);
+      await addEncomenda({
+        destinatario: newPackage.destinatario || '',
+        remetente: newPackage.remetente || '',
+        categoria: newPackage.categoria || 'Caixa',
+        caracteristicas: `${newPackage.caracteristicas || ''} [Recebido em: ${newPackage.destinatarioOriginal || 'N/A'}]`,
+        status: 'Pendente',
+        fotoUrl: foto_url,
+        sala_id: newPackage.destinatario?.replace('Unidade ', '') || '0000'
+      });
 
-      if (error) throw error;
       handleCloseModal();
     } catch (err) {
       console.error('Erro ao salvar encomenda:', err);
@@ -168,16 +116,11 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
     if (!nome) return;
 
     try {
-      const { error } = await supabase
-        .from('encomendas')
-        .update({
-          status: 'Retirado',
-          data_retirada: new Date().toISOString(),
-          quem_retirou: nome
-        })
-        .eq('id', id);
-
-      if (error) throw error;
+      await updateStatus(id, {
+        status: 'Retirado',
+        dataRetirada: new Date().toISOString(),
+        quemRetirou: nome
+      });
     } catch (err) {
       console.error('Erro ao dar baixa:', err);
       alert('Erro ao atualizar no banco de dados.');

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { supabase } from '../services/supabase';
+import React, { useState } from 'react';
+import { useDocuments } from '../hooks/useDocuments';
 import { DocumentoAnexo, User } from '../types';
 
 interface DocumentosProps {
@@ -7,48 +7,16 @@ interface DocumentosProps {
 }
 
 const Documentos: React.FC<DocumentosProps> = ({ user }) => {
-  const [documentos, setDocumentos] = useState<DocumentoAnexo[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('Todos');
+  const { documentos, loading, uploadDoc, deleteDoc } = useDocuments();
+
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [newDoc, setNewDoc] = useState({
     nome: '',
     categoria: 'Outros' as DocumentoAnexo['categoria']
   });
-
-  const fetchDocs = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('documentos')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      if (data) {
-        const mapped = data.map(d => ({
-          id: d.id,
-          nome: d.nome,
-          categoria: d.categoria as any,
-          dataUpload: new Date(d.created_at).toLocaleDateString('pt-BR'),
-          tamanho: d.tamanho,
-          tipo: d.tipo,
-          url: d.url,
-          storagePath: d.storage_path
-        }));
-        setDocumentos(mapped);
-      }
-    } catch (err) {
-      console.error('Erro ao buscar documentos:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDocs();
-  }, []);
 
   const categorias: string[] = ['Todos', 'Atas', 'Regimento Interno', 'Plantas', 'Seguros', 'Certidões', 'Outros'];
 
@@ -64,44 +32,17 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
     e.preventDefault();
     if (!canUpload || !selectedFile) return;
 
+    setIsUploading(true);
     try {
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${Date.now()}_${newDoc.nome.replace(/\s/g, '_')}.${fileExt}`;
-      const filePath = `condominio/${fileName}`;
-
-      // 1. Upload para Storage
-      const { error: uploadError } = await supabase.storage
-        .from('documentos')
-        .upload(filePath, selectedFile);
-
-      if (uploadError) throw uploadError;
-
-      // 2. Pegar URL Pública
-      const { data: { publicUrl } } = supabase.storage
-        .from('documentos')
-        .getPublicUrl(filePath);
-
-      // 3. Salvar Metadados no Banco
-      const { error: dbError } = await supabase
-        .from('documentos')
-        .insert([{
-          nome: newDoc.nome,
-          categoria: newDoc.categoria,
-          tamanho: `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`,
-          tipo: fileExt || 'pdf',
-          url: publicUrl,
-          storage_path: filePath
-        }]);
-
-      if (dbError) throw dbError;
-
+      await uploadDoc(selectedFile, newDoc);
       setShowUploadModal(false);
       setNewDoc({ nome: '', categoria: 'Outros' });
       setSelectedFile(null);
-      fetchDocs();
     } catch (err) {
       console.error('Erro no upload:', err);
       alert('Falha ao enviar arquivo.');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -110,21 +51,7 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
     if (!confirm('Deseja excluir este documento permanentemente?')) return;
 
     try {
-      // 1. Deletar do Storage
-      if (doc.storagePath) {
-        await supabase.storage
-          .from('documentos')
-          .remove([doc.storagePath]);
-      }
-
-      // 2. Deletar do Banco
-      const { error } = await supabase
-        .from('documentos')
-        .delete()
-        .eq('id', doc.id);
-
-      if (error) throw error;
-      fetchDocs();
+      await deleteDoc(doc);
     } catch (err) {
       console.error('Erro ao deletar:', err);
       alert('Falha ao excluir arquivo.');
@@ -305,10 +232,14 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
                   </button>
                   <button
                     type="submit"
-                    disabled={!selectedFile}
-                    className={`flex-1 py-4 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-xl transition-all ${selectedFile ? 'bg-primary shadow-primary/20 hover:scale-[1.02] active:scale-95' : 'bg-slate-300 cursor-not-allowed'}`}
+                    disabled={!selectedFile || isUploading}
+                    className={`flex-1 py-4 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-xl transition-all ${selectedFile && !isUploading ? 'bg-primary shadow-primary/20 hover:scale-[1.02] active:scale-95' : 'bg-slate-300 cursor-not-allowed'}`}
                   >
-                    Confirmar Envio
+                    {isUploading ? (
+                      <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto"></div>
+                    ) : (
+                      'Confirmar Envio'
+                    )}
                   </button>
                 </div>
               </form>

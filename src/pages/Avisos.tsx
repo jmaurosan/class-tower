@@ -1,6 +1,6 @@
 
-import React, { useEffect, useState } from 'react';
-import { supabase } from '../services/supabase';
+import React, { useState } from 'react';
+import { useAvisos } from '../hooks/useAvisos';
 import { Aviso, User } from '../types';
 
 interface AvisosProps {
@@ -8,46 +8,13 @@ interface AvisosProps {
 }
 
 const Avisos: React.FC<AvisosProps> = ({ user }) => {
-  const [avisos, setAvisos] = useState<Aviso[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { avisos, loading, addAviso, deleteAviso } = useAvisos();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     titulo: '',
     conteudo: '',
     prioridade: 'Baixa' as Aviso['prioridade']
   });
-
-  const fetchAvisos = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('avisos')
-        .select('*')
-        .order('data', { ascending: false })
-        .order('hora', { ascending: false });
-
-      if (error) throw error;
-      if (data) setAvisos(data);
-    } catch (err) {
-      console.error('Erro ao buscar avisos:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAvisos();
-
-    const channel = supabase
-      .channel('avisos_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'avisos' }, () => {
-        fetchAvisos();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
 
   const getPriorityStyle = (prioridade: Aviso['prioridade']) => {
     switch (prioridade) {
@@ -71,16 +38,13 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
     e.preventDefault();
     const agora = new Date();
     try {
-      const { error } = await supabase
-        .from('avisos')
-        .insert([{
-          ...formData,
-          data: agora.toISOString().split('T')[0],
-          hora: agora.toTimeString().split(' ')[0].substring(0, 5),
-          criado_por: user.name
-        }]);
+      await addAviso({
+        ...formData,
+        data: agora.toISOString().split('T')[0],
+        hora: agora.toTimeString().split(' ')[0].substring(0, 5),
+        criado_por: user.name
+      });
 
-      if (error) throw error;
       setShowForm(false);
       setFormData({ titulo: '', conteudo: '', prioridade: 'Baixa' });
     } catch (err) {
@@ -92,11 +56,7 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
   const handleDelete = async (id: string) => {
     if (!confirm('Deseja excluir este aviso?')) return;
     try {
-      const { error } = await supabase
-        .from('avisos')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
+      await deleteAviso(id);
     } catch (err) {
       console.error('Erro ao excluir:', err);
       alert('Erro ao excluir aviso.');

@@ -1,8 +1,9 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { useVencimentos } from '../hooks/useVencimentos';
 import { supabase } from '../services/supabase';
-import { DocumentoVencimento, User } from '../types';
+import { User } from '../types';
 import Lembretes from './Lembretes';
 
 const dataChart = [
@@ -13,12 +14,11 @@ const dataChart = [
 ];
 
 interface DashboardProps {
-  documentos?: DocumentoVencimento[];
-  onUpdateStatus?: (id: string, status: 'Feito' | 'Em Andamento', alertHandled?: boolean) => void;
   user: User;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ documentos = [], onUpdateStatus, user }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user }) => {
+  const { documentos, updateVencimentoStatus } = useVencimentos();
   const [stats, setStats] = useState({
     ocupacao: '0%',
     vistorias: '12',
@@ -87,14 +87,14 @@ const Dashboard: React.FC<DashboardProps> = ({ documentos = [], onUpdateStatus, 
               {criticalDocs.length === 1 ? (
                 <>
                   <button
-                    onClick={() => onUpdateStatus?.(criticalDocs[0].id, 'Feito', true)}
+                    onClick={() => updateVencimentoStatus(criticalDocs[0].id, 'Feito', true)}
                     className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2 transition-all active:scale-95"
                   >
                     <span className="material-symbols-outlined text-lg">check_circle</span>
                     Marcar como Feito
                   </button>
                   <button
-                    onClick={() => onUpdateStatus?.(criticalDocs[0].id, 'Em Andamento', true)}
+                    onClick={() => updateVencimentoStatus(criticalDocs[0].id, 'Em Andamento', true)}
                     className="px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white border border-white/30 rounded-xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
                   >
                     Marcar como Ciente
@@ -103,7 +103,7 @@ const Dashboard: React.FC<DashboardProps> = ({ documentos = [], onUpdateStatus, 
               ) : (
                 <button
                   onClick={() => {
-                    criticalDocs.forEach(doc => onUpdateStatus?.(doc.id, 'Em Andamento', true));
+                    criticalDocs.forEach(doc => updateVencimentoStatus(doc.id, 'Em Andamento', true));
                   }}
                   className="px-6 py-3 bg-white text-red-600 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl"
                 >

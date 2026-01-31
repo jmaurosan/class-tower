@@ -1,14 +1,12 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useVencimentos } from '../hooks/useVencimentos';
 import { DocumentoVencimento } from '../types';
 
 interface VencimentosProps {
-  documentos: DocumentoVencimento[];
-  setDocumentos: React.Dispatch<React.SetStateAction<DocumentoVencimento[]>>;
-  onUpdateStatus: (id: string, status: 'Feito' | 'Em Andamento', alertHandled?: boolean) => void;
 }
 
-const Vencimentos: React.FC<VencimentosProps> = ({ documentos, setDocumentos, onUpdateStatus }) => {
+const Vencimentos: React.FC<VencimentosProps> = () => {
+  const { documentos, loading, addVencimento, updateVencimentoStatus, deleteVencimento } = useVencimentos();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     titulo: 'Caixa d\'água',
@@ -23,24 +21,26 @@ const Vencimentos: React.FC<VencimentosProps> = ({ documentos, setDocumentos, on
     'Licença Ambiental'
   ].sort((a, b) => a.localeCompare(b)), []);
 
-  const docsEmAndamento = useMemo(() => 
+  const docsEmAndamento = useMemo(() =>
     documentos.filter(d => d.status === 'Em Andamento').sort((a, b) => a.titulo.localeCompare(b.titulo))
-  , [documentos]);
+    , [documentos]);
 
-  const docsFeitos = useMemo(() => 
+  const docsFeitos = useMemo(() =>
     documentos.filter(d => d.status === 'Feito').sort((a, b) => a.titulo.localeCompare(b.titulo))
-  , [documentos]);
+    , [documentos]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const novoDoc: DocumentoVencimento = {
-      id: Math.random().toString(36).substr(2, 9),
-      ...formData,
-      visto: false
-    };
-    setDocumentos([...documentos, novoDoc]);
-    setShowForm(false);
-    setFormData({ titulo: categorias[0], dataVencimento: '', status: 'Em Andamento' });
+    try {
+      await addVencimento({
+        ...formData,
+        visto: false
+      });
+      setShowForm(false);
+      setFormData({ titulo: categorias[0], dataVencimento: '', status: 'Em Andamento' });
+    } catch (err) {
+      console.error('Erro ao salvar:', err);
+    }
   };
 
   const getStatusBadgeStyle = (status: 'Feito' | 'Em Andamento') => {
@@ -55,7 +55,7 @@ const Vencimentos: React.FC<VencimentosProps> = ({ documentos, setDocumentos, on
     if (doc.status === 'Feito') return 'text-emerald-500';
 
     const threshold = doc.titulo.toLowerCase().includes('incêndio') ? 30 : 15;
-    
+
     if (diffDays < 0 || diffDays <= 5) return 'text-red-500'; // Vermelho: Vencido ou < 5 dias
     if (diffDays <= threshold) return 'text-amber-500';      // Amarelo: Dentro da fase de lembrete (15 ou 30)
     return 'text-emerald-500';                               // Verde: Dentro do prazo (seguro)
@@ -85,9 +85,9 @@ const Vencimentos: React.FC<VencimentosProps> = ({ documentos, setDocumentos, on
             {list.map((doc) => {
               const expirationDate = new Date(doc.dataVencimento);
               const hoje = new Date();
-              hoje.setHours(0,0,0,0);
+              hoje.setHours(0, 0, 0, 0);
               const diffDays = Math.ceil((expirationDate.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-              
+
               return (
                 <tr key={doc.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
                   <td className="px-6 py-5">
@@ -102,24 +102,24 @@ const Vencimentos: React.FC<VencimentosProps> = ({ documentos, setDocumentos, on
                     <div className="flex items-center gap-2">
                       <span className={`size-2 rounded-full shrink-0 ${getAtencaoColor(doc, diffDays).replace('text-', 'bg-')}`} />
                       <span className={`text-sm font-bold ${getAtencaoColor(doc, diffDays)}`}>
-                        {doc.status === 'Feito' 
-                          ? 'Conforme' 
+                        {doc.status === 'Feito'
+                          ? 'Conforme'
                           : diffDays < 0 ? `Vencido há ${Math.abs(diffDays)}d` : diffDays === 1 ? 'Vence amanhã!' : `Faltam ${diffDays} dias`
                         }
                       </span>
                     </div>
                   </td>
                   <td className="px-6 py-5">
-                    <button 
-                      onClick={() => onUpdateStatus(doc.id, doc.status === 'Feito' ? 'Em Andamento' : 'Feito', false)}
+                    <button
+                      onClick={() => updateVencimentoStatus(doc.id, doc.status === 'Feito' ? 'Em Andamento' : 'Feito', false)}
                       className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase border transition-all hover:scale-105 active:scale-95 ${getStatusBadgeStyle(doc.status)}`}
                     >
                       {doc.status}
                     </button>
                   </td>
                   <td className="px-6 py-5 text-right">
-                    <button 
-                      onClick={() => setDocumentos(documentos.filter(d => d.id !== doc.id))}
+                    <button
+                      onClick={() => deleteVencimento(doc.id)}
                       className="p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
                     >
                       <span className="material-symbols-outlined text-lg">delete</span>
@@ -146,11 +146,10 @@ const Vencimentos: React.FC<VencimentosProps> = ({ documentos, setDocumentos, on
           <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Painel de Conformidade</h3>
           <p className="text-slate-500 dark:text-slate-400 font-medium">Controle rigoroso de renovações obrigatórias</p>
         </div>
-        <button 
+        <button
           onClick={() => setShowForm(!showForm)}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg active:scale-95 ${
-            showForm ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-white' : 'bg-primary text-white shadow-primary/20'
-          }`}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg active:scale-95 ${showForm ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-white' : 'bg-primary text-white shadow-primary/20'
+            }`}
         >
           <span className="material-symbols-outlined">{showForm ? 'close' : 'add_task'}</span>
           {showForm ? 'Cancelar' : 'Nova Obrigação'}
@@ -163,11 +162,11 @@ const Vencimentos: React.FC<VencimentosProps> = ({ documentos, setDocumentos, on
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">Categoria</label>
-              <select 
-                required 
+              <select
+                required
                 className={selectClass}
                 value={formData.titulo}
-                onChange={e => setFormData({...formData, titulo: e.target.value})}
+                onChange={e => setFormData({ ...formData, titulo: e.target.value })}
               >
                 {categorias.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
@@ -176,12 +175,12 @@ const Vencimentos: React.FC<VencimentosProps> = ({ documentos, setDocumentos, on
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">Data de Vencimento</label>
-              <input 
-                required 
-                type="date" 
+              <input
+                required
+                type="date"
                 className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-sm"
                 value={formData.dataVencimento}
-                onChange={e => setFormData({...formData, dataVencimento: e.target.value})}
+                onChange={e => setFormData({ ...formData, dataVencimento: e.target.value })}
               />
             </div>
             <div className="flex items-end">
@@ -195,17 +194,17 @@ const Vencimentos: React.FC<VencimentosProps> = ({ documentos, setDocumentos, on
 
       {/* SEÇÃO 1: EM ANDAMENTO */}
       {renderTable(
-        docsEmAndamento, 
-        "Obrigações em Andamento", 
-        "pending_actions", 
+        docsEmAndamento,
+        "Obrigações em Andamento",
+        "pending_actions",
         "Nenhuma pendência para hoje"
       )}
 
       {/* SEÇÃO 2: FEITOS */}
       {renderTable(
-        docsFeitos, 
-        "Obrigações Concluídas", 
-        "task_alt", 
+        docsFeitos,
+        "Obrigações Concluídas",
+        "task_alt",
         "Nenhum documento concluído no histórico"
       )}
     </div>
