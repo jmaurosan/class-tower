@@ -20,39 +20,44 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: |
           echo "🔄 Executing keep-alive for Supabase..."
+          echo "📍 Supabase URL: ${SUPABASE_URL}"
           
-          # Fazer uma query simples para manter o banco ativo
-          response=$(curl -s -w "\n%{http_code}" -X POST \
-            "${SUPABASE_URL}/rest/v1/rpc/keep_alive_ping" \
-            -H "apikey: ${SUPABASE_ANON_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-            -H "Content-Type: application/json" \
-            -d '{}')
-          
-          http_code=$(echo "$response" | tail -n1)
-          body=$(echo "$response" | sed '$d')
-          
-          echo "📊 Response Status: $http_code"
-          echo "📄 Response Body: $body"
-          
-          # Alternativa: Chamar a Edge Function se estiver deployada
-          edge_response=$(curl -s -w "\n%{http_code}" -X POST \
-            "${SUPABASE_URL}/functions/v1/keep-alive" \
+          # Query 1: Tabela profiles
+          echo "📊 Querying profiles table..."
+          profiles_response=$(curl -s -w "\n%{http_code}" -X GET \
+            "${SUPABASE_URL}/rest/v1/profiles?select=id&limit=1" \
             -H "apikey: ${SUPABASE_ANON_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
           
-          edge_http_code=$(echo "$edge_response" | tail -n1)
-          edge_body=$(echo "$edge_response" | sed '$d')
+          profiles_code=$(echo "$profiles_response" | tail -n1)
+          echo "✓ Profiles table: HTTP $profiles_code"
           
-          echo "🔧 Edge Function Status: $edge_http_code"
-          echo "📄 Edge Function Body: $edge_body"
+          # Query 2: Tabela avisos
+          echo "📊 Querying avisos table..."
+          avisos_response=$(curl -s -w "\n%{http_code}" -X GET \
+            "${SUPABASE_URL}/rest/v1/avisos?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
           
-          # Verificar se pelo menos uma das chamadas foi bem-sucedida
-          if [[ "$http_code" == "200" ]] || [[ "$edge_http_code" == "200" ]]; then
-            echo "✅ Keep-alive executed successfully!"
+          avisos_code=$(echo "$avisos_response" | tail -n1)
+          echo "✓ Avisos table: HTTP $avisos_code"
+          
+          # Query 3: Tabela encomendas
+          echo "📊 Querying encomendas table..."
+          encomendas_response=$(curl -s -w "\n%{http_code}" -X GET \
+            "${SUPABASE_URL}/rest/v1/encomendas?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+          
+          encomendas_code=$(echo "$encomendas_response" | tail -n1)
+          echo "✓ Encomendas table: HTTP $encomendas_code"
+          
+          # Verificar se todas as queries foram bem-sucedidas
+          if [[ "$profiles_code" == "200" ]] && [[ "$avisos_code" == "200" ]] && [[ "$encomendas_code" == "200" ]]; then
+            echo "✅ Keep-alive executed successfully on all tables!"
             exit 0
           else
-            echo "⚠️ Keep-alive may have failed, but continuing..."
+            echo "⚠️ Some queries may have failed, but database is active"
             exit 0
           fi
 
