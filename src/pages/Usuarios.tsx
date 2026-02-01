@@ -160,7 +160,7 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
     const labels = {
       admin: 'Admin',
       atendente: 'Atendente',
-      sala: 'Morador'
+      sala: 'Condômino'
     };
     return (
       <span className={`px-3 py-1 rounded-full text-xs font-bold border ${styles[role as keyof typeof styles]}`}>
@@ -323,7 +323,7 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
                   className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white"
                 >
-                  <option value="sala">Morador</option>
+                  <option value="sala">Condômino</option>
                   <option value="atendente">Atendente</option>
                   <option value="admin">Administrador</option>
                 </select>
