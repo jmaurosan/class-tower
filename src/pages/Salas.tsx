@@ -1,4 +1,4 @@
-
+import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../services/supabase';
 import { Sala, User } from '../types';
 
@@ -104,8 +104,8 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
               key={andar}
               onClick={() => setSelectedAndar(andar)}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${selectedAndar === andar
-                  ? 'bg-primary text-white shadow-lg shadow-primary/20 font-bold'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                ? 'bg-primary text-white shadow-lg shadow-primary/20 font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
             >
               <span className="text-sm">{andar}º Andar</span>
