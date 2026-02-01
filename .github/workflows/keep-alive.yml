@@ -1,0 +1,69 @@
+name: Keep Alive - Supabase
+
+on:
+  schedule:
+    # Executa a cada 5 dias às 3:00 AM UTC
+    - cron: '0 3 */5 * *'
+  workflow_dispatch: # Permite execução manual
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Execute Keep-Alive Request
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          echo "🔄 Executing keep-alive for Supabase..."
+          
+          # Fazer uma query simples para manter o banco ativo
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            "${SUPABASE_URL}/rest/v1/rpc/keep_alive_ping" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "📊 Response Status: $http_code"
+          echo "📄 Response Body: $body"
+          
+          # Alternativa: Chamar a Edge Function se estiver deployada
+          edge_response=$(curl -s -w "\n%{http_code}" -X POST \
+            "${SUPABASE_URL}/functions/v1/keep-alive" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+          
+          edge_http_code=$(echo "$edge_response" | tail -n1)
+          edge_body=$(echo "$edge_response" | sed '$d')
+          
+          echo "🔧 Edge Function Status: $edge_http_code"
+          echo "📄 Edge Function Body: $edge_body"
+          
+          # Verificar se pelo menos uma das chamadas foi bem-sucedida
+          if [[ "$http_code" == "200" ]] || [[ "$edge_http_code" == "200" ]]; then
+            echo "✅ Keep-alive executed successfully!"
+            exit 0
+          else
+            echo "⚠️ Keep-alive may have failed, but continuing..."
+            exit 0
+          fi
+
+      - name: Notify Success
+        if: success()
+        run: |
+          echo "✅ Keep-alive job completed successfully at $(date)"
+          echo "Next execution in 5 days"
+
+      - name: Notify Failure
+        if: failure()
+        run: |
+          echo "❌ Keep-alive job failed at $(date)"
+          echo "Please check the logs and Supabase status"
