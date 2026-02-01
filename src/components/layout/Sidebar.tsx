@@ -77,8 +77,14 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
             <button
               key={item.id}
               onClick={() => {
+                console.log('Menu item clicked, closing sidebar...');
                 setCurrentPage(item.id as Page);
-                onClose?.(); // Fecha o sidebar no mobile após clicar
+                if (onClose) {
+                  console.log('Calling onClose...');
+                  onClose();
+                } else {
+                  console.warn('onClose is undefined!');
+                }
               }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group ${currentPage === item.id
                 ? 'bg-primary/10 text-primary border-r-2 border-primary rounded-r-none'
