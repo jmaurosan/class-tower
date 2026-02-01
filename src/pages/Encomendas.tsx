@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useEncomendas } from '../hooks/useEncomendas';
 import { supabase } from '../services/supabase';
 import { Encomenda, User } from '../types';
@@ -21,6 +21,10 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
     status: 'Pendente',
     destinatarioOriginal: ''
   });
+
+  // Refs para câmera
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const startCamera = async () => {
     setIsCameraActive(true);

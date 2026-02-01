@@ -71,7 +71,7 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
         const { error } = await supabase
           .from('profiles')
           .update({
-            name: formData.name,
+            full_name: formData.name,
             role: formData.role,
             sala_numero: formData.sala_numero,
             updated_at: new Date().toISOString()
@@ -124,7 +124,7 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
     setFormData({
       email: user.email || '',
       password: '',
-      name: user.name || '',
+      name: user.full_name || '',
       role: user.role || 'sala',
       sala_numero: user.sala_numero || '0000'
     });
@@ -238,7 +238,7 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
               {users.map((user) => (
                 <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
                   <td className="px-6 py-4">
-                    <div className="font-bold text-slate-900 dark:text-white">{user.name || 'Sem nome'}</div>
+                    <div className="font-bold text-slate-900 dark:text-white">{user.full_name || 'Sem nome'}</div>
                   </td>
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{user.email || 'Sem email'}</td>
                   <td className="px-6 py-4">{getRoleBadge(user.role)}</td>

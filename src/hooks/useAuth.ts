@@ -51,7 +51,7 @@ export const useAuth = () => {
       if (data) {
         setUser({
           id: data.id,
-          name: data.name || data.email?.split('@')[0],
+          name: data.full_name || data.email?.split('@')[0],
           email: data.email || '',
           role: data.role as UserRole || 'sala',
           avatar: data.avatar_url || `https://picsum.photos/seed/${data.id}/100/100`,
