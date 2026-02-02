@@ -11,6 +11,7 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ signIn, isDarkMode, toggleDarkMode }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -142,12 +143,21 @@ const Login: React.FC<LoginProps> = ({ signIn, isDarkMode, toggleDarkMode }) => 
                       <input
                         required
                         data-testid="password-input"
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all text-sm"
+                        className="w-full pl-12 pr-12 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all text-sm"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-xl">
+                          {showPassword ? 'visibility_off' : 'visibility'}
+                        </span>
+                      </button>
                     </div>
                   </div>
 
@@ -174,6 +184,19 @@ const Login: React.FC<LoginProps> = ({ signIn, isDarkMode, toggleDarkMode }) => 
                     )}
                   </button>
                 </form>
+
+                {/* Primeiro Acesso */}
+                <div className="mt-6 text-center">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
+                    Primeiro acesso?
+                  </p>
+                  <button
+                    onClick={() => window.location.href = '/signup'}
+                    className="text-sm font-bold text-primary hover:underline"
+                  >
+                    Cadastre-se aqui
+                  </button>
+                </div>
 
 
               </>

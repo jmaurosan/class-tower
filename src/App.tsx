@@ -107,6 +107,24 @@ const App: React.FC = () => {
     return <ResetPassword />;
   }
 
+  if (window.location.pathname === '/signup') {
+    return (
+      <SignUp
+        isDarkMode={isDarkMode}
+        toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+      />
+    );
+  }
+
+  if (window.location.pathname === '/forgot-password') {
+    return (
+      <ForgotPassword
+        isDarkMode={isDarkMode}
+        toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+      />
+    );
+  }
+
   if (!user) {
     return (
       <Login
