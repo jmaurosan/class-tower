@@ -7,10 +7,31 @@ interface AgendamentosProps {
   user: User;
 }
 
+interface CalendarRule {
+  id: string;
+  date: string;
+  description: string;
+  is_blocked: boolean;
+  allowed_start_time?: string;
+  allowed_end_time?: string;
+}
+
 const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+  const [rules, setRules] = useState<CalendarRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+
+  // Estado para Admin gerenciar regras
+  const [showRulesModal, setShowRulesModal] = useState(false);
+  const [newRule, setNewRule] = useState({
+    date: '',
+    description: '',
+    is_blocked: true,
+    allowed_start_time: '08:00',
+    allowed_end_time: '18:00'
+  });
+
   const [formData, setFormData] = useState({
     titulo: '',
     data: '',
@@ -19,29 +40,41 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
     tipo: 'Mudança' as Agendamento['tipo']
   });
 
-  const fetchAgendamentos = async () => {
+  const fetchData = async () => {
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+      // Buscar Agendamentos
+      const { data: agendamentosData } = await supabase
         .from('agendamentos')
         .select('*')
         .order('data', { ascending: true });
 
-      if (error) throw error;
-      if (data) setAgendamentos(data);
+      if (agendamentosData) setAgendamentos(agendamentosData);
+
+      // Buscar Regras de Calendário
+      const { data: rulesData } = await supabase
+        .from('condo_calendar_rules')
+        .select('*');
+
+      if (rulesData) setRules(rulesData);
+
     } catch (err) {
-      console.error('Erro ao buscar agendamentos:', err);
+      console.error('Erro ao buscar dados:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAgendamentos();
+    fetchData();
 
     const channel = supabase
-      .channel('agendamentos_changes')
+      .channel('agendamentos_realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, () => {
-        fetchAgendamentos();
+        fetchData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'condo_calendar_rules' }, () => {
+        fetchData();
       })
       .subscribe();
 
@@ -49,6 +82,151 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // --- LÓGICA DE VALIDAÇÃO ---
+  const validateScheduling = (dateStr: string, timeStr: string, type: string): string | null => {
+    if (type !== 'Mudança') return null; // Outros tipos por enquanto sem restrição estrita
+
+    const date = new Date(`${dateStr}T${timeStr}:00`);
+    const dayOfWeek = date.getDay(); // 0 = Domingo, 6 = Sábado
+    const hour = parseInt(timeStr.split(':')[0]);
+    const minutes = parseInt(timeStr.split(':')[1]);
+    const timeValue = hour * 60 + minutes;
+
+    // 1. Verificar Regras Específicas (Feriados/Exceções)
+    const specificRule = rules.find(r => r.date === dateStr);
+
+    if (specificRule) {
+      if (specificRule.is_blocked) {
+        return `A data ${dateStr} está bloqueada para agendamentos: ${specificRule.description}`;
+      }
+
+      // Se tiver horário específico permitido
+      if (specificRule.allowed_start_time && specificRule.allowed_end_time) {
+        const start = parseInt(specificRule.allowed_start_time.split(':')[0]) * 60 + parseInt(specificRule.allowed_start_time.split(':')[1]);
+        const end = parseInt(specificRule.allowed_end_time.split(':')[0]) * 60 + parseInt(specificRule.allowed_end_time.split(':')[1]);
+
+        if (timeValue < start || timeValue > end) {
+          return `Para esta data especial (${specificRule.description}), o horário permitido é de ${specificRule.allowed_start_time} às ${specificRule.allowed_end_time}.`;
+        }
+        return null; // Permitido pela regra especial
+      }
+    }
+
+    // 2. Regras Padrão (Semana regular)
+    // Domingo (0)
+    if (dayOfWeek === 0) {
+      return 'Mudanças não são permitidas aos Domingos.';
+    }
+
+    // Sábado (6): 14:00 as 23:59
+    if (dayOfWeek === 6) {
+      const start = 14 * 60; // 14:00
+      const end = 23 * 60 + 59; // 23:59
+      if (timeValue < start || timeValue > end) {
+        return 'Aos Sábados, mudanças são permitidas apenas das 14:00 às 23:59.';
+      }
+      return null;
+    }
+
+    // Segunda a Sexta (1-5): 19:00 as 23:59
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+      const start = 19 * 60; // 19:00
+      const end = 23 * 60 + 59; // 23:59
+      if (timeValue < start || timeValue > end) {
+        return 'De Segunda a Sexta, mudanças são permitidas apenas das 19:00 às 23:59.';
+      }
+      return null;
+    }
+
+    return null;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validar regras
+    const validationError = validateScheduling(formData.data, formData.hora, formData.tipo);
+    if (validationError && user.role !== 'admin') { // Admin pode bypass? Se não quiser, remova user.role !== 'admin'
+      alert(validationError);
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('agendamentos')
+        .insert([{
+          ...formData,
+          status: 'Pendente',
+          sala_id: user.sala_numero || '0000'
+        }]);
+
+      if (error) throw error;
+
+      // AUTO-GERAR AVISO SE FOR MUDANÇA
+      if (formData.tipo === 'Mudança') {
+        const agora = new Date();
+        const dataFormatada = new Date(formData.data + 'T00:00:00').toLocaleDateString('pt-BR');
+
+        await supabase.from('avisos').insert([{
+          titulo: `🚚 Nova Mudança Agendada - Unidade ${user.sala_numero || user.name}`,
+          conteudo: `Uma mudança foi agendada para o dia ${dataFormatada} às ${formData.hora}.\nLocal: ${formData.local}\nResponsável: ${user.name}`,
+          prioridade: 'Media',
+          data: agora.toISOString().split('T')[0],
+          hora: agora.toTimeString().split(' ')[0].substring(0, 5),
+          criado_por: 'Sistema'
+        }]);
+      }
+
+      setShowForm(false);
+      setFormData({ titulo: '', data: '', hora: '', local: '', tipo: 'Mudança' });
+      alert('Solicitação de agendamento enviada com sucesso!');
+    } catch (err) {
+      console.error('Erro ao agendar:', err);
+      alert('Erro ao salvar agendamento.');
+    }
+  };
+
+  const handleCreateRule = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase
+        .from('condo_calendar_rules')
+        .insert([{
+          date: newRule.date,
+          description: newRule.description,
+          is_blocked: newRule.is_blocked,
+          allowed_start_time: newRule.is_blocked ? null : newRule.allowed_start_time,
+          allowed_end_time: newRule.is_blocked ? null : newRule.allowed_end_time,
+          created_by: user.id
+        }]);
+
+      if (error) throw error;
+      setNewRule({ date: '', description: '', is_blocked: true, allowed_start_time: '08:00', allowed_end_time: '18:00' });
+      setShowRulesModal(false);
+      alert('Regra criada com sucesso!');
+    } catch (err) {
+      console.error('Erro ao criar regra:', err);
+      alert('Erro ao salvar regra.');
+    }
+  };
+
+  const handleDeleteRule = async (id: string) => {
+    if (!confirm('Excluir esta regra?')) return;
+    const { error } = await supabase.from('condo_calendar_rules').delete().eq('id', id);
+    if (error) alert('Erro ao excluir regra');
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Deseja excluir este agendamento?')) return;
+    try {
+      const { error } = await supabase.from('agendamentos').delete().eq('id', id);
+      if (error) throw error;
+    } catch (err) {
+      console.error('Erro ao excluir:', err);
+      alert('Erro ao excluir agendamento.');
+    }
+  };
 
   const getStatusStyle = (status: Agendamento['status']) => {
     switch (status) {
@@ -67,55 +245,92 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const { error } = await supabase
-        .from('agendamentos')
-        .insert([{
-          ...formData,
-          status: 'Pendente',
-          sala_id: user.sala_numero || '0000'
-        }]);
-
-      if (error) throw error;
-      setShowForm(false);
-      setFormData({ titulo: '', data: '', hora: '', local: '', tipo: 'Mudança' });
-    } catch (err) {
-      console.error('Erro ao agendar:', err);
-      alert('Erro ao salvar agendamento.');
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Deseja excluir este agendamento?')) return;
-    try {
-      const { error } = await supabase
-        .from('agendamentos')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-    } catch (err) {
-      console.error('Erro ao excluir:', err);
-      alert('Erro ao excluir agendamento.');
-    }
-  };
-
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-end">
         <div>
-          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Calendário de Eventos</h3>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">Gestão de espaços e serviços agendados</p>
+          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Agendamento</h3>
+          <p className="text-slate-500 dark:text-slate-400 font-medium">Gestão de espaços, mudanças e manutenções</p>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold transition-all shadow-lg shadow-primary/20 active:scale-95"
-        >
-          <span className="material-symbols-outlined">{showForm ? 'close' : 'calendar_add_on'}</span>
-          {showForm ? 'Cancelar' : 'Agendar Novo'}
-        </button>
+        <div className="flex gap-2">
+          {user.role === 'admin' && (
+            <button
+              onClick={() => setShowRulesModal(!showRulesModal)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 dark:bg-slate-700 text-white rounded-xl font-bold hover:bg-slate-700 transition-all"
+            >
+              <span className="material-symbols-outlined">edit_calendar</span>
+              Configurar Feriados
+            </button>
+          )}
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold transition-all shadow-lg shadow-primary/20 active:scale-95"
+          >
+            <span className="material-symbols-outlined">{showForm ? 'close' : 'calendar_add_on'}</span>
+            {showForm ? 'Cancelar' : 'Agendar Novo'}
+          </button>
+        </div>
       </div>
+
+      {/* MODAL / PAINEL DE REGRAS (ADMIN) */}
+      {showRulesModal && (
+        <div className="bg-slate-100 dark:bg-slate-800 p-6 rounded-2xl border border-slate-300 dark:border-slate-700 mb-8 animate-in slide-in-from-top-4">
+          <h4 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+            <span className="material-symbols-outlined">edit_calendar</span>
+            Gerenciar Feriados e Exceções
+          </h4>
+
+          <form onSubmit={handleCreateRule} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <input type="date" required className="px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 dark:text-white"
+              value={newRule.date} onChange={e => setNewRule({ ...newRule, date: e.target.value })}
+            />
+            <input type="text" required placeholder="Descrição (ex: Natal)" className="px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 dark:text-white"
+              value={newRule.description} onChange={e => setNewRule({ ...newRule, description: e.target.value })}
+            />
+            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 px-4 rounded-xl border border-slate-300 dark:border-slate-700">
+              <input type="checkbox" id="blocked" checked={newRule.is_blocked} onChange={e => setNewRule({ ...newRule, is_blocked: e.target.checked })} className="size-5 accent-primary" />
+              <label htmlFor="blocked" className="text-sm font-bold text-slate-600 dark:text-slate-300 cursor-pointer">Bloquear Dia Inteiro</label>
+            </div>
+
+            {!newRule.is_blocked && (
+              <div className="flex gap-2">
+                <input type="time" required value={newRule.allowed_start_time} onChange={e => setNewRule({ ...newRule, allowed_start_time: e.target.value })} className="w-1/2 px-2 py-2 rounded-xl bg-white dark:bg-slate-900 border dark:text-white" title="Início" />
+                <input type="time" required value={newRule.allowed_end_time} onChange={e => setNewRule({ ...newRule, allowed_end_time: e.target.value })} className="w-1/2 px-2 py-2 rounded-xl bg-white dark:bg-slate-900 border dark:text-white" title="Fim" />
+              </div>
+            )}
+
+            <button type="submit" className="col-span-full md:col-span-1 lg:col-span-1 py-2 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transistion-colors">
+              Adicionar Regra
+            </button>
+          </form>
+
+          {/* Lista de Regras Existentes */}
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {rules.map(rule => (
+              <div key={rule.id} className="flex justify-between items-center p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-4">
+                  <div className="font-mono font-bold text-slate-500 dark:text-slate-400">
+                    {new Date(rule.date).toLocaleDateString('pt-BR')}
+                  </div>
+                  <div className="font-bold text-slate-800 dark:text-white">{rule.description}</div>
+                  {rule.is_blocked ? (
+                    <span className="px-2 py-1 bg-red-100 text-red-600 text-xs font-bold rounded">BLOQUEADO</span>
+                  ) : (
+                    <span className="px-2 py-1 bg-green-100 text-green-600 text-xs font-bold rounded">
+                      {rule.allowed_start_time?.slice(0, 5)} - {rule.allowed_end_time?.slice(0, 5)}
+                    </span>
+                  )}
+                </div>
+                <button onClick={() => handleDeleteRule(rule.id)} className="text-slate-400 hover:text-red-500">
+                  <span className="material-symbols-outlined">delete</span>
+                </button>
+              </div>
+            ))}
+            {rules.length === 0 && <p className="text-center text-slate-400 py-2">Nenhuma regra especial cadastrada.</p>}
+          </div>
+
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Lado Esquerdo: Filtros e Formulário */}
@@ -129,11 +344,20 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                   <input required type="date" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-xs" value={formData.data} onChange={e => setFormData({ ...formData, data: e.target.value })} />
                   <input required type="time" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-xs" value={formData.hora} onChange={e => setFormData({ ...formData, hora: e.target.value })} />
                 </div>
-                <select className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white" value={formData.tipo} onChange={e => setFormData({ ...formData, tipo: e.target.value as any })}>
+                <select
+                  className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white ${user.role === 'sala' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  value={formData.tipo}
+                  onChange={e => setFormData({ ...formData, tipo: e.target.value as any })}
+                  disabled={user.role === 'sala'}
+                >
                   <option>Mudança</option>
-                  <option>Manutenção</option>
-                  <option>Reserva</option>
-                  <option>Reunião</option>
+                  {(user.role !== 'sala') && (
+                    <>
+                      <option>Manutenção</option>
+                      <option>Reserva</option>
+                      <option>Reunião</option>
+                    </>
+                  )}
                 </select>
                 <input required type="text" placeholder="Local/Ambiente" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white" value={formData.local} onChange={e => setFormData({ ...formData, local: e.target.value })} />
                 <button type="submit" className="w-full py-4 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">Confirmar Agendamento</button>
@@ -151,6 +375,19 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                   <span className="text-sm font-bold text-slate-600 dark:text-slate-300">Ativos</span>
                   <span className="text-lg font-black text-amber-500">{agendamentos.filter(a => a.status !== 'Cancelado').length}</span>
                 </div>
+              </div>
+
+              {/* CARD DE INFORMAÇÃO SOBRE MUDANÇAS */}
+              <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-800">
+                <h5 className="flex items-center gap-2 text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2">
+                  <span className="material-symbols-outlined text-sm">info</span>
+                  Regras de Mudança
+                </h5>
+                <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1">
+                  <li>• <b>Seg-Sex:</b> 19:00 - 23:59</li>
+                  <li>• <b>Sábado:</b> 14:00 - 23:59</li>
+                  <li>• <b>Domingos/Feriados:</b> Bloqueado/Sob consulta</li>
+                </ul>
               </div>
             </div>
           )}

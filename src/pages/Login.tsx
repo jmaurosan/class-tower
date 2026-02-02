@@ -24,6 +24,7 @@ const Login: React.FC<LoginProps> = ({ signIn, isDarkMode, toggleDarkMode }) => 
 
     try {
       await signIn(email, password);
+      // Login bem-sucedido! O estado global (useAuth) vai atualizar e redirecionar automaticamente.
     } catch (err: any) {
       console.error('Login error:', err);
       if (err.message === 'Invalid login credentials') {

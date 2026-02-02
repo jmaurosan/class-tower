@@ -146,10 +146,10 @@ const SignUp: React.FC<SignUpProps> = ({ isDarkMode, toggleDarkMode }) => {
                 onChange={(e) => setFormData({ ...formData, salaNumero: e.target.value })}
                 placeholder="Ex: 101"
                 required
-                className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 rounded-xl 
+                className="w-full px-4 py-3.5 border border-slate-300 dark:border-slate-700 rounded-2xl
                   bg-white dark:bg-slate-800 text-slate-900 dark:text-white
                   focus:ring-2 focus:ring-primary focus:border-transparent
-                  placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm"
               />
             </div>
 
@@ -164,10 +164,10 @@ const SignUp: React.FC<SignUpProps> = ({ isDarkMode, toggleDarkMode }) => {
                 onChange={(e) => setFormData({ ...formData, nomeCompleto: e.target.value })}
                 placeholder="Conforme cadastrado na administração"
                 required
-                className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 rounded-xl 
+                className="w-full px-4 py-3.5 border border-slate-300 dark:border-slate-700 rounded-2xl
                   bg-white dark:bg-slate-800 text-slate-900 dark:text-white
                   focus:ring-2 focus:ring-primary focus:border-transparent
-                  placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm"
               />
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Digite exatamente como está cadastrado na administração
@@ -185,10 +185,10 @@ const SignUp: React.FC<SignUpProps> = ({ isDarkMode, toggleDarkMode }) => {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="seu@email.com"
                 required
-                className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 rounded-xl 
+                className="w-full px-4 py-3.5 border border-slate-300 dark:border-slate-700 rounded-2xl
                   bg-white dark:bg-slate-800 text-slate-900 dark:text-white
                   focus:ring-2 focus:ring-primary focus:border-transparent
-                  placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm"
               />
             </div>
 
@@ -235,8 +235,8 @@ const SignUp: React.FC<SignUpProps> = ({ isDarkMode, toggleDarkMode }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-primary text-white font-bold rounded-xl 
-                hover:scale-105 active:scale-95 transition-all
+              className="w-full py-4 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20
+                hover:scale-[1.02] active:scale-95 transition-all
                 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
                 flex items-center justify-center gap-2"
             >
@@ -248,7 +248,7 @@ const SignUp: React.FC<SignUpProps> = ({ isDarkMode, toggleDarkMode }) => {
               ) : (
                 <>
                   <span className="material-symbols-outlined">person_add</span>
-                  Criar Conta
+                  <span className="text-sm uppercase tracking-widest">Criar Conta</span>
                 </>
               )}
             </button>

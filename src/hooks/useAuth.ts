@@ -39,6 +39,8 @@ export const useAuth = () => {
   }, []);
 
   const fetchProfile = async (id: string) => {
+    console.log('👤 [PROFILE] Buscando perfil...', { id });
+
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -46,9 +48,13 @@ export const useAuth = () => {
         .eq('id', id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [PROFILE] Erro ao buscar perfil:', error);
+        throw error;
+      }
 
       if (data) {
+        console.log('✅ [PROFILE] Perfil encontrado:', data);
         setUser({
           id: data.id,
           name: data.full_name || data.email?.split('@')[0],
@@ -57,9 +63,11 @@ export const useAuth = () => {
           avatar: data.avatar_url || `https://picsum.photos/seed/${data.id}/100/100`,
           sala_numero: data.sala_numero
         });
+      } else {
+        console.warn('⚠️ [PROFILE] Perfil não encontrado para o usuário');
       }
     } catch (err) {
-      console.error('Error fetching profile:', err);
+      console.error('❌ [PROFILE] Exceção ao buscar perfil:', err);
     } finally {
       setLoading(false);
     }
@@ -70,11 +78,32 @@ export const useAuth = () => {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) throw error;
+    console.log('🔐 [AUTH] Iniciando login...', { email });
+    console.log('🔐 [AUTH] Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error('❌ [AUTH] Erro no login:', error);
+        throw error;
+      }
+
+      console.log('✅ [AUTH] Login bem-sucedido!', data);
+
+      // Forçar busca do perfil imediatamente
+      if (data.session?.user?.id) {
+        await fetchProfile(data.session.user.id);
+      }
+
+      return data;
+    } catch (err) {
+      console.error('❌ [AUTH] Exceção capturada:', err);
+      throw err;
+    }
   };
 
   return { user, setUser, loading, logout, signIn, isAuthenticated: !!user };

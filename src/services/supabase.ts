@@ -9,7 +9,16 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Initialize with a dummy client if keys are missing to avoid throwing at module level
+// Initialize with session storage persistence (logout on tab close)
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder'
+  supabaseAnonKey || 'placeholder',
+  {
+    auth: {
+      storage: window.sessionStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    }
+  }
 );

@@ -33,10 +33,10 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           required={required}
-          className={`w-full px-4 py-3 pr-12 border border-slate-300 dark:border-slate-700 rounded-xl 
+          className={`w-full px-4 py-3.5 pr-12 border border-slate-300 dark:border-slate-700 rounded-2xl 
             bg-white dark:bg-slate-800 text-slate-900 dark:text-white
             focus:ring-2 focus:ring-primary focus:border-transparent
-            placeholder:text-slate-400 dark:placeholder:text-slate-500
+            placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm
             transition-all ${className}`}
         />
         <button

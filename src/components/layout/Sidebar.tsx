@@ -18,7 +18,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
     { id: 'encomendas', icon: 'package_2', label: 'Encomendas', roles: ['admin', 'atendente', 'sala'] },
     { id: 'vistorias', icon: 'fact_check', label: 'Vistorias', roles: ['admin'] },
     { id: 'vencimentos', icon: 'assignment_late', label: 'Vencimentos', roles: ['admin'] },
-    { id: 'agendamentos', icon: 'calendar_today', label: 'Calendário', roles: ['admin', 'atendente'] },
+    { id: 'agendamentos', icon: 'calendar_today', label: 'Calendário', roles: ['admin', 'atendente', 'sala'] },
     { id: 'diario', icon: 'menu_book', label: 'Ocorrências', roles: ['admin', 'atendente'] },
     { id: 'documentos', icon: 'folder_open', label: 'Documentos', roles: ['admin', 'sala'] },
     { id: 'usuarios', icon: 'group', label: 'Equipe e Usuários', roles: ['admin'] },
@@ -60,8 +60,8 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
               <span className="material-symbols-outlined text-2xl">domain</span>
             </div>
             <div className="flex flex-col">
-              <h1 className="text-slate-900 dark:text-white text-lg font-extrabold leading-tight">Class Tower</h1>
-              <p className="text-slate-500 dark:text-slate-500 text-[10px] font-semibold uppercase tracking-wider">Gestão Condominial</p>
+              <h1 className="text-slate-900 dark:text-white text-lg font-extrabold leading-tight">Class Tower Business</h1>
+              <p className="text-slate-500 dark:text-slate-500 text-[10px] font-semibold uppercase tracking-wider truncate max-w-[150px]">{user.name}</p>
             </div>
           </div>
           <button
