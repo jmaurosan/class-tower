@@ -1,6 +1,6 @@
 
-import React, { useState, useMemo } from 'react';
-import { Vistoria } from '../types';
+import React, { useMemo, useState } from 'react';
+import { Vistoria } from '../../types';
 
 interface ModalNovoRegistroProps {
   isOpen: boolean;
@@ -16,7 +16,7 @@ const ModalNovoRegistro: React.FC<ModalNovoRegistroProps> = ({ isOpen, onClose, 
   const [areas, setAreas] = useState(['Elétrica', 'Hidráulica', 'Estrutural', 'HVAC', 'Segurança']);
   const [isManagingAreas, setIsManagingAreas] = useState(false);
   const [newAreaInput, setNewAreaInput] = useState('');
-  
+
   const unidadesOptions = useMemo(() => {
     const andares = Array.from({ length: 17 }, (_, i) => `${i + 1}º Andar`);
     const locais = ['Algibre', 'Estacionamento', 'Jardim', 'Recepção', 'Subsolo 1', 'Subsolo 2', 'Subsolo 3', 'Terraço'];
@@ -55,16 +55,16 @@ const ModalNovoRegistro: React.FC<ModalNovoRegistroProps> = ({ isOpen, onClose, 
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Unidade</label>
-              <select 
+              <select
                 required
                 className={selectClass}
                 value={formData.unidade}
-                onChange={e => setFormData({...formData, unidade: e.target.value})}
+                onChange={e => setFormData({ ...formData, unidade: e.target.value })}
               >
                 {unidadesOptions.map(option => (
                   <option key={option} value={option}>{option}</option>
@@ -73,33 +73,33 @@ const ModalNovoRegistro: React.FC<ModalNovoRegistroProps> = ({ isOpen, onClose, 
             </div>
             <div className="space-y-1">
               <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Horário</label>
-              <input 
+              <input
                 required
                 type="time"
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 outline-none text-sm"
                 value={formData.hora}
-                onChange={e => setFormData({...formData, hora: e.target.value})}
+                onChange={e => setFormData({ ...formData, hora: e.target.value })}
               />
             </div>
           </div>
 
           <div className="space-y-1">
             <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Local</label>
-            <input 
+            <input
               required
               type="text"
               placeholder="Ex: Sala de máquinas, Hall A..."
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm transition-all"
               value={formData.local}
-              onChange={e => setFormData({...formData, local: e.target.value})}
+              onChange={e => setFormData({ ...formData, local: e.target.value })}
             />
           </div>
 
           <div className="space-y-3">
             <div className="flex justify-between items-center px-1">
               <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Área de Atuação</label>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setIsManagingAreas(!isManagingAreas)}
                 className={`text-[10px] font-black uppercase tracking-tighter px-2 py-1 rounded transition-colors ${isManagingAreas ? 'bg-primary text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}
               >
@@ -110,21 +110,21 @@ const ModalNovoRegistro: React.FC<ModalNovoRegistroProps> = ({ isOpen, onClose, 
             {isManagingAreas ? (
               <div className="space-y-3 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 animate-in slide-in-from-top-2">
                 <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    placeholder="Nova área..." 
+                  <input
+                    type="text"
+                    placeholder="Nova área..."
                     className="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs dark:text-white outline-none focus:ring-1 focus:ring-primary"
                     value={newAreaInput}
                     onChange={e => setNewAreaInput(e.target.value)}
                   />
-                  <button type="button" onClick={() => { if(newAreaInput.trim()) setAreas([...areas, newAreaInput.trim()]); setNewAreaInput(''); }} className="p-2 bg-primary text-white rounded-lg"><span className="material-symbols-outlined text-sm">add</span></button>
+                  <button type="button" onClick={() => { if (newAreaInput.trim()) setAreas([...areas, newAreaInput.trim()]); setNewAreaInput(''); }} className="p-2 bg-primary text-white rounded-lg"><span className="material-symbols-outlined text-sm">add</span></button>
                 </div>
               </div>
             ) : (
-              <select 
+              <select
                 className={selectClass}
                 value={formData.area}
-                onChange={e => setFormData({...formData, area: e.target.value})}
+                onChange={e => setFormData({ ...formData, area: e.target.value })}
               >
                 {areas.map(a => <option key={a} value={a}>{a}</option>)}
               </select>
@@ -138,14 +138,13 @@ const ModalNovoRegistro: React.FC<ModalNovoRegistroProps> = ({ isOpen, onClose, 
                 <button
                   key={opt}
                   type="button"
-                  onClick={() => setFormData({...formData, urgencia: opt})}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border ${
-                    formData.urgencia === opt 
-                    ? opt === 'Alta' ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/20' :
-                      opt === 'Média' ? 'bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-500/20' :
-                      'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20'
-                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500'
-                  }`}
+                  onClick={() => setFormData({ ...formData, urgencia: opt })}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border ${formData.urgencia === opt
+                      ? opt === 'Alta' ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/20' :
+                        opt === 'Média' ? 'bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-500/20' :
+                          'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500'
+                    }`}
                 >
                   {opt}
                 </button>
@@ -155,33 +154,33 @@ const ModalNovoRegistro: React.FC<ModalNovoRegistroProps> = ({ isOpen, onClose, 
 
           <div className="space-y-1">
             <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Descrição dos Problemas</label>
-            <textarea 
+            <textarea
               rows={3}
               placeholder="Relate as irregularidades..."
               className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 outline-none text-sm transition-all resize-none"
               value={formData.descricao}
-              onChange={e => setFormData({...formData, descricao: e.target.value})}
+              onChange={e => setFormData({ ...formData, descricao: e.target.value })}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Técnico</label>
-              <input 
+              <input
                 required
                 type="text"
                 placeholder="Nome"
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 outline-none text-sm"
                 value={formData.tecnico}
-                onChange={e => setFormData({...formData, tecnico: e.target.value})}
+                onChange={e => setFormData({ ...formData, tecnico: e.target.value })}
               />
             </div>
             <div className="space-y-1">
               <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Status</label>
-              <select 
+              <select
                 className={selectClass}
                 value={formData.status}
-                onChange={e => setFormData({...formData, status: e.target.value as any})}
+                onChange={e => setFormData({ ...formData, status: e.target.value as any })}
               >
                 <option>Pendente</option>
                 <option>Em Andamento</option>

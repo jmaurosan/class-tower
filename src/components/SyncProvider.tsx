@@ -29,7 +29,7 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
       switch (item.module) {
         case 'encomendas':
           if (item.action === 'create') await encomendasService.create(item.payload);
-          if (item.action === 'updateStatus') await encomendasService.updateStatus(item.payload.id, item.payload.status, item.payload.quemRetirou);
+          if (item.action === 'updateStatus') await encomendasService.updateStatus(item.payload.id, { status: item.payload.status, quemRetirou: item.payload.quemRetirou });
           break;
         case 'avisos':
           if (item.action === 'create') await avisosService.create(item.payload);

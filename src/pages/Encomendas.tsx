@@ -98,6 +98,7 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
         caracteristicas: `${newPackage.caracteristicas || ''} [Recebido em: ${newPackage.destinatarioOriginal || 'N/A'}]`,
         status: 'Pendente',
         fotoUrl: foto_url,
+        dataEntrada: new Date().toISOString(), // Ignorado pelo backend (usando created_at)
         sala_id: newPackage.destinatario?.replace('Unidade ', '') || '0000'
       });
 

@@ -18,7 +18,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
     { id: 'encomendas', icon: 'package_2', label: 'Encomendas', roles: ['admin', 'atendente', 'sala'] },
     { id: 'vistorias', icon: 'fact_check', label: 'Vistorias', roles: ['admin'] },
     { id: 'vencimentos', icon: 'assignment_late', label: 'Vencimentos', roles: ['admin'] },
-    { id: 'agendamentos', icon: 'calendar_today', label: 'Calendário', roles: ['admin', 'atendente', 'sala'] },
+    { id: 'agendamentos', icon: 'calendar_today', label: 'Agendamentos', roles: ['admin', 'atendente', 'sala'] },
     { id: 'diario', icon: 'menu_book', label: 'Ocorrências', roles: ['admin', 'atendente'] },
     { id: 'documentos', icon: 'folder_open', label: 'Documentos', roles: ['admin', 'sala'] },
     { id: 'usuarios', icon: 'group', label: 'Equipe e Usuários', roles: ['admin'] },

@@ -72,11 +72,12 @@ export interface Vistoria {
   hora: string;
   unidade: string;
   local?: string;
-  area: string;
+  area?: string;
   tecnico: string;
   urgencia: 'Alta' | 'Média' | 'Baixa';
   status: 'Concluído' | 'Pendente' | 'Em Andamento';
   descricao?: string;
+  fotoUrl?: string;
 }
 
 export interface DiarioEntry {
