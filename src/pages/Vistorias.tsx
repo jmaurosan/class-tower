@@ -88,9 +88,9 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
               <button
                 key={status}
                 onClick={() => setFilter(status)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${filter === status
-                    ? 'bg-primary text-white shadow-md shadow-primary/20'
-                    : 'bg-white dark:bg-[#1d222a] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-primary/50'
+                className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all border ${filter === status
+                  ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
+                  : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-primary/50'
                   }`}
               >
                 {status}
@@ -172,7 +172,7 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
                   <td className="px-6 py-5 text-sm text-slate-500 dark:text-slate-400">{v.tecnico}</td>
                   <td className="px-6 py-5">
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold ${v.status === 'Concluído' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' :
-                        v.status === 'Pendente' ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600' : 'bg-blue-50 dark:bg-blue-900/20 text-blue-600'
+                      v.status === 'Pendente' ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600' : 'bg-blue-50 dark:bg-blue-900/20 text-blue-600'
                       }`}>
                       {v.status}
                     </span>

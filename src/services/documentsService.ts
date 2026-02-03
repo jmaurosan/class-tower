@@ -24,39 +24,62 @@ export const documentsService = {
   },
 
   async upload(file: File, docInfo: { nome: string, categoria: string }) {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${docInfo.nome.replace(/\s/g, '_')}.${fileExt}`;
-    const filePath = `condominio/${fileName}`;
+    try {
+      if (!file) throw new Error('Arquivo não selecionado');
 
-    // 1. Upload for Storage
-    const { error: uploadError } = await supabase.storage
-      .from('documentos')
-      .upload(filePath, file);
+      const fileExt = file.name.split('.').pop() || 'tmp';
+      // Sanitize file name to remove special chars
+      const safeName = docInfo.nome.replace(/[^a-zA-Z0-9\s-_]/g, '').trim().replace(/\s+/g, '_');
+      const fileName = `${Date.now()}_${safeName}.${fileExt}`;
+      const filePath = `condominio/${fileName}`;
 
-    if (uploadError) throw uploadError;
+      // 1. Upload for Storage
+      const { error: uploadError } = await supabase.storage
+        .from('documentos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-    // 2. Get Public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('documentos')
-      .getPublicUrl(filePath);
+      if (uploadError) {
+        console.error('Erro no Storage:', uploadError);
+        throw new Error(`Erro ao enviar arquivo: ${uploadError.message}`);
+      }
 
-    // 3. Save Metadata in Database
-    const { data, error: dbError } = await supabase
-      .from('documentos')
-      .insert([{
-        nome: docInfo.nome,
-        categoria: docInfo.categoria,
-        tamanho: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-        tipo: fileExt || 'pdf',
-        url: publicUrl,
-        storage_path: filePath
-      }])
-      .select()
-      .single();
+      // 2. Get Public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('documentos')
+        .getPublicUrl(filePath);
 
-    if (dbError) throw dbError;
-    return data;
+      // 3. Save Metadata in Database
+      const { data, error: dbError } = await supabase
+        .from('documentos')
+        .insert([{
+          nome: docInfo.nome,
+          categoria: docInfo.categoria,
+          tamanho: file.size < 1024 * 1024
+            ? `${(file.size / 1024).toFixed(2)} KB`
+            : `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+          tipo: fileExt,
+          url: publicUrl,
+          storage_path: filePath
+        }])
+        .select()
+        .single();
+
+      if (dbError) {
+        console.error('Erro no Banco:', dbError);
+        await supabase.storage.from('documentos').remove([filePath]);
+        throw new Error(`Erro ao salvar metadados: ${dbError.message}`);
+      }
+
+      return data;
+    } catch (error: any) {
+      console.error('❌ Upload Service Error:', error);
+      throw error;
+    }
   },
+
 
   async delete(doc: DocumentoAnexo) {
     // 1. Delete from Storage
