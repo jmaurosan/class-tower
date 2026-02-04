@@ -1,8 +1,8 @@
 {
-  "status": "commited",
+  "status": "init",
   "type": "frontend",
   "scope": "codebase",
-  "localEndpoint": "http://localhost:3000",
+  "localEndpoint": "http://localhost:3000/",
   "loginUser": "mauromonit@gmail.com",
   "loginPassword": "Tower@9644#",
   "executionArgs": {
@@ -16,5 +16,6 @@
       "API_KEY": "sk-user-O8P5qT_lRfY5MjavyWa-QDD6Oozl6N55_2VTJxp6XWdMEPFW-8a7GKSGcBnk_jJuZdRdvejvwdtGWZf0PDU79oUoYGZ-Z6LjCTh4ycqVhQTNsvv24CL8YACqwsbwhVZuCSc"
     }
   },
-  "proxy": "http://934d4def-182d-4506-ab8e-775a8ab4b722:0lscRrSeCPDTbBPXRu8CGE8GnzxcvYOT@tun.testsprite.com:8080"
+  "proxy": "http://934d4def-182d-4506-ab8e-775a8ab4b722:0lscRrSeCPDTbBPXRu8CGE8GnzxcvYOT@tun.testsprite.com:8080",
+  "serverPort": 56910
 }

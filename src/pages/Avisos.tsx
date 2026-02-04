@@ -42,7 +42,7 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
         ...formData,
         data: agora.toISOString().split('T')[0],
         hora: agora.toTimeString().split(' ')[0].substring(0, 5),
-        criado_por: user.name
+        criado_por: user.id
       });
 
       setShowForm(false);
@@ -75,9 +75,9 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
         {canManage && (
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold transition-all shadow-lg shadow-primary/20 active:scale-95"
+            className="flex items-center gap-2 px-5 py-2 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
           >
-            <span className="material-symbols-outlined">{showForm ? 'close' : 'add_alert'}</span>
+            <span className="material-symbols-outlined text-xl">{showForm ? 'close' : 'add_alert'}</span>
             {showForm ? 'Cancelar' : 'Novo Aviso'}
           </button>
         )}
@@ -110,7 +110,7 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
                   </select>
                 </div>
 
-                <button type="submit" className="w-full py-4 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">Publicar Agora</button>
+                <button type="submit" className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-sm">Publicar Agora</button>
               </form>
             </div>
           </div>

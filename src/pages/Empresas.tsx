@@ -28,8 +28,9 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
 
   const fetchEmpresas = async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
-        .from('prestadores')
+        .from('empresas')
         .select('*')
         .order('nome', { ascending: true });
 
@@ -95,12 +96,13 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
 
     try {
       const { error } = await supabase
-        .from('prestadores')
+        .from('empresas')
         .insert([{
           ...formData,
           setor: finalSetor,
           status: 'Em Revisão',
-          rating: 0
+          rating: 0,
+          sala_id: user.sala_numero
         }]);
 
       if (error) throw error;
@@ -154,10 +156,10 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
         {canManage && (
           <button
             onClick={() => setShowForm(!showForm)}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg active:scale-95 ${showForm ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-white' : 'bg-primary text-white shadow-primary/20'
+            className={`flex items-center gap-2 px-5 py-2 rounded-xl font-bold transition-all shadow-lg active:scale-95 text-sm ${showForm ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-white' : 'bg-primary text-white shadow-primary/20'
               }`}
           >
-            <span className="material-symbols-outlined">{showForm ? 'close' : 'person_add'}</span>
+            <span className="material-symbols-outlined text-xl">{showForm ? 'close' : 'person_add'}</span>
             {showForm ? 'Cancelar' : 'Novo Prestador'}
           </button>
         )}
@@ -232,7 +234,7 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
               </div>
             </div>
             <div className="pt-2">
-              <button type="submit" className="w-full md:w-auto px-8 py-4 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+              <button type="submit" className="w-full md:w-auto px-6 py-2 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-sm">
                 Salvar Cadastro de Prestador
               </button>
             </div>
@@ -245,7 +247,7 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
           <button
             key={setor}
             onClick={() => setFilterSetor(setor)}
-            className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all border ${filterSetor === setor
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all border ${filterSetor === setor
               ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
               : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-primary/50'
               }`}

@@ -87,7 +87,7 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
           password: formData.password,
           options: {
             data: {
-              name: formData.name,
+              full_name: formData.name,
               role: formData.role,
               sala_numero: formData.sala_numero
             },
@@ -197,9 +197,9 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
             });
             setShowModal(true);
           }}
-          className="px-6 py-3 bg-primary text-white font-bold rounded-xl hover:scale-105 transition-all flex items-center gap-2"
+          className="px-5 py-2 bg-primary text-white font-bold rounded-xl hover:scale-105 transition-all flex items-center gap-2 text-sm"
         >
-          <span className="material-symbols-outlined">add</span>
+          <span className="material-symbols-outlined text-xl">add</span>
           Novo Usuário
         </button>
       </div>

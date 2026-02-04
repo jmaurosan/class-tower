@@ -91,9 +91,9 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
         {canUpload && (
           <button
             onClick={() => setShowUploadModal(true)}
-            className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all"
+            className="flex items-center gap-2 px-5 py-2 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
           >
-            <span className="material-symbols-outlined">cloud_upload</span>
+            <span className="material-symbols-outlined text-xl">cloud_upload</span>
             Anexar Documento
           </button>
         )}
@@ -104,7 +104,7 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
           <button
             key={cat}
             onClick={() => setFilter(cat)}
-            className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all border ${filter === cat
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all border ${filter === cat
               ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
               : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-primary/50'
               }`}

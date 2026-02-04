@@ -88,7 +88,7 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
               <button
                 key={status}
                 onClick={() => setFilter(status)}
-                className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all border ${filter === status
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all border ${filter === status
                   ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
                   : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-primary/50'
                   }`}
@@ -101,9 +101,9 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
           {isAdmin && (
             <button
               onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all"
+              className="flex items-center gap-2 px-5 py-2 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
             >
-              <span className="material-symbols-outlined">add_task</span>
+              <span className="material-symbols-outlined text-xl">add_task</span>
               Nova Vistoria
             </button>
           )}
@@ -129,7 +129,7 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
                 <input placeholder="Técnico" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white" value={formData.tecnico} onChange={e => setFormData({ ...formData, tecnico: e.target.value })} />
               </div>
               <textarea rows={3} placeholder="Descrição técnica do problema/vistoria..." className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white resize-none" value={formData.descricao} onChange={e => setFormData({ ...formData, descricao: e.target.value })} />
-              <button type="submit" className="w-full py-4 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">Salvar Vistoria</button>
+              <button type="submit" className="w-full py-3 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-sm">Salvar Vistoria</button>
             </form>
           </div>
         )}

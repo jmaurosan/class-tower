@@ -171,9 +171,9 @@ const Settings: React.FC<SettingsProps> = ({ user, onUpdateUser }) => {
         <div className="md:col-span-2 bg-white dark:bg-[#1d222a] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
           <button
             onClick={() => setShowPasswordModal(true)}
-            className="flex items-center gap-3 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            className="flex items-center gap-2 px-4 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
           >
-            <span className="material-symbols-outlined text-xl">lock_reset</span>
+            <span className="material-symbols-outlined text-lg">lock_reset</span>
             Alterar Senha de Acesso
           </button>
         </div>
@@ -181,7 +181,7 @@ const Settings: React.FC<SettingsProps> = ({ user, onUpdateUser }) => {
 
       <div className="flex justify-end gap-3 pt-4">
         <button onClick={() => setLocalUser(user)} className="px-6 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">Descartar</button>
-        <button onClick={handleSave} className="px-8 py-2.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">Salvar Alterações</button>
+        <button onClick={handleSave} className="px-6 py-2 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-sm">Salvar Alterações</button>
       </div>
 
       {/* Modal de Alteração de Senha */}

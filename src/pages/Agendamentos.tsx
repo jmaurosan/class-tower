@@ -158,7 +158,8 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
         .insert([{
           ...formData,
           status: 'Pendente',
-          sala_id: user.sala_numero || '0000'
+          sala_id: user.sala_numero || '0000',
+          user_id: user.id
         }]);
 
       if (error) throw error;
@@ -174,7 +175,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
           prioridade: 'Media',
           data: agora.toISOString().split('T')[0],
           hora: agora.toTimeString().split(' ')[0].substring(0, 5),
-          criado_por: 'Sistema'
+          criado_por: user.id
         }]);
       }
 
@@ -256,17 +257,17 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
           {user.role === 'admin' && (
             <button
               onClick={() => setShowRulesModal(!showRulesModal)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 dark:bg-slate-700 text-white rounded-xl font-bold hover:bg-slate-700 transition-all"
+              className="flex items-center gap-2 px-5 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-xl font-bold hover:bg-slate-700 transition-all text-sm"
             >
-              <span className="material-symbols-outlined">edit_calendar</span>
+              <span className="material-symbols-outlined text-xl">edit_calendar</span>
               Configurar Feriados
             </button>
           )}
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold transition-all shadow-lg shadow-primary/20 active:scale-95"
+            className="flex items-center gap-2 px-5 py-2 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
           >
-            <span className="material-symbols-outlined">{showForm ? 'close' : 'calendar_add_on'}</span>
+            <span className="material-symbols-outlined text-xl">{showForm ? 'close' : 'calendar_add_on'}</span>
             {showForm ? 'Cancelar' : 'Agendar Novo'}
           </button>
         </div>
@@ -360,7 +361,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                   )}
                 </select>
                 <input required type="text" placeholder="Local/Ambiente" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white" value={formData.local} onChange={e => setFormData({ ...formData, local: e.target.value })} />
-                <button type="submit" className="w-full py-4 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">Confirmar Agendamento</button>
+                <button type="submit" className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-sm">Confirmar Agendamento</button>
               </form>
             </div>
           ) : (

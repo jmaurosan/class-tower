@@ -20,7 +20,7 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
   const fetchEntries = async () => {
     try {
       const { data, error } = await supabase
-        .from('ocorrencias')
+        .from('diario')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -34,7 +34,7 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
           titulo: item.titulo,
           descricao: item.descricao,
           categoria: item.categoria,
-          usuario: item.usuario_nome,
+          usuario: item.usuario,
           sala_id: item.sala_id
         }));
         setEntries(mappedData);
@@ -50,8 +50,8 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
     fetchEntries();
 
     const channel = supabase
-      .channel('ocorrencias_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'ocorrencias' }, () => {
+      .channel('diario_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'diario' }, () => {
         fetchEntries();
       })
       .subscribe();
@@ -89,7 +89,7 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
     try {
       if (editingId) {
         const { error } = await supabase
-          .from('ocorrencias')
+          .from('diario')
           .update({
             titulo: newEntry.titulo,
             descricao: newEntry.descricao,
@@ -101,13 +101,14 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
         setEditingId(null);
       } else {
         const { error } = await supabase
-          .from('ocorrencias')
+          .from('diario')
           .insert([{
             titulo: newEntry.titulo,
             descricao: newEntry.descricao,
             categoria: newEntry.categoria,
-            usuario_nome: user.name,
-            sala_id: user.sala_numero
+            usuario: user.name,
+            sala_id: user.sala_numero,
+            user_id: user.id
           }]);
 
         if (error) throw error;
@@ -137,7 +138,7 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
 
     try {
       const { error } = await supabase
-        .from('ocorrencias')
+        .from('diario')
         .delete()
         .eq('id', id);
 
