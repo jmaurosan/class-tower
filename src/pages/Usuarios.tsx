@@ -14,6 +14,7 @@ interface UserForm {
   name: string;
   role: 'admin' | 'atendente' | 'sala';
   sala_numero: string;
+  permissions: Record<string, boolean>;
 }
 
 const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
@@ -25,8 +26,9 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
     email: '',
     password: '',
     name: '',
-    role: 'sala', // Changed from morador to match UserRole 'sala'
-    sala_numero: '0000'
+    role: 'sala',
+    sala_numero: '0000',
+    permissions: {}
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -74,6 +76,7 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
             full_name: formData.name,
             role: formData.role,
             sala_numero: formData.sala_numero,
+            permissions: formData.permissions,
             updated_at: new Date().toISOString()
           })
           .eq('id', editingUser.id);
@@ -89,9 +92,10 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
             data: {
               full_name: formData.name,
               role: formData.role,
-              sala_numero: formData.sala_numero
+              sala_numero: formData.sala_numero,
+              permissions: formData.permissions
             },
-            emailRedirectTo: `${window.location.origin}/auth/callback`
+            emailRedirectTo: window.location.origin
           }
         });
 
@@ -126,9 +130,29 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
       password: '',
       name: user.full_name || '',
       role: user.role || 'sala',
-      sala_numero: user.sala_numero || '0000'
+      sala_numero: user.sala_numero || '',
+      permissions: user.permissions || {}
     });
     setShowModal(true);
+  };
+
+  const toggleBlockStatus = async (user: any) => {
+    const newStatus = user.status === 'Bloqueado' ? 'Ativo' : 'Bloqueado';
+    if (!confirm(`Deseja realmente ${newStatus === 'Bloqueado' ? 'Bloquear' : 'Desbloquear'} este usuário?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: newStatus })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setSuccess(`Usuário ${newStatus === 'Bloqueado' ? 'bloqueado' : 'desbloqueado'} com sucesso!`);
+      loadUsers();
+    } catch (err: any) {
+      console.error('Erro ao alternar status:', err);
+      setError('Erro ao alterar status do usuário');
+    }
   };
 
   const handleDelete = async (userId: string) => {
@@ -152,19 +176,27 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
   };
 
   const getRoleBadge = (role: string) => {
-    const styles = {
-      admin: 'bg-red-500/10 text-red-500 border-red-500/20',
-      atendente: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-      sala: 'bg-green-500/10 text-green-500 border-green-500/20'
-    };
+    const lowerRole = (role || '').toLowerCase();
+    let normalizedRole = 'sala';
+
+    if (lowerRole.includes('admin')) normalizedRole = 'admin';
+    else if (lowerRole.includes('atendente') || lowerRole.includes('colaborador')) normalizedRole = 'atendente';
+
     const labels = {
       admin: 'Admin',
       atendente: 'Atendente',
-      sala: 'Condômino'
+      sala: 'Unidade Comercial'
     };
+
+    const colors = {
+      admin: 'bg-red-500/10 text-red-500 border-red-500/20',
+      atendente: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+      sala: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+    };
+
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-bold border ${styles[role as keyof typeof styles]}`}>
-        {labels[role as keyof typeof labels]}
+      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${colors[normalizedRole as keyof typeof colors]}`}>
+        {labels[normalizedRole as keyof typeof labels]}
       </span>
     );
   };
@@ -231,6 +263,7 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
                 <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Email</th>
                 <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Perfil</th>
                 <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Apartamento</th>
+                <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-4 text-right text-xs font-black text-slate-500 uppercase tracking-wider">Ações</th>
               </tr>
             </thead>
@@ -243,7 +276,20 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{user.email || 'Sem email'}</td>
                   <td className="px-6 py-4">{getRoleBadge(user.role)}</td>
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{user.sala_numero || '-'}</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2 py-1 rounded-lg text-[10px] font-bold ${user.status === 'Bloqueado' ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                      {user.status || 'Ativo'}
+                    </span>
+                  </td>
                   <td className="px-6 py-4 text-right">
+                    <button
+                      onClick={() => toggleBlockStatus(user)}
+                      className={`px-3 py-2 ${user.status === 'Bloqueado' ? 'text-emerald-500 hover:bg-emerald-500/10' : 'text-amber-500 hover:bg-amber-500/10'} rounded-lg transition-colors mr-2`}
+                      title={user.status === 'Bloqueado' ? 'Desbloquear' : 'Bloquear'}
+                      disabled={user.id === currentUser.id}
+                    >
+                      <span className="material-symbols-outlined text-sm">{user.status === 'Bloqueado' ? 'lock_open' : 'lock'}</span>
+                    </button>
                     <button
                       onClick={() => handleEdit(user)}
                       className="px-3 py-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors mr-2"
@@ -323,7 +369,7 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
                   className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white"
                 >
-                  <option value="sala">Condômino</option>
+                  <option value="sala">Unidade Comercial</option>
                   <option value="atendente">Atendente</option>
                   <option value="admin">Administrador</option>
                 </select>
@@ -331,17 +377,50 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
 
               {formData.role === 'sala' && (
                 <div>
-                  <label className="block text-xs font-black text-slate-400 uppercase mb-2">Número do Apartamento</label>
+                  <label className="block text-xs font-black text-slate-400 uppercase mb-2">Número da Unidade / Sala</label>
                   <input
                     type="text"
                     required
                     value={formData.sala_numero}
                     onChange={(e) => setFormData({ ...formData, sala_numero: e.target.value })}
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white"
-                    placeholder="101"
+                    placeholder="Ex: 101 ou Sala 502"
                   />
                 </div>
               )}
+
+              {/* Seção de Permissões */}
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                <label className="block text-xs font-black text-slate-400 uppercase mb-4">Permissões de Acesso (Menu)</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { id: 'dashboard', label: 'Dashboard' },
+                    { id: 'avisos', label: 'Avisos' },
+                    { id: 'encomendas', label: 'Encomendas' },
+                    { id: 'vistorias', label: 'Vistorias' },
+                    { id: 'diario', label: 'Ocorrências' },
+                    { id: 'documentos', label: 'Documentos' },
+                    { id: 'salas', label: 'Salas' },
+                    { id: 'empresas', label: 'Prestadores' }
+                  ].map(mod => (
+                    <label key={mod.id} className="flex items-center gap-2 cursor-pointer group">
+                      <div className="relative flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={formData.permissions[mod.id] ?? false}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            permissions: { ...formData.permissions, [mod.id]: e.target.checked }
+                          })}
+                          className="peer appearance-none size-5 rounded-md border border-slate-200 dark:border-slate-700 checked:bg-primary checked:border-primary transition-all"
+                        />
+                        <span className="material-symbols-outlined absolute text-white text-sm scale-0 peer-checked:scale-100 transition-transform pointer-events-none">check</span>
+                      </div>
+                      <span className="text-sm text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors">{mod.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
 
               <div className="flex gap-3 mt-6">
                 <button

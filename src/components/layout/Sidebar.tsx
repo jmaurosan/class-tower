@@ -13,7 +13,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, isOpen, onClose }) => {
   // Configuração centralizada de itens de menu
   const allMenuItems = [
-    { id: 'dashboard', icon: 'dashboard', label: 'Dashboard', roles: ['admin', 'atendente', 'sala'] },
+    { id: 'dashboard', icon: 'dashboard', label: 'Dashboard', roles: ['admin'] },
     { id: 'avisos', icon: 'campaign', label: 'Portal de Avisos', roles: ['admin', 'atendente', 'sala'] },
     { id: 'encomendas', icon: 'package_2', label: 'Encomendas', roles: ['admin', 'atendente', 'sala'] },
     { id: 'vistorias', icon: 'fact_check', label: 'Vistorias', roles: ['admin'] },
@@ -27,16 +27,33 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
     { id: 'audit-logs', icon: 'history', label: 'Logs de Auditoria', roles: ['admin'] },
   ];
 
-  // Filtra itens permitidos para a role atual
-  const visibleMenuItems = allMenuItems.filter(item => item.roles.includes(user.role));
+  // Filtra itens permitidos para o usuário atual
+  const visibleMenuItems = allMenuItems.filter(item => {
+    // Admin sempre vê tudo por padrão (segurança de redundância)
+    if (user.role === 'admin') return true;
+
+    // Se houver uma permissão específica gravada no banco para este usuário, ela tem prioridade
+    if (user.permissions && typeof user.permissions[item.id] === 'boolean') {
+      return user.permissions[item.id];
+    }
+
+    // Caso contrário, segue a regra padrão da Role
+    return item.roles.includes(user.role);
+  });
 
   const getRoleLabel = (role: string) => {
-    switch (role) {
-      case 'admin': return 'Gestor Predial';
-      case 'atendente': return 'Colaborador';
-      case 'sala': return 'Morador / Sala';
-      default: return role;
+    const lowerRole = (role || '').toLowerCase();
+
+    if (lowerRole.includes('admin')) return 'Gestor Predial';
+    if (lowerRole.includes('atendente') || lowerRole.includes('colaborador')) return 'Colaborador';
+
+    // Padrão para todos os outros casos (incluindo 'sala', 'morador', 'condômino', etc)
+    // Isso garante que "Morador / Sala" nunca seja exibido
+    if (user.sala_numero && user.sala_numero !== '0000') {
+      return `Unidade ${user.sala_numero}`;
     }
+
+    return 'Unidade Comercial';
   };
 
   return (
@@ -61,7 +78,14 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
             </div>
             <div className="flex flex-col">
               <h1 className="text-slate-900 dark:text-white text-lg font-extrabold leading-tight">Class Tower Business</h1>
-              <p className="text-slate-500 dark:text-slate-500 text-[10px] font-semibold uppercase tracking-wider truncate max-w-[150px]">{user.name}</p>
+              <div className="flex flex-col -gap-0.5">
+                <p className="text-slate-500 dark:text-slate-500 text-[10px] font-semibold uppercase tracking-wider truncate max-w-[150px]">{user.name}</p>
+                {user.sala_numero ? (
+                  <p className="text-primary text-[9px] font-black uppercase tracking-tight">Unidade {user.sala_numero}</p>
+                ) : (
+                  <p className="text-slate-400 text-[9px] font-medium uppercase tracking-tight">Perfil de Acesso</p>
+                )}
+              </div>
             </div>
           </div>
           <button
@@ -96,45 +120,54 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
             </button>
           ))}
 
-          <div className="pt-8 pb-4">
-            <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-[0.2em]">Sistemas</p>
-          </div>
+          {user.role === 'admin' && (
+            <>
+              <div className="pt-8 pb-4">
+                <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-[0.2em]">Sistemas</p>
+              </div>
 
-          <button
-            onClick={() => {
-              setCurrentPage('settings');
-              onClose?.();
-            }}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${currentPage === 'settings'
-              ? 'bg-primary/10 text-primary border-r-2 border-primary rounded-r-none'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-              }`}
-          >
-            <span className={`material-symbols-outlined ${currentPage === 'settings' ? 'fill-1' : ''}`}>settings</span>
-            <span className={`text-sm ${currentPage === 'settings' ? 'font-bold' : 'font-medium'}`}>Configurações</span>
-          </button>
-          <button
-            onClick={() => {
-              setCurrentPage('support');
-              onClose?.();
-            }}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${currentPage === 'support'
-              ? 'bg-primary/10 text-primary border-r-2 border-primary rounded-r-none'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-              }`}
-          >
-            <span className={`material-symbols-outlined ${currentPage === 'support' ? 'fill-1' : ''}`}>contact_support</span>
-            <span className={`text-sm ${currentPage === 'support' ? 'font-bold' : 'font-medium'}`}>Suporte</span>
-          </button>
+              <button
+                onClick={() => {
+                  setCurrentPage('settings');
+                  onClose?.();
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${currentPage === 'settings'
+                  ? 'bg-primary/10 text-primary border-r-2 border-primary rounded-r-none'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  }`}
+              >
+                <span className={`material-symbols-outlined ${currentPage === 'settings' ? 'fill-1' : ''}`}>settings</span>
+                <span className={`text-sm ${currentPage === 'settings' ? 'font-bold' : 'font-medium'}`}>Configurações</span>
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentPage('support');
+                  onClose?.();
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${currentPage === 'support'
+                  ? 'bg-primary/10 text-primary border-r-2 border-primary rounded-r-none'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  }`}
+              >
+                <span className={`material-symbols-outlined ${currentPage === 'support' ? 'fill-1' : ''}`}>contact_support</span>
+                <span className={`text-sm ${currentPage === 'support' ? 'font-bold' : 'font-medium'}`}>Suporte</span>
+              </button>
+            </>
+          )}
         </nav>
 
         <div className="p-4 border-t border-slate-100 dark:border-slate-800">
           <div
             onClick={() => {
-              setCurrentPage('settings');
-              onClose?.();
+              if (user.role === 'admin') {
+                setCurrentPage('settings');
+                onClose?.();
+              }
             }}
-            className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl cursor-pointer transition-colors"
+            className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${user.role === 'admin'
+                ? 'hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer'
+                : 'cursor-default'
+              }`}
           >
             <img
               src={user.avatar}

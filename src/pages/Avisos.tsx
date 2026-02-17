@@ -53,6 +53,20 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
     }
   };
 
+  const canManage = user.role === 'admin' || user.role === 'atendente';
+
+  const filteredAvisos = React.useMemo(() => {
+    if (canManage) return avisos;
+
+    return avisos.filter(aviso => {
+      const creatorRole = aviso.creator?.role;
+      // Mostrar se foi criado por staff (admin/atendente)
+      if (creatorRole === 'admin' || creatorRole === 'atendente') return true;
+      // Mostrar se foi criado pelo próprio usuário
+      return aviso.criado_por === user.id;
+    });
+  }, [avisos, user.id, canManage]);
+
   const handleDelete = async (id: string) => {
     if (!confirm('Deseja excluir este aviso?')) return;
     try {
@@ -63,7 +77,6 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
     }
   };
 
-  const canManage = user.role === 'admin' || user.role === 'atendente';
 
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-500">
@@ -118,8 +131,8 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
 
         {/* Lado Direito: Feed de Avisos */}
         <div className={`${showForm && canManage ? 'lg:col-span-3' : 'lg:col-span-4'} space-y-6`}>
-          {avisos.length > 0 ? (
-            avisos.map((aviso) => (
+          {filteredAvisos.length > 0 ? (
+            filteredAvisos.map((aviso) => (
               <div key={aviso.id} className="group relative bg-white dark:bg-[#1d222a] p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                   <div className="space-y-4 flex-1">

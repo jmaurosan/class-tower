@@ -49,24 +49,40 @@ export const useAuth = () => {
         .single();
 
       if (error) {
+        if (error.name === 'AbortError' || error.message?.includes('aborted')) {
+          console.warn('⚠️ [PROFILE] Busca de perfil cancelada (normal no recarregamento)');
+          return;
+        }
         console.error('❌ [PROFILE] Erro ao buscar perfil:', error);
         throw error;
       }
 
       if (data) {
         console.log('✅ [PROFILE] Perfil encontrado:', data);
+
+        // Normalização de Role: Se vier algo como "Morador / Sala", converte para "sala"
+        let normalizedRole: UserRole = 'sala';
+        const rawRole = (data.role || '').toLowerCase();
+
+        if (rawRole.includes('admin')) normalizedRole = 'admin';
+        else if (rawRole.includes('atendente') || rawRole.includes('colaborador')) normalizedRole = 'atendente';
+        else normalizedRole = 'sala';
+
         setUser({
           id: data.id,
-          name: data.full_name || data.email?.split('@')[0],
+          name: data.full_name || data.name || data.email?.split('@')[0],
           email: data.email || '',
-          role: data.role as UserRole || 'sala',
+          role: normalizedRole,
           avatar: data.avatar_url || `https://picsum.photos/seed/${data.id}/100/100`,
-          sala_numero: data.sala_numero
+          sala_numero: data.sala_numero,
+          status: data.status as 'Ativo' | 'Bloqueado',
+          permissions: data.permissions || {}
         });
       } else {
         console.warn('⚠️ [PROFILE] Perfil não encontrado para o usuário');
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (err.name === 'AbortError' || err.message?.includes('aborted')) return;
       console.error('❌ [PROFILE] Exceção ao buscar perfil:', err);
     } finally {
       setLoading(false);

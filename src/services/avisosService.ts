@@ -6,7 +6,7 @@ export const avisosService = {
   async getAll() {
     const { data, error } = await supabase
       .from('avisos')
-      .select('*')
+      .select('*, creator:profiles!criado_por(role)')
       .order('created_at', { ascending: false });
 
     if (error) throw error;

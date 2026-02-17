@@ -10,6 +10,8 @@ export interface User {
   role: UserRole;
   avatar?: string;
   sala_numero?: string;
+  status?: 'Ativo' | 'Bloqueado';
+  permissions?: Record<string, boolean>;
 }
 
 export interface DocumentoAnexo {
@@ -89,6 +91,8 @@ export interface DiarioEntry {
   categoria: 'Segurança' | 'Manutenção' | 'Reclamação' | 'Aviso' | 'Limpeza' | 'Outros';
   usuario: string;
   sala_id?: string;
+  status: 'Pendente' | 'Resolvido';
+  solucao?: string;
 }
 
 export interface Aviso {
@@ -99,6 +103,9 @@ export interface Aviso {
   conteudo: string;
   prioridade: 'Baixa' | 'Media' | 'Alta' | 'Critica';
   criado_por: string;
+  creator?: {
+    role: UserRole;
+  };
 }
 
 export interface Agendamento {
@@ -123,6 +130,17 @@ export interface Empresa {
   status: 'Homologada' | 'Em Revisão' | 'Inativa';
   rating: number;
   sala_id?: string;
+  average_rating?: number;
+  ratings_count?: number;
+}
+
+export interface Avaliacao {
+  id: string;
+  empresa_id: string;
+  user_id: string;
+  rating: number;
+  comentario?: string;
+  created_at: string;
 }
 
 export interface AuditLog {

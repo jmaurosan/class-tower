@@ -25,6 +25,15 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
     return vistorias.filter(v => v.status === filter);
   }, [filter, vistorias]);
 
+  const counts = useMemo(() => {
+    return {
+      Todos: vistorias.length,
+      Pendente: vistorias.filter(v => v.status === 'Pendente').length,
+      'Em Andamento': vistorias.filter(v => v.status === 'Em Andamento').length,
+      Concluído: vistorias.filter(v => v.status === 'Concluído').length,
+    };
+  }, [vistorias]);
+
   const selectedVistoria = useMemo(() => {
     return vistorias.find(v => v.id === selectedId);
   }, [selectedId, vistorias]);
@@ -95,12 +104,18 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
               <button
                 key={status}
                 onClick={() => setFilter(status)}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all border ${filter === status
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all border flex items-center gap-2 ${filter === status
                   ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
                   : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-primary/50'
                   }`}
               >
                 {status}
+                <span className={`px-1.5 py-0.5 rounded-full text-[8px] ${filter === status
+                  ? 'bg-white/20 text-white dark:bg-slate-900/20 dark:text-slate-900'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-400'
+                  }`}>
+                  {counts[status]}
+                </span>
               </button>
             ))}
           </div>

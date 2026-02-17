@@ -53,17 +53,66 @@ const App: React.FC = () => {
     return false;
   });
 
-  const permissions: Record<UserRole, Page[]> = {
+  const defaultPermissions: Record<UserRole, Page[]> = {
     admin: ['dashboard', 'encomendas', 'vistorias', 'vencimentos', 'agendamentos', 'diario', 'documentos', 'empresas', 'settings', 'support', 'salas', 'audit-logs', 'avisos', 'usuarios'],
-    atendente: ['dashboard', 'encomendas', 'agendamentos', 'diario', 'salas', 'empresas', 'support', 'avisos'],
-    sala: ['dashboard', 'encomendas', 'documentos', 'empresas', 'support', 'avisos']
+    atendente: ['encomendas', 'agendamentos', 'diario', 'salas', 'empresas', 'support', 'avisos'],
+    sala: ['encomendas', 'agendamentos', 'documentos', 'empresas', 'support', 'avisos']
+  };
+
+  const isPageAllowed = (page: Page) => {
+    if (!user) return false;
+    if (user.role === 'admin') return true;
+
+    // Se houver permissão customizada no banco, ela manda
+    if (user.permissions && typeof user.permissions[page] === 'boolean') {
+      const allowed = user.permissions[page];
+      console.log(`🔐 [ACCESS] Checando permissão customizada para ${page}:`, allowed);
+      return allowed;
+    }
+
+    // Normalização de segurança: Se a role não for padrão, assumimos 'sala' (menos privilegiado)
+    let safeRole: UserRole = 'sala';
+    const lowerRole = (user.role || '').toLowerCase();
+
+    if (lowerRole.includes('admin')) safeRole = 'admin';
+    else if (lowerRole.includes('atendente') || lowerRole.includes('colaborador')) safeRole = 'atendente';
+
+    const allowed = defaultPermissions[safeRole].includes(page);
+    // console.log(`🔐 [ACCESS] Checando permissão padrão (Role Real: ${user.role} -> ${safeRole}) para ${page}:`, allowed);
+    return allowed;
   };
 
   useEffect(() => {
-    if (user && !permissions[user.role].includes(currentPage)) {
-      setCurrentPage('dashboard');
+    if (user && !isPageAllowed(currentPage)) {
+      console.warn(`🚀 [ROUTER] Acesso negado à página ${currentPage}. Redirecionando...`);
+      // Tenta redirecionar para 'avisos' ou para a primeira página disponível
+      const firstAllowed = defaultPermissions[user.role].find(p => isPageAllowed(p)) || 'avisos';
+      setCurrentPage(firstAllowed as Page);
     }
   }, [currentPage, user]);
+
+  // Tela de Bloqueio caso o usuário esteja inativo
+  if (user && user.status === 'Bloqueado') {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 dark:bg-[#15191e] p-8 text-center transition-colors duration-300">
+        <div className="size-24 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mb-6 animate-bounce">
+          <span className="material-symbols-outlined text-5xl font-bold">block</span>
+        </div>
+        <h1 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter mb-2">Acesso Suspenso</h1>
+        <p className="text-slate-500 max-w-md mb-8">
+          Sua conta foi temporariamente bloqueada pela administração.
+          Entre em contato com o síndico para regularizar seu acesso ao Class Tower.
+        </p>
+        <button
+          onClick={logout}
+          className="px-8 py-3 bg-slate-900 dark:bg-white dark:text-slate-900 text-white font-bold rounded-xl hover:scale-105 transition-all flex items-center gap-2"
+        >
+          <span className="material-symbols-outlined">logout</span>
+          Sair do Sistema
+        </button>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (isDarkMode) {

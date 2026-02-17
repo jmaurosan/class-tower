@@ -22,7 +22,8 @@ const AuditLogs: React.FC = () => {
       case 'vistorias': return 'Vistoria';
       case 'vencimentos': return 'Vencimento';
       case 'profiles': return 'Perfil / Permissão';
-      case 'ocorrencias': return 'Ocorrência';
+      case 'ocorrencias':
+      case 'diario': return 'Ocorrência (Diário)';
       default: return table;
     }
   };

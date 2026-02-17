@@ -147,7 +147,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
 
     // Validar regras
     const validationError = validateScheduling(formData.data, formData.hora, formData.tipo);
-    if (validationError) {
+    if (validationError && user.role !== 'admin') {
       alert(validationError);
       return;
     }

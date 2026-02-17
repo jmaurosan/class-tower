@@ -17,6 +17,40 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
 
   const [setores, setSetores] = useState<string[]>(['Limpeza', 'Elétrica', 'Hidráulica', 'Segurança', 'Elevadores', 'Outros']);
 
+  // Rating States
+  const [ratingModalOpen, setRatingModalOpen] = useState(false);
+  const [selectedEmpresa, setSelectedEmpresa] = useState<Empresa | null>(null);
+  const [userRating, setUserRating] = useState(0);
+  const [userComment, setUserComment] = useState('');
+
+  const handleOpenRating = (empresa: Empresa) => {
+    setSelectedEmpresa(empresa);
+    setUserRating(0);
+    setUserComment('');
+    setRatingModalOpen(true);
+  };
+
+  const submitRating = async () => {
+    if (!selectedEmpresa || userRating === 0) return;
+
+    try {
+      const { error } = await supabase.from('avaliacoes_empresas').upsert({
+        empresa_id: selectedEmpresa.id,
+        user_id: user.id,
+        rating: userRating,
+        comentario: userComment
+      });
+
+      if (error) throw error;
+      setRatingModalOpen(false);
+      fetchEmpresas(); // Recarregar média
+      alert('Avaliação enviada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao avaliar:', error);
+      alert('Erro ao enviar avaliação. Verifique se o banco de dados foi atualizado.');
+    }
+  };
+
   const [formData, setFormData] = useState({
     nome: '',
     cnpj: '',
@@ -48,7 +82,7 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
 
     const channel = supabase
       .channel('prestadores_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestadores' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'empresas' }, () => {
         fetchEmpresas();
       })
       .subscribe();
@@ -118,7 +152,7 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
     if (!confirm('Deseja excluir este prestador permanentemente?')) return;
     try {
       const { error } = await supabase
-        .from('prestadores')
+        .from('empresas')
         .delete()
         .eq('id', id);
       if (error) throw error;
@@ -286,11 +320,18 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{empresa.cnpj}</p>
               </div>
 
-              <div className="flex items-center gap-1">
+              <div
+                className="flex items-center gap-1 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 p-1 rounded transition-colors"
+                onClick={(e) => { e.stopPropagation(); handleOpenRating(empresa); }}
+                title="Clique para avaliar"
+              >
                 {[...Array(5)].map((_, i) => (
-                  <span key={i} className={`material-symbols-outlined text-sm ${i < (empresa.rating || 0) ? 'text-amber-400 fill-1' : 'text-slate-200 dark:text-slate-700'}`}>star</span>
+                  <span key={i} className={`material-symbols-outlined text-sm ${i < (empresa.average_rating || empresa.rating || 0) ? 'text-amber-400 fill-1' : 'text-slate-200 dark:text-slate-700'}`}>star</span>
                 ))}
-                <span className="ml-2 text-xs font-bold text-slate-400">({empresa.rating || 0}.0)</span>
+                <span className="ml-2 text-xs font-bold text-slate-400">
+                  ({empresa.average_rating || empresa.rating || 0})
+                  {empresa.ratings_count ? ` • ${empresa.ratings_count} avaliações` : ''}
+                </span>
               </div>
 
               <div className="space-y-2 pt-2">
@@ -325,6 +366,49 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
         <div className="text-center py-20 bg-white dark:bg-[#1d222a] rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
           <span className="material-symbols-outlined text-6xl text-slate-200 mb-4">domain_disabled</span>
           <p className="text-slate-500 font-bold uppercase tracking-widest">Nenhum prestador encontrado</p>
+        </div>
+      )}
+
+      {ratingModalOpen && selectedEmpresa && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setRatingModalOpen(false)}>
+          <div className="bg-white dark:bg-[#1d222a] p-6 rounded-2xl w-full max-w-md space-y-4 shadow-xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="text-center">
+              <h3 className="text-xl font-black text-slate-900 dark:text-white mb-1">Avaliar Prestador</h3>
+              <p className="text-sm text-slate-500 font-medium">{selectedEmpresa.nome}</p>
+            </div>
+
+            <div className="flex justify-center gap-2 py-4">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setUserRating(star)}
+                  className="transition-transform hover:scale-110 focus:outline-none"
+                >
+                  <span className={`material-symbols-outlined text-4xl ${star <= userRating ? 'text-amber-400 fill-1' : 'text-slate-200 dark:text-slate-700'}`}>star</span>
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white resize-none text-sm"
+              rows={3}
+              placeholder="Conte sua experiência com este prestador (opcional)..."
+              value={userComment}
+              onChange={e => setUserComment(e.target.value)}
+            />
+
+            <div className="flex gap-2 justify-end pt-2">
+              <button onClick={() => setRatingModalOpen(false)} className="px-4 py-2 text-slate-500 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">Cancelar</button>
+              <button
+                onClick={submitRating}
+                disabled={userRating === 0}
+                className="px-6 py-2 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all text-xs disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+              >
+                Enviar Avaliação
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

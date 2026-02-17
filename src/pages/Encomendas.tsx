@@ -143,7 +143,7 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
       <div className="flex justify-between items-end">
         <div>
           <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Gestão de Encomendas</h3>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">Controle de recebimento e entrega para moradores</p>
+          <p className="text-slate-500 dark:text-slate-400 font-medium">Controle de recebimento e entrega para unidades comerciais</p>
         </div>
         {canManage && (
           <button

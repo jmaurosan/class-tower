@@ -8,7 +8,7 @@ interface DocumentosProps {
 
 const Documentos: React.FC<DocumentosProps> = ({ user }) => {
   const [filter, setFilter] = useState<string>('Todos');
-  const { documentos, loading, uploadDoc, deleteDoc } = useDocuments();
+  const { documentos, loading, uploadDoc, deleteDoc, refresh } = useDocuments();
 
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -52,9 +52,11 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
 
     try {
       await deleteDoc(doc);
+      // Fallback: Atualizar manualmente caso o Realtime falhe ou não esteja ativo
+      await refresh();
     } catch (err) {
-      console.error('Erro ao deletar:', err);
-      alert('Falha ao excluir arquivo.');
+      console.error('Erro ao deletar documento:', err);
+      alert('Falha ao excluir arquivo do banco de dados ou storage.');
     }
   };
 

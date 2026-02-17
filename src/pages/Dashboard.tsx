@@ -22,7 +22,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
   const { documentos, updateVencimentoStatus } = useVencimentos();
   const [stats, setStats] = useState({
     ocupacao: '0%',
-    vistorias: '12',
+    vistorias: '0',
     ocorrencias: '0',
     urgentes: '0'
   });
@@ -37,12 +37,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
         setStats(prev => ({ ...prev, ocupacao: `${Math.round((occupied / total) * 100)}%` }));
       }
 
-      // 2. Ocorrências
-      const { data: ocorrencias } = await supabase.from('ocorrencias').select('categoria');
+      // 2. Ocorrências (Diário de Bordo)
+      const { data: ocorrencias } = await supabase.from('diario').select('categoria');
       if (ocorrencias) {
         const active = ocorrencias.length;
         const urgent = ocorrencias.filter(o => o.categoria === 'Segurança').length;
         setStats(prev => ({ ...prev, ocorrencias: active.toString(), urgentes: urgent.toString() }));
+      }
+
+      // 3. Vistorias Pendentes
+      const { count: vistoriasCount } = await supabase
+        .from('vistorias')
+        .select('*', { count: 'exact', head: true })
+        .neq('status', 'Concluído');
+
+      if (vistoriasCount !== null) {
+        setStats(prev => ({ ...prev, vistorias: vistoriasCount.toString() }));
       }
     } catch (err) {
       console.error('Erro ao buscar estatísticas:', err);
@@ -135,12 +145,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
               <span className={`px-2 py-1 rounded text-[10px] font-black uppercase ${card.color} bg-opacity-10 border border-current opacity-60`}>{card.change}</span>
             </div>
             <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{card.label}</p>
-            <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">{card.value}</h3>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{card.value}</h3>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="space-y-8">
+          <Lembretes />
+        </div>
+
         <div className="lg:col-span-2 space-y-8">
           <div className="bg-white dark:bg-[#1d222a] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
             <div className="flex items-center justify-between mb-8">
@@ -149,8 +163,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
                 <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Desempenho nos últimos 30 dias</p>
               </div>
             </div>
-            <div className="h-64 w-full">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full">
+              <ResponsiveContainer width="100%" height={250}>
                 <AreaChart data={dataChart}>
                   <defs>
                     <linearGradient id="colorVisitas" x1="0" y1="0" x2="0" y2="1">
@@ -166,10 +180,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
               </ResponsiveContainer>
             </div>
           </div>
-        </div>
-
-        <div className="space-y-8">
-          <Lembretes />
         </div>
       </div>
     </div>

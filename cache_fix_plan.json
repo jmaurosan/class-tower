@@ -1,0 +1,32 @@
+[
+  {
+    "step_id": 1,
+    "description": "Limpar completamente a pasta de build e cache local do Vite (node_modules/.vite) para garantir que não estamos servindo arquivos antigos.",
+    "agent": "orchestrator",
+    "status": "pending"
+  },
+  {
+    "step_id": 2,
+    "description": "Adicionar um indicador visual de versão (ex: v1.5.0-comercial) no rodapé do Sidebar.tsx. Isso servirá como prova incontestável de que o navegador carregou o código novo.",
+    "agent": "frontend-specialist",
+    "status": "pending"
+  },
+  {
+    "step_id": 3,
+    "description": "Reiniciar o servidor de desenvolvimento com a flag '--force' para ignorar caches pré-compilados.",
+    "agent": "server-management",
+    "status": "pending"
+  },
+  {
+    "step_id": 4,
+    "description": "Verificar se existem Service Workers ativos que possam estar servindo a aplicação offline (PWA) e removê-los se necessário.",
+    "agent": "frontend-specialist",
+    "status": "pending"
+  },
+  {
+    "step_id": 5,
+    "description": "Revalidar o fluxo de login e permissões com o novo código carregado, garantindo que 'Morador / Sala' sumiu e 'Agendamentos' abre a tela correta.",
+    "agent": "orchestrator",
+    "status": "pending"
+  }
+]

@@ -14,7 +14,9 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
   const [newEntry, setNewEntry] = useState({
     titulo: '',
     descricao: '',
-    categoria: 'Outros' as DiarioEntry['categoria']
+    categoria: 'Outros' as DiarioEntry['categoria'],
+    status: 'Pendente' as DiarioEntry['status'],
+    solucao: ''
   });
 
   const fetchEntries = async () => {
@@ -35,7 +37,9 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
           descricao: item.descricao,
           categoria: item.categoria,
           usuario: item.usuario,
-          sala_id: item.sala_id
+          sala_id: item.sala_id,
+          status: item.status || 'Pendente',
+          solucao: item.solucao || ''
         }));
         setEntries(mappedData);
       }
@@ -93,7 +97,9 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
           .update({
             titulo: newEntry.titulo,
             descricao: newEntry.descricao,
-            categoria: newEntry.categoria
+            categoria: newEntry.categoria,
+            status: newEntry.status,
+            solucao: newEntry.solucao
           })
           .eq('id', editingId);
 
@@ -108,13 +114,14 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
             categoria: newEntry.categoria,
             usuario: user.name,
             sala_id: user.sala_numero,
-            user_id: user.id
+            user_id: user.id,
+            status: 'Pendente'
           }]);
 
         if (error) throw error;
       }
 
-      setNewEntry({ titulo: '', descricao: '', categoria: 'Outros' });
+      setNewEntry({ titulo: '', descricao: '', categoria: 'Outros', status: 'Pendente', solucao: '' });
       setShowForm(false);
     } catch (err) {
       console.error('Erro ao salvar ocorrência:', err);
@@ -126,7 +133,9 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
     setNewEntry({
       titulo: entry.titulo,
       descricao: entry.descricao,
-      categoria: entry.categoria
+      categoria: entry.categoria,
+      status: entry.status,
+      solucao: entry.solucao || ''
     });
     setEditingId(entry.id);
     setShowForm(true);
@@ -152,7 +161,7 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
   const handleCancel = () => {
     setShowForm(false);
     setEditingId(null);
-    setNewEntry({ titulo: '', descricao: '', categoria: 'Outros' });
+    setNewEntry({ titulo: '', descricao: '', categoria: 'Outros', status: 'Pendente', solucao: '' });
   };
 
   const isAdmin = user.role === 'admin';
@@ -187,7 +196,7 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Formulário Coluna Esquerda */}
-        {showForm && (
+        {showForm ? (
           <div className="lg:col-span-1 animate-in slide-in-from-left duration-300 h-fit sticky top-8">
             <div className="bg-white dark:bg-[#1d222a] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 ring-1 ring-primary/5">
               <div className="flex justify-between items-center">
@@ -210,20 +219,35 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
                     onChange={e => setNewEntry({ ...newEntry, titulo: e.target.value })}
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Categoria</label>
-                  <select
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all"
-                    value={newEntry.categoria}
-                    onChange={e => setNewEntry({ ...newEntry, categoria: e.target.value as any })}
-                  >
-                    <option>Segurança</option>
-                    <option>Manutenção</option>
-                    <option>Limpeza</option>
-                    <option>Reclamação</option>
-                    <option>Aviso</option>
-                    <option>Outros</option>
-                  </select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Categoria</label>
+                    <select
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all"
+                      value={newEntry.categoria}
+                      onChange={e => setNewEntry({ ...newEntry, categoria: e.target.value as any })}
+                    >
+                      <option>Segurança</option>
+                      <option>Manutenção</option>
+                      <option>Limpeza</option>
+                      <option>Reclamação</option>
+                      <option>Aviso</option>
+                      <option>Outros</option>
+                    </select>
+                  </div>
+                  {editingId && (
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Status</label>
+                      <select
+                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all"
+                        value={newEntry.status}
+                        onChange={e => setNewEntry({ ...newEntry, status: e.target.value as any })}
+                      >
+                        <option value="Pendente">Pendente</option>
+                        <option value="Resolvido">Resolvido</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Descrição</label>
@@ -236,16 +260,43 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
                     onChange={e => setNewEntry({ ...newEntry, descricao: e.target.value })}
                   />
                 </div>
+                {newEntry.status === 'Resolvido' && (
+                  <div className="space-y-1 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <label className="text-[10px] font-bold text-emerald-500 uppercase ml-1">Solução Efetivada</label>
+                    <textarea
+                      required
+                      rows={3}
+                      placeholder="Qual foi a solução aplicada?"
+                      className="w-full px-4 py-3 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 dark:text-white resize-none transition-all"
+                      value={newEntry.solucao}
+                      onChange={e => setNewEntry({ ...newEntry, solucao: e.target.value })}
+                    />
+                  </div>
+                )}
                 <button type="submit" className="w-full py-4 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
                   {editingId ? 'Salvar Alterações' : 'Registrar Agora'}
                 </button>
               </form>
             </div>
           </div>
+        ) : (
+          <div className="lg:col-span-1 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 bg-slate-50 dark:bg-slate-900/50">
+            <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Informações Importantes</h4>
+            <div className="space-y-4">
+              <div className="flex gap-3">
+                <span className="material-symbols-outlined text-primary">history</span>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">As ocorrências são arquivadas por período indeterminado para consultas e vistorias futuras.</p>
+              </div>
+              <div className="flex gap-3">
+                <span className="material-symbols-outlined text-primary">task_alt</span>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Você pode marcar uma ocorrência como <b>Resolvida</b> editando o registro e informando a solução aplicada.</p>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Lista Coluna Direita */}
-        <div className={`${showForm ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-6`}>
+        <div className={`${showForm ? 'lg:col-span-2' : 'lg:col-span-2'} space-y-6`}>
           {entries.length > 0 ? (
             entries.map((entry) => (
               <div key={entry.id} className="group flex gap-6">
@@ -285,11 +336,24 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
                     <div className="flex items-center gap-3">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{entry.data} • {entry.hora}</span>
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white ${getCategoryColor(entry.categoria)} shadow-sm`}>{entry.categoria}</span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${entry.status === 'Resolvido' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
+                        {entry.status}
+                      </span>
                     </div>
                   </div>
 
                   <h4 className="text-lg font-extrabold text-slate-900 dark:text-white mb-2">{entry.titulo}</h4>
                   <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">{entry.descricao}</p>
+
+                  {entry.status === 'Resolvido' && entry.solucao && (
+                    <div className="mb-4 p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-xl border border-emerald-100 dark:border-emerald-800">
+                      <h5 className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">task_alt</span>
+                        Solução Aplicada
+                      </h5>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">{entry.solucao}</p>
+                    </div>
+                  )}
 
                   <div className="pt-4 border-t border-slate-50 dark:border-slate-800/50 flex items-center gap-2">
                     <div className="size-5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">

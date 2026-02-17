@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import PasswordChecklist from '../components/ui/PasswordChecklist';
 import { supabase } from '../services/supabase';
 import { User, UserRole } from '../types';
@@ -23,6 +23,46 @@ const Settings: React.FC<SettingsProps> = ({ user, onUpdateUser }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('A imagem deve ter no máximo 5MB.');
+      return;
+    }
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${localUser.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      // Upload para o bucket 'avatars'
+      let { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+
+      if (data) {
+        setLocalUser(prev => ({ ...prev, avatar: data.publicUrl }));
+        setStatus({ type: 'success', message: 'Imagem carregada! Clique em Salvar para confirmar.' });
+      }
+    } catch (error: any) {
+      console.error('Erro no upload:', error);
+      setStatus({ type: 'error', message: 'Erro no upload. Verifique se o bucket "avatars" existe e é público.' });
+    }
+  };
 
   const handleSave = () => {
     onUpdateUser(localUser);
@@ -78,9 +118,20 @@ const Settings: React.FC<SettingsProps> = ({ user, onUpdateUser }) => {
           <div className="flex items-center gap-6">
             <div className="relative group">
               <img src={localUser.avatar} alt="Avatar" className="size-20 rounded-2xl object-cover border-4 border-slate-100 dark:border-slate-800" />
-              <button className="absolute -bottom-2 -right-2 size-8 bg-primary text-white rounded-lg flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+              <button
+                type="button"
+                onClick={handleAvatarClick}
+                className="absolute -bottom-2 -right-2 size-8 bg-primary text-white rounded-lg flex items-center justify-center shadow-lg hover:scale-110 transition-transform cursor-pointer"
+              >
                 <span className="material-symbols-outlined text-sm">photo_camera</span>
               </button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept="image/*"
+              />
             </div>
             <div className="space-y-1">
               <h5 className="font-bold text-slate-900 dark:text-white">{localUser.name}</h5>
