@@ -85,8 +85,6 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
 
   // --- LÓGICA DE VALIDAÇÃO ---
   const validateScheduling = (dateStr: string, timeStr: string, type: string): string | null => {
-    if (type !== 'Mudança') return null; // Outros tipos por enquanto sem restrição estrita
-
     const date = new Date(`${dateStr}T${timeStr}:00`);
     const dayOfWeek = date.getDay(); // 0 = Domingo, 6 = Sábado
     const hour = parseInt(timeStr.split(':')[0]);
@@ -94,51 +92,53 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
     const timeValue = hour * 60 + minutes;
 
     // 1. Verificar Regras Específicas (Feriados/Exceções)
+    // Procurar por regra que bata exatamente com a data (YYYY-MM-DD)
     const specificRule = rules.find(r => r.date === dateStr);
 
     if (specificRule) {
       if (specificRule.is_blocked) {
-        return `A data ${dateStr} está bloqueada para agendamentos: ${specificRule.description}`;
+        return `Agendamento indisponível: A data ${new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR')} está BLOQUEADA (${specificRule.description}).`;
       }
 
-      // Se tiver horário específico permitido
+      // Se tiver horário específico permitido para esta data
       if (specificRule.allowed_start_time && specificRule.allowed_end_time) {
         const start = parseInt(specificRule.allowed_start_time.split(':')[0]) * 60 + parseInt(specificRule.allowed_start_time.split(':')[1]);
         const end = parseInt(specificRule.allowed_end_time.split(':')[0]) * 60 + parseInt(specificRule.allowed_end_time.split(':')[1]);
 
         if (timeValue < start || timeValue > end) {
-          return `Para esta data especial (${specificRule.description}), o horário permitido é de ${specificRule.allowed_start_time} às ${specificRule.allowed_end_time}.`;
+          return `Horário indisponível: Para esta data (${specificRule.description}), o horário permitido é apenas entre ${specificRule.allowed_start_time.slice(0, 5)} e ${specificRule.allowed_end_time.slice(0, 5)}.`;
         }
         return null; // Permitido pela regra especial
       }
     }
 
-    // 2. Regras Padrão (Semana regular)
-    // Domingo (0)
-    if (dayOfWeek === 0) {
-      return 'Mudanças não são permitidas aos Domingos.';
-    }
-
-    // Sábado (6): 14:00 as 23:59
-    if (dayOfWeek === 6) {
-      const start = 14 * 60; // 14:00
-      const end = 23 * 60 + 59; // 23:59
-      if (timeValue < start || timeValue > end) {
-        return 'Aos Sábados, mudanças são permitidas apenas das 14:00 às 23:59.';
+    // 2. Regras Específicas para Mudança (Mais restritivas)
+    if (type === 'Mudança') {
+      // Domingo (0)
+      if (dayOfWeek === 0) {
+        return 'Agendamento indisponível: Mudanças não são permitidas aos Domingos.';
       }
-      return null;
-    }
 
-    // Segunda a Sexta (1-5): 19:00 as 23:59
-    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-      const start = 19 * 60; // 19:00
-      const end = 23 * 60 + 59; // 23:59
-      if (timeValue < start || timeValue > end) {
-        return 'De Segunda a Sexta, mudanças são permitidas apenas das 19:00 às 23:59.';
+      // Sábado (6): 14:00 as 23:59
+      if (dayOfWeek === 6) {
+        const start = 14 * 60; // 14:00
+        const end = 23 * 60 + 59; // 23:59
+        if (timeValue < start || timeValue > end) {
+          return 'Horário indisponível: Aos Sábados, mudanças são permitidas apenas das 14:00 às 23:59.';
+        }
       }
-      return null;
+
+      // Segunda a Sexta (1-5): 19:00 as 23:59
+      if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+        const start = 19 * 60; // 19:00
+        const end = 23 * 60 + 59; // 23:59
+        if (timeValue < start || timeValue > end) {
+          return 'Horário indisponível: De Segunda a Sexta, mudanças são permitidas apenas das 19:00 às 23:59.';
+        }
+      }
     }
 
+    // Se passou por tudo, está liberado
     return null;
   };
 
@@ -147,7 +147,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
 
     // Validar regras
     const validationError = validateScheduling(formData.data, formData.hora, formData.tipo);
-    if (validationError && user.role !== 'admin') { // Admin pode bypass? Se não quiser, remova user.role !== 'admin'
+    if (validationError) {
       alert(validationError);
       return;
     }

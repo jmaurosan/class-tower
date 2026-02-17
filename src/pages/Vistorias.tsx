@@ -55,8 +55,11 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
     if (!id) return;
     try {
       await updateVistoriaStatus(id, 'Concluído');
+      setSelectedId(null); // Fecha o painel após concluir
+      alert('Vistoria concluída com sucesso!');
     } catch (err) {
       console.error('Erro ao concluir:', err);
+      alert('Erro ao concluir a vistoria. Verifique sua conexão.');
     }
   };
 
@@ -71,6 +74,10 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
 
   const isAdmin = user.role === 'admin' || user.role === 'atendente';
 
+  const handleExportPDF = () => {
+    window.print();
+  };
+
   if (loading && vistorias.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -80,9 +87,9 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
   }
 
   return (
-    <div className="flex h-full overflow-hidden animate-in fade-in duration-500 transition-colors duration-300">
-      <div className="flex-1 p-8 overflow-y-auto custom-scrollbar">
-        <div className="flex items-center justify-between mb-8">
+    <div className="flex h-full overflow-hidden animate-in fade-in duration-500 transition-colors duration-300 print:bg-white">
+      <div className="flex-1 p-8 overflow-y-auto custom-scrollbar print:p-0">
+        <div className="flex items-center justify-between mb-8 print:hidden">
           <div className="flex gap-2">
             {(['Todos', 'Pendente', 'Em Andamento', 'Concluído'] as const).map((status) => (
               <button
@@ -110,7 +117,7 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
         </div>
 
         {showForm && (
-          <div className="mb-8 bg-white dark:bg-[#1d222a] p-6 rounded-3xl border border-primary/20 shadow-xl animate-in slide-in-from-top duration-300">
+          <div className="mb-8 bg-white dark:bg-[#1d222a] p-6 rounded-3xl border border-primary/20 shadow-xl animate-in slide-in-from-top duration-300 print:hidden">
             <div className="flex justify-between items-center mb-6">
               <h4 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Registrar Laudo de Vistoria</h4>
               <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600"><span className="material-symbols-outlined">close</span></button>
@@ -134,10 +141,10 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
           </div>
         )}
 
-        <div className="bg-white dark:bg-[#1d222a] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-          <table className="w-full text-left border-collapse">
+        <div className="bg-white dark:bg-[#1d222a] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden overflow-x-auto custom-scrollbar print:border-none print:shadow-none">
+          <table className="w-full text-left border-collapse min-w-[800px] print:min-w-0">
             <thead>
-              <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+              <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 print:bg-transparent">
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Data / Hora</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Unidade / Local</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Urgência</th>
@@ -150,7 +157,7 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
                 <tr
                   key={v.id}
                   onClick={() => setSelectedId(v.id)}
-                  className={`cursor-pointer transition-all hover:bg-slate-50/80 dark:hover:bg-slate-800/80 ${selectedId === v.id ? 'bg-primary/5 dark:bg-primary/10' : ''}`}
+                  className={`cursor-pointer transition-all hover:bg-slate-50/80 dark:hover:bg-slate-800/80 ${selectedId === v.id ? 'bg-primary/5 dark:bg-primary/10' : ''} print:hover:bg-transparent`}
                 >
                   <td className="px-6 py-5">
                     <div className="flex flex-col">
@@ -188,72 +195,83 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
       </div>
 
       {selectedVistoria && (
-        <aside className="w-[400px] bg-white dark:bg-[#1d222a] border-l border-slate-200 dark:border-slate-800 flex flex-col overflow-y-auto custom-scrollbar shadow-2xl transition-colors duration-300">
-          <div className="p-8 space-y-8">
-            <div className="flex justify-between items-start">
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest">Vistoria #{selectedVistoria.id.substring(0, 8)}</span>
-                <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">{selectedVistoria.unidade}</h2>
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{selectedVistoria.local}</span>
-              </div>
-              <button onClick={() => setSelectedId(null)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400">
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
+        <>
+          {/* Backdrop para mobile */}
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden animate-in fade-in duration-300 print:hidden"
+            onClick={() => setSelectedId(null)}
+          />
 
-            <div className={`p-4 rounded-2xl border flex items-center justify-between ${getUrgenciaBadge(selectedVistoria.urgencia)}`}>
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-xl">
-                  {selectedVistoria.urgencia === 'Alta' ? 'priority_high' : selectedVistoria.urgencia === 'Média' ? 'medium' : 'low_priority'}
-                </span>
-                <span className="text-sm font-black uppercase tracking-widest">Prioridade {selectedVistoria.urgencia}</span>
-              </div>
-              <span className="text-[10px] font-bold opacity-60">{selectedVistoria.hora}</span>
-            </div>
-
-            <section className="bg-slate-50/50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
-              <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest mb-4">Progresso do Laudo</h3>
-              <div className="mb-6">
-                <div className="flex justify-between mb-2">
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Estado Atual</span>
-                  <span className="text-xs font-bold text-primary">{selectedVistoria.status === 'Concluído' ? '100% (Finalizado)' : 'Em Aberto'}</span>
+          <aside className="fixed inset-y-0 right-0 z-50 w-full sm:w-[400px] lg:static lg:z-auto bg-white dark:bg-[#1d222a] border-l border-slate-200 dark:border-slate-800 flex flex-col overflow-y-auto custom-scrollbar shadow-2xl lg:shadow-none transition-colors duration-300 animate-in slide-in-from-right duration-300 print:hidden">
+            <div className="p-8 space-y-8">
+              <div className="flex justify-between items-start">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest">Vistoria #{selectedVistoria.id.substring(0, 8)}</span>
+                  <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">{selectedVistoria.unidade}</h2>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{selectedVistoria.local}</span>
                 </div>
-                <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-primary" style={{ width: selectedVistoria.status === 'Concluído' ? '100%' : '30%' }}></div>
-                </div>
-              </div>
-            </section>
-
-            <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm">
-              <img src={selectedVistoria.fotoUrl} alt="Vistoria" className="w-full object-cover" />
-            </div>
-
-            <section className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
-              <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest mb-3">Observações Técnicas</h3>
-              {selectedVistoria.descricao ? (
-                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-wrap">{selectedVistoria.descricao}</p>
-              ) : (
-                <p className="text-sm text-slate-400 italic">Sem observações.</p>
-              )}
-            </section>
-
-            <div className="space-y-3 pt-4 sticky bottom-0 bg-white dark:bg-[#1d222a] pb-4">
-              {selectedVistoria.status !== 'Concluído' && isAdmin && (
-                <button
-                  onClick={() => markAsCompleted(selectedVistoria.id)}
-                  className="w-full bg-emerald-500 text-white py-4 rounded-xl font-bold text-sm shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 mb-3"
-                >
-                  <span className="material-symbols-outlined text-xl">check_circle</span>
-                  Concluir Vistoria
+                <button onClick={() => setSelectedId(null)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400">
+                  <span className="material-symbols-outlined">close</span>
                 </button>
-              )}
-              <button className="w-full bg-slate-900 dark:bg-slate-700 text-white py-4 rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2">
-                <span className="material-symbols-outlined text-xl">picture_as_pdf</span>
-                Exportar Laudo Técnico
-              </button>
+              </div>
+
+              <div className={`p-4 rounded-2xl border flex items-center justify-between ${getUrgenciaBadge(selectedVistoria.urgencia)}`}>
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-xl">
+                    {selectedVistoria.urgencia === 'Alta' ? 'priority_high' : selectedVistoria.urgencia === 'Média' ? 'horizontal_rule' : 'low_priority'}
+                  </span>
+                  <span className="text-sm font-black uppercase tracking-widest">Prioridade {selectedVistoria.urgencia}</span>
+                </div>
+                <span className="text-[10px] font-bold opacity-60">{selectedVistoria.hora}</span>
+              </div>
+
+              <section className="bg-slate-50/50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest mb-4">Progresso do Laudo</h3>
+                <div className="mb-6">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Estado Atual</span>
+                    <span className="text-xs font-bold text-primary">{selectedVistoria.status === 'Concluído' ? '100% (Finalizado)' : 'Em Aberto'}</span>
+                  </div>
+                  <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-primary" style={{ width: selectedVistoria.status === 'Concluído' ? '100%' : '30%' }}></div>
+                  </div>
+                </div>
+              </section>
+
+              <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm">
+                <img src={selectedVistoria.fotoUrl} alt="Vistoria" className="w-full object-cover" />
+              </div>
+
+              <section className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-widest mb-3">Observações Técnicas</h3>
+                {selectedVistoria.descricao ? (
+                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-wrap">{selectedVistoria.descricao}</p>
+                ) : (
+                  <p className="text-sm text-slate-400 italic">Sem observações.</p>
+                )}
+              </section>
+
+              <div className="space-y-3 pt-4 sticky bottom-0 bg-white dark:bg-[#1d222a] pb-4">
+                {selectedVistoria.status !== 'Concluído' && isAdmin && (
+                  <button
+                    onClick={() => markAsCompleted(selectedVistoria.id)}
+                    className="w-full bg-emerald-500 text-white py-4 rounded-xl font-bold text-sm shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 mb-3"
+                  >
+                    <span className="material-symbols-outlined text-xl">check_circle</span>
+                    Concluir Vistoria
+                  </button>
+                )}
+                <button
+                  onClick={handleExportPDF}
+                  className="w-full bg-slate-900 dark:bg-slate-700 text-white py-4 rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-xl">picture_as_pdf</span>
+                  Exportar Laudo Técnico
+                </button>
+              </div>
             </div>
-          </div>
-        </aside>
+          </aside>
+        </>
       )}
     </div>
   );

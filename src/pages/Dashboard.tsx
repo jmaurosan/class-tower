@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useVencimentos } from '../hooks/useVencimentos';
 import { supabase } from '../services/supabase';
-import { User } from '../types';
+import { Page, User } from '../types';
 import Lembretes from './Lembretes';
 
 const dataChart = [
@@ -15,9 +15,10 @@ const dataChart = [
 
 interface DashboardProps {
   user: User;
+  setCurrentPage: (page: Page) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
   const { documentos, updateVencimentoStatus } = useVencimentos();
   const [stats, setStats] = useState({
     ocupacao: '0%',
@@ -67,15 +68,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-500">
       {criticalDocs.length > 0 && (
-        <div className="bg-red-500 dark:bg-red-600 rounded-2xl p-6 shadow-2xl shadow-red-500/20 border-2 border-white/20 animate-in slide-in-from-top duration-500">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-6 text-white">
-            <div className="flex items-center gap-4">
-              <div className="size-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-4xl font-black">priority_high</span>
+        <div className="bg-red-500 dark:bg-red-600 rounded-2xl p-4 md:p-6 shadow-2xl shadow-red-500/20 border-2 border-white/20 animate-in slide-in-from-top duration-500">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 md:gap-6 text-white">
+            <div className="flex items-center gap-3 md:gap-4 w-full md:w-auto">
+              <div className="size-10 md:size-14 rounded-xl md:rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-2xl md:text-4xl font-black">priority_high</span>
               </div>
-              <div>
-                <h3 className="text-xl font-black uppercase tracking-tight">Vencimento em Prazo Crítico!</h3>
-                <p className="text-sm font-bold opacity-90">
+              <div className="flex-1">
+                <h3 className="text-base md:text-xl font-black uppercase tracking-tight">Vencimento em Prazo Crítico!</h3>
+                <p className="text-xs md:text-sm font-bold opacity-90 leading-tight md:leading-normal">
                   {criticalDocs.length === 1
                     ? `O documento "${criticalDocs[0].titulo}" está na fase crítica de 5 dias. Atualize o status.`
                     : `Você tem ${criticalDocs.length} documentos em fase crítica (menos de 5 dias).`}
@@ -83,19 +84,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3 shrink-0">
+            <div className="flex flex-wrap gap-2 md:gap-3 shrink-0 w-full md:w-auto">
               {criticalDocs.length === 1 ? (
                 <>
                   <button
                     onClick={() => updateVencimentoStatus(criticalDocs[0].id, 'Feito', true)}
-                    className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2 transition-all active:scale-95"
+                    className="flex-1 md:flex-none justify-center px-4 py-2.5 md:px-6 md:py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest shadow-xl flex items-center gap-2 transition-all active:scale-95"
                   >
-                    <span className="material-symbols-outlined text-lg">check_circle</span>
+                    <span className="material-symbols-outlined text-base md:text-lg">check_circle</span>
                     Marcar como Feito
                   </button>
                   <button
                     onClick={() => updateVencimentoStatus(criticalDocs[0].id, 'Em Andamento', true)}
-                    className="px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white border border-white/30 rounded-xl font-black text-xs uppercase tracking-widest transition-all active:scale-95"
+                    className="flex-1 md:flex-none justify-center px-4 py-2.5 md:px-6 md:py-3 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white border border-white/30 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest transition-all active:scale-95"
                   >
                     Marcar como Ciente
                   </button>
@@ -105,7 +106,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                   onClick={() => {
                     criticalDocs.forEach(doc => updateVencimentoStatus(doc.id, 'Em Andamento', true));
                   }}
-                  className="px-6 py-3 bg-white text-red-600 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl"
+                  className="w-full md:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-white text-red-600 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest shadow-xl"
                 >
                   Resolver Pendências
                 </button>
@@ -117,14 +118,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: 'Taxa de Ocupação', value: stats.ocupacao, change: 'Building', color: 'text-emerald-500', icon: 'apartment', bg: 'bg-primary/10' },
-          { label: 'Vistorias Pendentes', value: stats.vistorias, change: 'Sistema', color: 'text-amber-500', icon: 'warning', bg: 'bg-amber-500/10' },
-          { label: 'Prazos Críticos', value: criticalDocs.length.toString(), change: '< 5 Dias', color: 'text-red-500', icon: 'gavel', bg: 'bg-red-500/10' },
-          { label: 'Ocorrências Abertas', value: stats.ocorrencias, change: `${stats.urgentes} Urgentes`, color: 'text-red-500', icon: 'report_problem', bg: 'bg-red-500/10' },
+          { label: 'Taxa de Ocupação', value: stats.ocupacao, change: 'Building', color: 'text-emerald-500', icon: 'apartment', bg: 'bg-primary/10', target: 'salas' as Page },
+          { label: 'Vistorias Pendentes', value: stats.vistorias, change: 'Sistema', color: 'text-amber-500', icon: 'warning', bg: 'bg-amber-500/10', target: 'vistorias' as Page },
+          { label: 'Prazos Críticos', value: criticalDocs.length.toString(), change: '< 5 Dias', color: 'text-red-500', icon: 'gavel', bg: 'bg-red-500/10', target: 'vencimentos' as Page },
+          { label: 'Ocorrências Abertas', value: stats.ocorrencias, change: `${stats.urgentes} Urgentes`, color: 'text-red-500', icon: 'report_problem', bg: 'bg-red-500/10', target: 'diario' as Page },
         ].map((card, i) => (
-          <div key={i} className="bg-white dark:bg-[#1d222a] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-lg">
+          <div
+            key={i}
+            onClick={() => setCurrentPage(card.target)}
+            className="bg-white dark:bg-[#1d222a] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-lg hover:scale-[1.02] cursor-pointer group"
+          >
             <div className="flex justify-between items-start mb-4">
-              <div className={`p-2.5 rounded-lg ${card.bg} ${card.color}`}>
+              <div className={`p-2.5 rounded-lg ${card.bg} ${card.color} group-hover:scale-110 transition-transform duration-300`}>
                 <span className="material-symbols-outlined">{card.icon}</span>
               </div>
               <span className={`px-2 py-1 rounded text-[10px] font-black uppercase ${card.color} bg-opacity-10 border border-current opacity-60`}>{card.change}</span>

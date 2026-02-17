@@ -41,11 +41,25 @@ export const useAvisos = () => {
   };
 
   const deleteAviso = async (id: string) => {
-    if (!navigator.onLine) {
-      offlineService.enqueue('avisos', 'delete', { id });
-      return;
+    // 1. Optimistic Update: Remove from UI immediately
+    const originalAvisos = [...avisos];
+    setAvisos(current => current.filter(a => a.id !== id));
+
+    try {
+      if (!navigator.onLine) {
+        offlineService.enqueue('avisos', 'delete', { id });
+        return;
+      }
+      await avisosService.delete(id);
+
+      // 2. Force refresh to ensure sync (optional, but good for consistency)
+      // await fetchAvisos(); // Commented out to trust optimistic update for speed
+    } catch (error) {
+      // 3. Rollback on error
+      console.error('Error deleting aviso:', error);
+      setAvisos(originalAvisos);
+      alert('Erro ao excluir. Verifique sua conexão.');
     }
-    await avisosService.delete(id);
   };
 
   return { avisos, loading, addAviso, deleteAviso, refresh: fetchAvisos };

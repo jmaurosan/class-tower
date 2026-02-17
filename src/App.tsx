@@ -79,7 +79,7 @@ const App: React.FC = () => {
     if (!user) return null;
 
     switch (currentPage) {
-      case 'dashboard': return <Dashboard user={user} />;
+      case 'dashboard': return <Dashboard user={user} setCurrentPage={setCurrentPage} />;
       case 'vistorias': return <Vistorias user={user} />;
       case 'vencimentos': return <Vencimentos />;
       case 'diario': return <DiarioBordo user={user} />;

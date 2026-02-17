@@ -142,7 +142,7 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
                   {canManage && (
                     <button
                       onClick={() => handleDelete(aviso.id)}
-                      className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
+                      className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-2 text-slate-400 md:text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all shrink-0"
                       title="Excluir Aviso"
                     >
                       <span className="material-symbols-outlined">delete</span>

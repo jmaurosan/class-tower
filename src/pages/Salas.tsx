@@ -93,8 +93,27 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
   };
 
   return (
-    <div className="flex h-full animate-in fade-in duration-500 overflow-hidden">
-      <aside className="w-48 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1d222a] overflow-y-auto custom-scrollbar flex flex-col shrink-0">
+    <div className="flex flex-col md:flex-row h-full animate-in fade-in duration-500 overflow-hidden">
+      {/* Mobile Floor Selector */}
+      <div className="md:hidden bg-white dark:bg-[#1d222a] border-b border-slate-200 dark:border-slate-800 p-4 shrink-0 overflow-x-auto custom-scrollbar">
+        <div className="flex gap-3 min-w-max">
+          {Array.from({ length: 17 }, (_, i) => i + 1).map((andar) => (
+            <button
+              key={andar}
+              onClick={() => setSelectedAndar(andar)}
+              className={`px-5 py-2.5 rounded-xl transition-all font-bold text-sm whitespace-nowrap ${selectedAndar === andar
+                  ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                  : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-100 dark:border-slate-700'
+                }`}
+            >
+              {andar}º Andar
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex w-48 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1d222a] overflow-y-auto custom-scrollbar flex-col shrink-0">
         <div className="p-4 border-b border-slate-100 dark:border-slate-800">
           <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Andares</h4>
         </div>
@@ -104,8 +123,8 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
               key={andar}
               onClick={() => setSelectedAndar(andar)}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${selectedAndar === andar
-                ? 'bg-primary text-white shadow-lg shadow-primary/20 font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  ? 'bg-primary text-white shadow-lg shadow-primary/20 font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
             >
               <span className="text-sm">{andar}º Andar</span>
