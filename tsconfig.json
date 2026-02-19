@@ -29,6 +29,7 @@
     "noEmit": true
   },
   "exclude": [
-    "supabase/functions"
+    "supabase/functions",
+    "*.js"
   ]
 }
