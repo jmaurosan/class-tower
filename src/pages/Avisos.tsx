@@ -47,9 +47,12 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
 
       setShowForm(false);
       setFormData({ titulo: '', conteudo: '', prioridade: 'Baixa' });
-    } catch (err) {
+      // Adicionar feedback de sucesso
+      console.log('Aviso salvo com sucesso');
+    } catch (err: any) {
       console.error('Erro ao postar aviso:', err);
-      alert('Erro ao salvar o aviso.');
+      const errorMessage = err.message || 'Erro desconhecido ao salvar o aviso.';
+      alert(`Erro ao salvar o aviso: ${errorMessage}`);
     }
   };
 

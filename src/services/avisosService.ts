@@ -20,7 +20,10 @@ export const avisosService = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Database Error:', error);
+      throw new Error(error.message);
+    }
     return data;
   },
 

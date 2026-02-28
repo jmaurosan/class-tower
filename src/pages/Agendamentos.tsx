@@ -218,8 +218,23 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
     if (error) alert('Erro ao excluir regra');
   };
 
+  const handleCancel = async (id: string) => {
+    if (!confirm('Deseja cancelar este agendamento?')) return;
+    try {
+      const { error } = await supabase
+        .from('agendamentos')
+        .update({ status: 'Cancelado' })
+        .eq('id', id);
+      if (error) throw error;
+      alert('Agendamento cancelado com sucesso!');
+    } catch (err) {
+      console.error('Erro ao cancelar:', err);
+      alert('Erro ao cancelar agendamento.');
+    }
+  };
+
   const handleDelete = async (id: string) => {
-    if (!confirm('Deseja excluir este agendamento?')) return;
+    if (!confirm('Deseja EXCLUIR permanentemente este agendamento?')) return;
     try {
       const { error } = await supabase.from('agendamentos').delete().eq('id', id);
       if (error) throw error;
@@ -248,16 +263,15 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
 
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Agendamento</h3>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">Gestão de espaços, mudanças e manutenções</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
           {user.role === 'admin' && (
             <button
               onClick={() => setShowRulesModal(!showRulesModal)}
-              className="flex items-center gap-2 px-5 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-xl font-bold hover:bg-slate-700 transition-all text-sm"
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-800 dark:bg-slate-700 text-white rounded-xl font-bold hover:bg-slate-700 transition-all text-sm whitespace-nowrap"
             >
               <span className="material-symbols-outlined text-xl">edit_calendar</span>
               Configurar Feriados
@@ -265,7 +279,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
           )}
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-5 py-2 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm whitespace-nowrap"
           >
             <span className="material-symbols-outlined text-xl">{showForm ? 'close' : 'calendar_add_on'}</span>
             {showForm ? 'Cancelar' : 'Agendar Novo'}
@@ -397,34 +411,47 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
         {/* Lado Direito: Timeline de Agendamentos */}
         <div className="lg:col-span-3 space-y-4">
           {agendamentos.map((item) => (
-            <div key={item.id} className="group flex items-center gap-6 bg-white dark:bg-[#1d222a] p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all relative">
-              <div className="flex flex-col items-center justify-center min-w-[80px] py-2 border-r border-slate-100 dark:border-slate-800">
+            <div key={item.id} className="group flex flex-wrap md:flex-nowrap items-center gap-4 md:gap-6 bg-white dark:bg-[#1d222a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all relative">
+              <div className="flex flex-col items-center justify-center min-w-[70px] md:min-w-[80px] py-1 md:py-2 border-r border-slate-100 dark:border-slate-800">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{new Date(item.data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short' })}</span>
-                <span className="text-xl font-black text-slate-900 dark:text-white">{new Date(item.data + 'T00:00:00').getDate()}</span>
+                <span className="text-lg md:text-xl font-black text-slate-900 dark:text-white">{new Date(item.data + 'T00:00:00').getDate()}</span>
                 <span className="text-[10px] font-bold text-primary uppercase">{item.hora}</span>
               </div>
 
-              <div className="size-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
-                <span className="material-symbols-outlined text-2xl">{getIcon(item.tipo)}</span>
+              <div className="size-10 md:size-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors shrink-0">
+                <span className="material-symbols-outlined text-xl md:text-2xl">{getIcon(item.tipo)}</span>
               </div>
 
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
+              <div className="flex-1 min-w-[200px]">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
                   <span className={`px-2 py-0.5 rounded text-[9px] font-bold border ${getStatusStyle(item.status)} uppercase tracking-tighter`}>{item.status}</span>
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">• {item.tipo}</span>
                   {item.sala_id && <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">• Unid {item.sala_id}</span>}
                 </div>
-                <h4 className="text-lg font-extrabold text-slate-900 dark:text-white">{item.titulo}</h4>
-                <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs">
+                <h4 className="text-base md:text-lg font-extrabold text-slate-900 dark:text-white leading-tight">{item.titulo}</h4>
+                <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-[11px] md:text-xs">
                   <span className="material-symbols-outlined text-sm">location_on</span>
                   {item.local}
                 </div>
               </div>
 
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+              <div className="opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0 mt-2 md:mt-0">
+                {(user.role === 'admin' || item.sala_id === user.sala_numero) && item.status !== 'Cancelado' && (
+                  <button
+                    onClick={() => handleCancel(item.id)}
+                    className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
+                    title="Cancelar Agendamento"
+                  >
+                    <span className="material-symbols-outlined text-xl">event_busy</span>
+                  </button>
+                )}
                 {(user.role === 'admin' || item.sala_id === user.sala_numero) && (
-                  <button onClick={() => handleDelete(item.id)} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
-                    <span className="material-symbols-outlined">delete</span>
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                    title="Excluir Permanentemente"
+                  >
+                    <span className="material-symbols-outlined text-xl">delete</span>
                   </button>
                 )}
               </div>

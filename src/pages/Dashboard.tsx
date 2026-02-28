@@ -1,17 +1,10 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useVencimentos } from '../hooks/useVencimentos';
 import { supabase } from '../services/supabase';
 import { Page, User } from '../types';
 import Lembretes from './Lembretes';
 
-const dataChart = [
-  { name: 'Semana 1', visitas: 30 },
-  { name: 'Semana 2', visitas: 55 },
-  { name: 'Semana 3', visitas: 42 },
-  { name: 'Semana 4', visitas: 68 },
-];
 
 interface DashboardProps {
   user: User;
@@ -29,20 +22,23 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
 
   const fetchStats = async () => {
     try {
-      // 1. Ocupação
-      const { data: salas } = await supabase.from('salas').select('nome');
-      if (salas) {
-        const total = (15 * 6) + (2 * 3);
-        const occupied = salas.filter(s => s.nome && s.nome.trim() !== '').length;
-        setStats(prev => ({ ...prev, ocupacao: `${Math.round((occupied / total) * 100)}%` }));
+      // 1. Empresas (Contagem de empresas homologadas)
+      const { count: empresasCount } = await supabase
+        .from('empresas')
+        .select('*', { count: 'exact', head: true });
+
+      if (empresasCount !== null) {
+        setStats(prev => ({ ...prev, ocupacao: empresasCount.toString() }));
       }
 
-      // 2. Ocorrências (Diário de Bordo)
-      const { data: ocorrencias } = await supabase.from('diario').select('categoria');
-      if (ocorrencias) {
-        const active = ocorrencias.length;
-        const urgent = ocorrencias.filter(o => o.categoria === 'Segurança').length;
-        setStats(prev => ({ ...prev, ocorrencias: active.toString(), urgentes: urgent.toString() }));
+      // 2. Agendamentos (Contagem de agendamentos pendentes/confirmados)
+      const { count: agendamentosCount } = await supabase
+        .from('agendamentos')
+        .select('*', { count: 'exact', head: true })
+        .neq('status', 'Cancelado');
+
+      if (agendamentosCount !== null) {
+        setStats(prev => ({ ...prev, ocorrencias: agendamentosCount.toString() }));
       }
 
       // 3. Vistorias Pendentes
@@ -128,10 +124,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: 'Taxa de Ocupação', value: stats.ocupacao, change: 'Building', color: 'text-emerald-500', icon: 'apartment', bg: 'bg-primary/10', target: 'salas' as Page },
-          { label: 'Vistorias Pendentes', value: stats.vistorias, change: 'Sistema', color: 'text-amber-500', icon: 'warning', bg: 'bg-amber-500/10', target: 'vistorias' as Page },
-          { label: 'Prazos Críticos', value: criticalDocs.length.toString(), change: '< 5 Dias', color: 'text-red-500', icon: 'gavel', bg: 'bg-red-500/10', target: 'vencimentos' as Page },
-          { label: 'Ocorrências Abertas', value: stats.ocorrencias, change: `${stats.urgentes} Urgentes`, color: 'text-red-500', icon: 'report_problem', bg: 'bg-red-500/10', target: 'diario' as Page },
+          { label: 'Empresas', value: stats.ocupacao, change: 'Cadastradas', color: 'text-emerald-500', icon: 'business', bg: 'bg-emerald-500/10', target: 'empresas' as Page },
+          { label: 'Vistorias', value: stats.vistorias, change: 'Pendentes', color: 'text-amber-500', icon: 'assignment_turned_in', bg: 'bg-amber-500/10', target: 'vistorias' as Page },
+          { label: 'Documentos com Urgência', value: criticalDocs.length.toString(), change: '< 5 Dias', color: 'text-red-500', icon: 'notification_important', bg: 'bg-red-500/10', target: 'vencimentos' as Page },
+          { label: 'Agendamentos', value: stats.ocorrencias, change: `Atuais`, color: 'text-blue-500', icon: 'calendar_month', bg: 'bg-blue-500/10', target: 'agendamentos' as Page },
         ].map((card, i) => (
           <div
             key={i}
@@ -153,33 +149,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="space-y-8">
           <Lembretes />
-        </div>
-
-        <div className="lg:col-span-2 space-y-8">
-          <div className="bg-white dark:bg-[#1d222a] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">Visitas Técnicas</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Desempenho nos últimos 30 dias</p>
-              </div>
-            </div>
-            <div className="w-full">
-              <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={dataChart}>
-                  <defs>
-                    <linearGradient id="colorVisitas" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0f756f" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#0f756f" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="name" hide />
-                  <YAxis hide />
-                  <Tooltip contentStyle={{ backgroundColor: '#1d222a', border: 'none', borderRadius: '8px', color: '#fff' }} />
-                  <Area type="monotone" dataKey="visitas" stroke="#0f756f" fillOpacity={1} fill="url(#colorVisitas)" strokeWidth={3} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
         </div>
       </div>
     </div>

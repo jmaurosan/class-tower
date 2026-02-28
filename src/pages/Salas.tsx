@@ -44,22 +44,40 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
 
   const currentFloorRooms = useMemo(() => {
     const rooms = [];
-    const limit = (selectedAndar === 16 || selectedAndar === 17) ? 3 : 6;
 
-    for (let i = 1; i <= limit; i++) {
-      const roomNum = selectedAndar * 100 + i;
-      const numeroStr = roomNum.toString().padStart(4, '0');
-      const existing = salas.find(s => s.numero === numeroStr);
-      rooms.push(existing || {
-        id: numeroStr,
-        numero: numeroStr,
-        andar: selectedAndar,
-        nome: '',
-        responsavel1: '',
-        telefone1: '',
-        responsavel2: '',
-        telefone2: ''
-      });
+    if (selectedAndar === 0) {
+      // Unidades especiais do Térreo
+      const terreoRooms = ['T01', 'CO2'];
+      for (const numero of terreoRooms) {
+        const existing = salas.find(s => s.numero === numero);
+        rooms.push(existing || {
+          id: numero,
+          numero: numero,
+          andar: 0,
+          nome: '',
+          responsavel1: '',
+          telefone1: '',
+          responsavel2: '',
+          telefone2: ''
+        });
+      }
+    } else {
+      const limit = (selectedAndar === 16 || selectedAndar === 17) ? 3 : 6;
+      for (let i = 1; i <= limit; i++) {
+        const roomNum = selectedAndar * 100 + i;
+        const numeroStr = roomNum.toString().padStart(4, '0');
+        const existing = salas.find(s => s.numero === numeroStr);
+        rooms.push(existing || {
+          id: numeroStr,
+          numero: numeroStr,
+          andar: selectedAndar,
+          nome: '',
+          responsavel1: '',
+          telefone1: '',
+          responsavel2: '',
+          telefone2: ''
+        });
+      }
     }
     return rooms;
   }, [selectedAndar, salas]);
@@ -97,16 +115,16 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
       {/* Mobile Floor Selector */}
       <div className="md:hidden bg-white dark:bg-[#1d222a] border-b border-slate-200 dark:border-slate-800 p-4 shrink-0 overflow-x-auto custom-scrollbar">
         <div className="flex gap-3 min-w-max">
-          {Array.from({ length: 17 }, (_, i) => i + 1).map((andar) => (
+          {Array.from({ length: 18 }, (_, i) => i).map((andar) => (
             <button
               key={andar}
               onClick={() => setSelectedAndar(andar)}
               className={`px-5 py-2.5 rounded-xl transition-all font-bold text-sm whitespace-nowrap ${selectedAndar === andar
-                  ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                  : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-100 dark:border-slate-700'
+                ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-100 dark:border-slate-700'
                 }`}
             >
-              {andar}º Andar
+              {andar === 0 ? 'Térreo' : `${andar}º Andar`}
             </button>
           ))}
         </div>
@@ -118,16 +136,16 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
           <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Andares</h4>
         </div>
         <nav className="flex-1 p-2 space-y-1">
-          {Array.from({ length: 17 }, (_, i) => i + 1).map((andar) => (
+          {Array.from({ length: 18 }, (_, i) => i).map((andar) => (
             <button
               key={andar}
               onClick={() => setSelectedAndar(andar)}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${selectedAndar === andar
-                  ? 'bg-primary text-white shadow-lg shadow-primary/20 font-bold'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                ? 'bg-primary text-white shadow-lg shadow-primary/20 font-bold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
             >
-              <span className="text-sm">{andar}º Andar</span>
+              <span className="text-sm">{andar === 0 ? 'Térreo' : `${andar}º Andar`}</span>
               <span className="material-symbols-outlined text-sm opacity-50">chevron_right</span>
             </button>
           ))}
@@ -139,16 +157,18 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
           <div className="flex justify-between items-center">
             <div>
               <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                Salas do {selectedAndar}º Andar
+                Salas do {selectedAndar === 0 ? 'Térreo' : `${selectedAndar}º Andar`}
               </h3>
               <p className="text-slate-500 dark:text-slate-400 font-medium">
-                Gerencie as {(selectedAndar === 16 || selectedAndar === 17) ? '3' : '6'} unidades deste pavimento
+                {selectedAndar === 0
+                  ? 'Gerencie as unidades especiais localizadas no pavimento térreo'
+                  : `Gerencie as ${(selectedAndar === 16 || selectedAndar === 17) ? '3' : '6'} unidades deste pavimento`}
               </p>
             </div>
             <div className="flex items-center gap-3 bg-white dark:bg-[#1d222a] px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
               <span className="material-symbols-outlined text-primary">info</span>
               <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">
-                Padrão: {(selectedAndar === 16 || selectedAndar === 17) ? '3 Salas' : '6 Salas'}
+                Padrão: {selectedAndar === 0 ? '2 Unidades' : (selectedAndar === 16 || selectedAndar === 17) ? '3 Salas' : '6 Salas'}
               </span>
             </div>
           </div>
@@ -241,7 +261,7 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
                   </div>
                   <div>
                     <h4 className="text-xl font-black text-slate-900 dark:text-white">Editar Unidade</h4>
-                    <p className="text-xs text-slate-500 uppercase font-bold tracking-widest">{selectedAndar}º Andar</p>
+                    <p className="text-xs text-slate-500 uppercase font-bold tracking-widest">{selectedAndar === 0 ? 'Térreo' : `${selectedAndar}º Andar`}</p>
                   </div>
                 </div>
                 <button onClick={() => setEditingSala(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">

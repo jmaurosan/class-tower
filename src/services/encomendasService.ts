@@ -47,6 +47,7 @@ export const encomendasService = {
     if (updates.status) dbUpdates.status = updates.status;
     if (updates.quemRetirou) dbUpdates.quem_retirou = updates.quemRetirou;
     if (updates.dataRetirada) dbUpdates.data_retirada = updates.dataRetirada;
+    if (updates.justificativaCancelamento) dbUpdates.justificativa_cancelamento = updates.justificativaCancelamento;
 
     const { error } = await supabase
       .from('encomendas')

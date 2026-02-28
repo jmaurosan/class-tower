@@ -84,16 +84,15 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
 
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Repositório de Documentos</h3>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">Acesso centralizado aos documentos oficiais do condomínio</p>
+          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Documentos</h3>
         </div>
 
         {canUpload && (
           <button
             onClick={() => setShowUploadModal(true)}
-            className="flex items-center gap-2 px-5 py-2 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm whitespace-nowrap"
           >
             <span className="material-symbols-outlined text-xl">cloud_upload</span>
             Anexar Documento
@@ -101,7 +100,7 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
         )}
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+      <div className="flex flex-wrap gap-2 pb-2">
         {categorias.map(cat => (
           <button
             key={cat}

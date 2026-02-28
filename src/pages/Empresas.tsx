@@ -133,6 +133,7 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
         .from('empresas')
         .insert([{
           ...formData,
+          cnpj: tipoPessoa === 'PJ' ? formData.cnpj : null,
           setor: finalSetor,
           status: 'Em Revisão',
           rating: 0,
@@ -224,10 +225,12 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nome / Razão Social</label>
                 <input required name="nome" value={formData.nome} onChange={handleInputChange} type="text" placeholder={tipoPessoa === 'PJ' ? "Ex: Master Elevadores LTDA" : "Ex: João da Silva"} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white" />
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{tipoPessoa === 'PJ' ? 'CNPJ' : 'CPF'}</label>
-                <input required name="cnpj" value={formData.cnpj} onChange={handleInputChange} type="text" placeholder={tipoPessoa === 'PJ' ? "00.000.000/0000-00" : "000.000.000-00"} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white" />
-              </div>
+              {tipoPessoa === 'PJ' && (
+                <div className="space-y-1 animate-in slide-in-from-left duration-200">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">CNPJ</label>
+                  <input required name="cnpj" value={formData.cnpj} onChange={handleInputChange} type="text" placeholder="00.000.000/0000-00" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white" />
+                </div>
+              )}
               <div className="space-y-1">
                 <div className="flex justify-between items-center mb-1">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Setor / Especialidade</label>
@@ -317,7 +320,9 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
             <div className="p-6 space-y-4">
               <div>
                 <h4 className="text-lg font-black text-slate-900 dark:text-white truncate" title={empresa.nome}>{empresa.nome}</h4>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{empresa.cnpj}</p>
+                {empresa.cnpj && (
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{empresa.cnpj}</p>
+                )}
               </div>
 
               <div

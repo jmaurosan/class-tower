@@ -63,9 +63,10 @@ export interface Encomenda {
   categoria: 'Caixa' | 'Envelope' | 'Pacote' | 'Outros';
   caracteristicas: string;
   fotoUrl?: string;
-  status: 'Pendente' | 'Retirado';
+  status: 'Pendente' | 'Retirado' | 'Cancelado';
   quemRetirou?: string;
   sala_id: string;
+  justificativaCancelamento?: string;
 }
 
 export interface Vistoria {
@@ -88,7 +89,7 @@ export interface DiarioEntry {
   hora: string;
   titulo: string;
   descricao: string;
-  categoria: 'Segurança' | 'Manutenção' | 'Reclamação' | 'Aviso' | 'Limpeza' | 'Outros';
+  categoria: string;
   usuario: string;
   sala_id?: string;
   status: 'Pendente' | 'Resolvido';

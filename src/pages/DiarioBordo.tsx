@@ -14,10 +14,12 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
   const [newEntry, setNewEntry] = useState({
     titulo: '',
     descricao: '',
-    categoria: 'Outros' as DiarioEntry['categoria'],
+    categoria: 'Outros' as string,
+    novaCategoria: '',
     status: 'Pendente' as DiarioEntry['status'],
     solucao: ''
   });
+  const [isNovaCategoria, setIsNovaCategoria] = useState(false);
 
   const fetchEntries = async () => {
     try {
@@ -91,13 +93,15 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
     e.preventDefault();
 
     try {
+      const finalCategoria = isNovaCategoria ? newEntry.novaCategoria : newEntry.categoria;
+
       if (editingId) {
         const { error } = await supabase
           .from('diario')
           .update({
             titulo: newEntry.titulo,
             descricao: newEntry.descricao,
-            categoria: newEntry.categoria,
+            categoria: finalCategoria,
             status: newEntry.status,
             solucao: newEntry.solucao
           })
@@ -111,7 +115,7 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
           .insert([{
             titulo: newEntry.titulo,
             descricao: newEntry.descricao,
-            categoria: newEntry.categoria,
+            categoria: finalCategoria,
             usuario: user.name,
             sala_id: user.sala_numero,
             user_id: user.id,
@@ -121,7 +125,8 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
         if (error) throw error;
       }
 
-      setNewEntry({ titulo: '', descricao: '', categoria: 'Outros', status: 'Pendente', solucao: '' });
+      setNewEntry({ titulo: '', descricao: '', categoria: 'Outros', novaCategoria: '', status: 'Pendente', solucao: '' });
+      setIsNovaCategoria(false);
       setShowForm(false);
     } catch (err) {
       console.error('Erro ao salvar ocorrência:', err);
@@ -134,10 +139,12 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
       titulo: entry.titulo,
       descricao: entry.descricao,
       categoria: entry.categoria,
+      novaCategoria: '',
       status: entry.status,
       solucao: entry.solucao || ''
     });
     setEditingId(entry.id);
+    setIsNovaCategoria(false);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -161,7 +168,8 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
   const handleCancel = () => {
     setShowForm(false);
     setEditingId(null);
-    setNewEntry({ titulo: '', descricao: '', categoria: 'Outros', status: 'Pendente', solucao: '' });
+    setNewEntry({ titulo: '', descricao: '', categoria: 'Outros', novaCategoria: '', status: 'Pendente', solucao: '' });
+    setIsNovaCategoria(false);
   };
 
   const isAdmin = user.role === 'admin';
@@ -170,14 +178,13 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
 
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Ocorrências</h3>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">Histórico oficial de ocorrências e atividades</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
           {isAdmin && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-200 dark:border-slate-700">
+            <div className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-200 dark:border-slate-700 whitespace-nowrap">
               <span className="material-symbols-outlined text-sm">security</span>
               Logs Ativos
             </div>
@@ -185,9 +192,9 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
           {!showForm && canManage && (
             <button
               onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold transition-all shadow-lg shadow-primary/20 active:scale-95 hover:opacity-90"
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold transition-all shadow-lg shadow-primary/20 active:scale-95 hover:opacity-90 whitespace-nowrap"
             >
-              <span className="material-symbols-outlined">edit_note</span>
+              <span className="material-symbols-outlined text-xl">edit_note</span>
               Nova Entrada
             </button>
           )}
@@ -219,13 +226,22 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
                     onChange={e => setNewEntry({ ...newEntry, titulo: e.target.value })}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Categoria</label>
                     <select
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all"
-                      value={newEntry.categoria}
-                      onChange={e => setNewEntry({ ...newEntry, categoria: e.target.value as any })}
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all text-sm"
+                      value={isNovaCategoria ? 'Nova' : newEntry.categoria}
+                      onChange={e => {
+                        const val = e.target.value;
+                        if (val === 'Nova') {
+                          setIsNovaCategoria(true);
+                          setNewEntry({ ...newEntry, categoria: '' });
+                        } else {
+                          setIsNovaCategoria(false);
+                          setNewEntry({ ...newEntry, categoria: val });
+                        }
+                      }}
                     >
                       <option>Segurança</option>
                       <option>Manutenção</option>
@@ -233,13 +249,27 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
                       <option>Reclamação</option>
                       <option>Aviso</option>
                       <option>Outros</option>
+                      <option value="Nova">+ Criar Nova Categoria</option>
                     </select>
                   </div>
+                  {isNovaCategoria && (
+                    <div className="space-y-1 animate-in slide-in-from-left duration-200">
+                      <label className="text-[10px] font-bold text-primary uppercase ml-1">Nome da Nova Categoria</label>
+                      <input
+                        required
+                        type="text"
+                        placeholder="Ex: Elétrica"
+                        className="w-full px-4 py-3 bg-primary/5 border border-primary/20 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all text-sm"
+                        value={newEntry.novaCategoria}
+                        onChange={e => setNewEntry({ ...newEntry, novaCategoria: e.target.value })}
+                      />
+                    </div>
+                  )}
                   {editingId && (
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Status</label>
                       <select
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all"
+                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all text-sm"
                         value={newEntry.status}
                         onChange={e => setNewEntry({ ...newEntry, status: e.target.value as any })}
                       >
@@ -279,24 +309,10 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
               </form>
             </div>
           </div>
-        ) : (
-          <div className="lg:col-span-1 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 bg-slate-50 dark:bg-slate-900/50">
-            <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Informações Importantes</h4>
-            <div className="space-y-4">
-              <div className="flex gap-3">
-                <span className="material-symbols-outlined text-primary">history</span>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">As ocorrências são arquivadas por período indeterminado para consultas e vistorias futuras.</p>
-              </div>
-              <div className="flex gap-3">
-                <span className="material-symbols-outlined text-primary">task_alt</span>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Você pode marcar uma ocorrência como <b>Resolvida</b> editando o registro e informando a solução aplicada.</p>
-              </div>
-            </div>
-          </div>
-        )}
+        ) : null}
 
         {/* Lista Coluna Direita */}
-        <div className={`${showForm ? 'lg:col-span-2' : 'lg:col-span-2'} space-y-6`}>
+        <div className={`${showForm ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-6`}>
           {entries.length > 0 ? (
             entries.map((entry) => (
               <div key={entry.id} className="group flex gap-6">
