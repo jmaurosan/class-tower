@@ -25,13 +25,26 @@ const Support: React.FC = () => {
         <p className="text-slate-500 dark:text-slate-400 font-medium">Suporte técnico especializado para a plataforma Class Tower</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto w-full">
         {[
-          { icon: 'forum', label: 'Chat Online', desc: 'Fale agora com um consultor', color: 'text-blue-500', bg: 'bg-blue-500/10' },
-          { icon: 'mail', label: 'E-mail', desc: 'suporte@classtower.com.br', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-          { icon: 'phone_in_talk', label: 'Central 24h', desc: '0800 7070 1010', color: 'text-primary', bg: 'bg-primary/10' },
+          {
+            icon: 'chat',
+            label: 'WhatsApp',
+            desc: 'Fale agora via WhatsApp',
+            color: 'text-emerald-500',
+            bg: 'bg-emerald-500/10',
+            onClick: () => window.open('https://wa.me/55', '_blank')
+          },
+          {
+            icon: 'mail',
+            label: 'E-mail',
+            desc: 'suporte@classtower.com.br',
+            color: 'text-blue-500',
+            bg: 'bg-blue-500/10',
+            onClick: () => window.open('mailto:suporte@classtower.com.br', '_blank')
+          },
         ].map((item, i) => (
-          <button key={i} className="flex flex-col items-center p-8 bg-white dark:bg-[#1d222a] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all group">
+          <button key={i} onClick={item.onClick} className="flex flex-col items-center p-8 bg-white dark:bg-[#1d222a] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all group">
             <div className={`size-14 rounded-2xl ${item.bg} ${item.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
               <span className="material-symbols-outlined text-3xl">{item.icon}</span>
             </div>
@@ -50,7 +63,7 @@ const Support: React.FC = () => {
           <div className="space-y-3">
             {faqs.map((faq, i) => (
               <div key={i} className="bg-white dark:bg-[#1d222a] border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden transition-all">
-                <button 
+                <button
                   onClick={() => setActiveFaq(activeFaq === i ? null : i)}
                   className="w-full flex items-center justify-between p-5 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                 >
@@ -97,16 +110,16 @@ const Support: React.FC = () => {
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Descrição Detalhada</label>
-                  <textarea 
-                    required 
-                    rows={4} 
+                  <textarea
+                    required
+                    rows={4}
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-sm resize-none"
                     placeholder="Como podemos ajudar?"
                   ></textarea>
                 </div>
-                <button 
+                <button
                   disabled={ticketStatus === 'sending'}
-                  type="submit" 
+                  type="submit"
                   className="w-full py-4 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                 >
                   {ticketStatus === 'sending' ? 'Enviando...' : 'Enviar Solicitação'}

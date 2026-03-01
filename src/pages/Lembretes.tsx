@@ -16,7 +16,7 @@ const Lembretes: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
 
   const toggleTodo = (id: number) => {
-    setTodos(prev => prev.map(todo => 
+    setTodos(prev => prev.map(todo =>
       todo.id === id ? { ...todo, completed: !todo.completed } : todo
     ));
   };
@@ -25,7 +25,7 @@ const Lembretes: React.FC = () => {
     e.preventDefault();
     const text = inputValue.trim();
     if (!text) return;
-    
+
     const newTodo: Todo = {
       id: Date.now(),
       text: text,
@@ -48,7 +48,7 @@ const Lembretes: React.FC = () => {
       <div className="p-6 border-b border-slate-100 dark:border-slate-800 shrink-0">
         <h3 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
           <span className="material-symbols-outlined text-primary">sticky_note_2</span>
-          Lembretes do Gestor
+          Lembretes
         </h3>
         <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Anotações e tarefas rápidas</p>
       </div>
@@ -78,23 +78,20 @@ const Lembretes: React.FC = () => {
             <div
               key={todo.id}
               onClick={() => toggleTodo(todo.id)}
-              className={`group flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all duration-200 select-none ${
-                todo.completed
+              className={`group flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all duration-200 select-none ${todo.completed
                   ? 'bg-slate-50/50 dark:bg-slate-800/10 border-slate-100 dark:border-slate-800/50'
                   : 'bg-white dark:bg-slate-800/30 border-slate-200 dark:border-slate-700 shadow-sm hover:border-primary/40'
-              }`}
+                }`}
             >
               <div className="flex items-center gap-3 overflow-hidden">
-                <span className={`material-symbols-outlined shrink-0 transition-colors ${
-                  todo.completed ? 'text-emerald-500 fill-1' : 'text-slate-300 dark:text-slate-600'
-                }`}>
+                <span className={`material-symbols-outlined shrink-0 transition-colors ${todo.completed ? 'text-emerald-500 fill-1' : 'text-slate-300 dark:text-slate-600'
+                  }`}>
                   {todo.completed ? 'check_circle' : 'radio_button_unchecked'}
                 </span>
-                <span className={`text-sm font-medium truncate transition-all duration-300 ${
-                  todo.completed 
-                    ? 'line-through text-slate-400 dark:text-slate-600' 
+                <span className={`text-sm font-medium truncate transition-all duration-300 ${todo.completed
+                    ? 'line-through text-slate-400 dark:text-slate-600'
                     : 'text-slate-700 dark:text-slate-200'
-                }`}>
+                  }`}>
                   {todo.text}
                 </span>
               </div>

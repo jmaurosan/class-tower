@@ -7,14 +7,18 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   -- Inserir novo perfil na tabela profiles
-  INSERT INTO public.profiles (id, full_name, email, role, sala_numero)
+  -- IMPORTANTE: o frontend envia 'full_name' como chave nos metadados do usuário
+  INSERT INTO public.profiles (id, full_name, email, role, sala_numero, permissions, status)
   VALUES (
     NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'name', NEW.email),
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'role', 'sala'),
-    COALESCE(NEW.raw_user_meta_data->>'sala_numero', '0000')
-  );
+    COALESCE(NEW.raw_user_meta_data->>'sala_numero', '0000'),
+    COALESCE((NEW.raw_user_meta_data->>'permissions')::jsonb, '{}'::jsonb),
+    'Ativo'
+  )
+  ON CONFLICT (id) DO NOTHING; -- evita duplicação se o frontend já inseriu via upsert
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

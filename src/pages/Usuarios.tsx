@@ -84,26 +84,27 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
         if (error) throw error;
         setSuccess('Usuário atualizado com sucesso!');
       } else {
-        // Criar novo usuário via Auth
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            data: {
-              full_name: formData.name,
-              role: formData.role,
-              sala_numero: formData.sala_numero,
-              permissions: formData.permissions
-            },
-            emailRedirectTo: window.location.origin
+        // Cria usuário via Edge Function - functions.invoke() injeta o token automaticamente
+        const { data: fnData, error: fnError } = await supabase.functions.invoke('create-user', {
+          body: {
+            email: formData.email,
+            password: formData.password,
+            name: formData.name,
+            role: formData.role,
+            sala_numero: formData.sala_numero,
+            permissions: formData.permissions
           }
         });
 
-        if (authError) throw authError;
+        if (fnError) {
+          throw new Error(fnError.message || 'Erro ao criar usuário');
+        }
 
-        // O perfil será criado via Trigger no Supabase, 
-        // mas garantimos que a lista atualize ou damos feedback se o e-mail foi enviado
-        setSuccess('Usuário convidado! Um e-mail de confirmação foi enviado.');
+        if (fnData?.error) {
+          throw new Error(fnData.error);
+        }
+
+        setSuccess('Usuário criado com sucesso! O acesso está disponível imediatamente.');
       }
 
       // Resetar formulário e recarregar lista
@@ -112,7 +113,8 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
         password: '',
         name: '',
         role: 'sala',
-        sala_numero: '0000'
+        sala_numero: '0000',
+        permissions: {}
       });
       setShowModal(false);
       setEditingUser(null);
@@ -220,12 +222,15 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
         <button
           onClick={() => {
             setEditingUser(null);
+            setError('');
+            setSuccess('');
             setFormData({
               email: '',
               password: '',
               name: '',
               role: 'sala',
-              sala_numero: '0000'
+              sala_numero: '0000',
+              permissions: {}
             });
             setShowModal(true);
           }}
@@ -314,7 +319,7 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
       {/* Modal de Criação/Edição */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-[#1d222a] rounded-2xl shadow-2xl max-w-md w-full p-8">
+          <div className="bg-white dark:bg-[#1d222a] rounded-2xl shadow-2xl max-w-md w-full p-8 max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-6">
               {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
             </h2>

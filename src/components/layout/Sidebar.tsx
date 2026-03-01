@@ -165,8 +165,8 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
               }
             }}
             className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${user.role === 'admin'
-                ? 'hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer'
-                : 'cursor-default'
+              ? 'hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer'
+              : 'cursor-default'
               }`}
           >
             <img
@@ -178,6 +178,9 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
               <span className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[120px]">{user.name}</span>
               <span className="text-[10px] text-slate-500 dark:text-slate-500 uppercase">{getRoleLabel(user.role)}</span>
             </div>
+          </div>
+          <div className="mt-2 flex justify-center">
+            <span className="text-[9px] text-slate-400 dark:text-slate-600 font-medium">v1.5.0-comercial</span>
           </div>
         </div>
       </aside>
