@@ -85,8 +85,7 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
     <div className="p-8 space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-end">
         <div>
-          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Portal de Avisos</h3>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">Comunicados oficiais e informações gerais</p>
+          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Avisos</h3>
         </div>
         {canManage && (
           <button

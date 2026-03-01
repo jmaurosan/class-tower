@@ -143,8 +143,7 @@ const Vencimentos: React.FC<VencimentosProps> = () => {
     <div className="p-8 space-y-10 animate-in fade-in duration-500 transition-colors duration-300 pb-20">
       <div className="flex justify-between items-end">
         <div>
-          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Painel de Conformidade</h3>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">Controle rigoroso de renovações obrigatórias</p>
+          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Vencimentos</h3>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}

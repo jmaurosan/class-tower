@@ -106,7 +106,6 @@ const Settings: React.FC<SettingsProps> = ({ user, onUpdateUser }) => {
     <div className="p-8 max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
         <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Configurações do Sistema</h3>
-        <p className="text-slate-500 dark:text-slate-400 font-medium">Gerencie suas preferências e segurança da conta</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

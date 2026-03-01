@@ -216,8 +216,7 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
     <div className="p-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white">Gestão de Usuários</h1>
-          <p className="text-slate-500 mt-1">Gerencie todos os usuários do sistema</p>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white">Cadastro de Usuários</h1>
         </div>
         <button
           onClick={() => {

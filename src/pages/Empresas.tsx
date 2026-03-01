@@ -186,7 +186,6 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
       <div className="flex justify-between items-end">
         <div>
           <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Prestadores de Serviço</h3>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">Catálogo de fornecedores e parceiros homologados</p>
         </div>
         {canManage && (
           <button

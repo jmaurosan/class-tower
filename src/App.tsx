@@ -214,16 +214,7 @@ const App: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2 md:gap-4">
-              <button
-                onClick={handleOpenNews}
-                className="size-10 flex items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800 relative hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                title="Novidades"
-              >
-                <span className="material-symbols-outlined text-slate-500">celebration</span>
-                {hasNewUpdates && (
-                  <span className="absolute -top-1 -right-1 size-3 bg-red-500 rounded-full border-2 border-white dark:border-[#1d222a]" />
-                )}
-              </button>
+
 
               <button onClick={() => setIsDarkMode(!isDarkMode)} className="size-10 flex items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800">
                 <span className="material-symbols-outlined text-slate-500">{isDarkMode ? 'light_mode' : 'dark_mode'}</span>

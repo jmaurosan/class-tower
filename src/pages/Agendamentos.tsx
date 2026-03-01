@@ -222,8 +222,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
     <div className="p-8 space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Agendamento</h3>
-          <p className="text-sm text-slate-500 font-medium">Gerencie mudanças, manutenções e reservas</p>
+          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Agendamentos</h3>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
