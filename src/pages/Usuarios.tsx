@@ -213,11 +213,9 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white">Cadastro de Usuários</h1>
-        </div>
+    <div className="p-4 md:p-8">
+      <div className="flex justify-between items-center mb-6 md:mb-8">
+        <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Cadastro de Usuários</h1>
         <button
           onClick={() => {
             setEditingUser(null);
@@ -233,9 +231,9 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
             });
             setShowModal(true);
           }}
-          className="px-5 py-2 bg-primary text-white font-bold rounded-xl hover:scale-105 transition-all flex items-center gap-2 text-sm"
+          className="flex items-center gap-1.5 px-3 py-2 md:px-5 md:py-2.5 bg-primary text-white font-bold rounded-xl text-xs md:text-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all whitespace-nowrap"
         >
-          <span className="material-symbols-outlined text-xl">add</span>
+          <span className="material-symbols-outlined text-lg md:text-xl">add</span>
           Novo Usuário
         </button>
       </div>
@@ -259,59 +257,48 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
           <div className="inline-block size-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
         </div>
       ) : (
-        <div className="bg-white dark:bg-[#1d222a] rounded-2xl shadow-xl overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-slate-50 dark:bg-slate-900">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Nome</th>
-                <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Perfil</th>
-                <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Apartamento</th>
-                <th className="px-6 py-4 text-left text-xs font-black text-slate-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-right text-xs font-black text-slate-500 uppercase tracking-wider">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {users.map((user) => (
-                <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="font-bold text-slate-900 dark:text-white">{user.full_name || 'Sem nome'}</div>
-                  </td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{user.email || 'Sem email'}</td>
-                  <td className="px-6 py-4">{getRoleBadge(user.role)}</td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{user.sala_numero || '-'}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-lg text-[10px] font-bold ${user.status === 'Bloqueado' ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+        <div className="space-y-3 md:space-y-4">
+          {users.map((user) => (
+            <div key={user.id} className="bg-white dark:bg-[#1d222a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:shadow-md transition-all">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h4 className="text-sm md:text-base font-black text-slate-900 dark:text-white truncate">{user.full_name || 'Sem nome'}</h4>
+                    {getRoleBadge(user.role)}
+                    <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${user.status === 'Bloqueado' ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
                       {user.status || 'Ativo'}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => toggleBlockStatus(user)}
-                      className={`px-3 py-2 ${user.status === 'Bloqueado' ? 'text-emerald-500 hover:bg-emerald-500/10' : 'text-amber-500 hover:bg-amber-500/10'} rounded-lg transition-colors mr-2`}
-                      title={user.status === 'Bloqueado' ? 'Desbloquear' : 'Bloquear'}
-                      disabled={user.id === currentUser.id}
-                    >
-                      <span className="material-symbols-outlined text-sm">{user.status === 'Bloqueado' ? 'lock_open' : 'lock'}</span>
-                    </button>
-                    <button
-                      onClick={() => handleEdit(user)}
-                      className="px-3 py-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors mr-2"
-                    >
-                      <span className="material-symbols-outlined text-sm">edit</span>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(user.id)}
-                      className="px-3 py-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                      disabled={user.id === currentUser.id}
-                    >
-                      <span className="material-symbols-outlined text-sm">delete</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email || 'Sem email'}</p>
+                  {user.sala_numero && <p className="text-[10px] text-slate-400 mt-0.5">Unidade: {user.sala_numero}</p>}
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => toggleBlockStatus(user)}
+                    className={`p-1.5 ${user.status === 'Bloqueado' ? 'text-emerald-500 hover:bg-emerald-500/10' : 'text-amber-500 hover:bg-amber-500/10'} rounded-lg transition-colors`}
+                    title={user.status === 'Bloqueado' ? 'Desbloquear' : 'Bloquear'}
+                    disabled={user.id === currentUser.id}
+                  >
+                    <span className="material-symbols-outlined text-base">{user.status === 'Bloqueado' ? 'lock_open' : 'lock'}</span>
+                  </button>
+                  <button
+                    onClick={() => handleEdit(user)}
+                    className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-base">edit</span>
+                  </button>
+                  <button
+                    onClick={() => handleDelete(user.id)}
+                    className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                    disabled={user.id === currentUser.id}
+                  >
+                    <span className="material-symbols-outlined text-base">delete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
