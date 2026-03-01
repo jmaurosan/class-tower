@@ -191,28 +191,30 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent, onDa
   return (
     <div className="space-y-6">
       {/* Header do Calendário */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white dark:bg-[#1d222a] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div className="flex items-center gap-2">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-            <span className="material-symbols-outlined">chevron_left</span>
-          </button>
-          <h3 className="text-lg font-black text-slate-900 dark:text-white min-w-[150px] text-center capitalize">
-            {currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-          </h3>
-          <button onClick={() => navigate(1)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-            <span className="material-symbols-outlined">chevron_right</span>
-          </button>
-          <button onClick={resetToToday} className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors">
+      <div className="flex flex-col gap-3 bg-white dark:bg-[#1d222a] p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <button onClick={() => navigate(-1)} className="p-1.5 md:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0">
+              <span className="material-symbols-outlined text-xl md:text-2xl">chevron_left</span>
+            </button>
+            <h3 className="text-sm md:text-lg font-black text-slate-900 dark:text-white text-center capitalize whitespace-nowrap">
+              {currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+            </h3>
+            <button onClick={() => navigate(1)} className="p-1.5 md:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0">
+              <span className="material-symbols-outlined text-xl md:text-2xl">chevron_right</span>
+            </button>
+          </div>
+          <button onClick={resetToToday} className="px-2.5 py-1 md:px-3 md:py-1.5 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors shrink-0">
             Hoje
           </button>
         </div>
 
-        <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl">
+        <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl self-center md:self-end">
           {(['month', 'week', 'day'] as ViewMode[]).map(mode => (
             <button
               key={mode}
               onClick={() => setViewMode(mode)}
-              className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === mode ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              className={`px-3 md:px-4 py-1.5 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === mode ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                 }`}
             >
               {mode === 'month' ? 'Mês' : mode === 'week' ? 'Semana' : 'Dia'}
