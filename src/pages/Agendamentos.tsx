@@ -326,6 +326,11 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
           {viewType === 'calendar' ? (
             <CalendarView
               events={agendamentos.filter(a => a.status !== 'Cancelado')}
+              onDateClick={(date) => {
+                setFormData({ ...formData, data: date });
+                setShowForm(true);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
             />
           ) : (
             <div className="space-y-4">

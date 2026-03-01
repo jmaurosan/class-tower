@@ -5,11 +5,12 @@ import { Agendamento } from '../types';
 interface CalendarViewProps {
   events: Agendamento[];
   onSelectEvent?: (event: Agendamento) => void;
+  onDateClick?: (date: string) => void;
 }
 
 type ViewMode = 'month' | 'week' | 'day';
 
-const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent, onDateClick }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
 
@@ -46,7 +47,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent }) =>
       const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
 
       days.push(
-        <div key={day} className="h-24 md:h-32 p-1 md:p-2 bg-white dark:bg-[#1d222a] border border-slate-100 dark:border-slate-800 relative group overflow-hidden">
+        <div
+          key={day}
+          onClick={() => onDateClick?.(dateStr)}
+          className="h-24 md:h-32 p-1 md:p-2 bg-white dark:bg-[#1d222a] border border-slate-100 dark:border-slate-800 relative group overflow-hidden cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+        >
           <span className={`text-xs font-bold ${isToday ? 'bg-primary text-white size-6 flex items-center justify-center rounded-full' : 'text-slate-400'}`}>
             {day}
           </span>
@@ -54,7 +59,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent }) =>
             {dayEvents.map(event => (
               <div
                 key={event.id}
-                onClick={() => onSelectEvent?.(event)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectEvent?.(event);
+                }}
                 className="text-[9px] md:text-[10px] p-1 rounded bg-primary/10 text-primary border border-primary/20 truncate cursor-pointer hover:bg-primary/20 transition-colors"
                 title={`${event.hora} - ${event.titulo}`}
               >
@@ -91,7 +99,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent }) =>
       const isToday = new Date().toDateString() === date.toDateString();
 
       days.push(
-        <div key={i} className="flex-1 min-w-[120px] bg-white dark:bg-[#1d222a] border-r border-slate-200 dark:border-slate-800 min-h-[500px]">
+        <div
+          key={i}
+          onClick={() => onDateClick?.(dateStr)}
+          className="flex-1 min-w-[120px] bg-white dark:bg-[#1d222a] border-r border-slate-200 dark:border-slate-800 min-h-[500px] cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+        >
           <div className={`p-4 text-center border-b border-slate-100 dark:border-slate-800 ${isToday ? 'bg-primary/5' : ''}`}>
             <p className="text-[10px] font-black text-slate-400 uppercase">{date.toLocaleDateString('pt-BR', { weekday: 'short' })}</p>
             <p className={`text-xl font-black ${isToday ? 'text-primary' : 'text-slate-900 dark:text-white'}`}>{date.getDate()}</p>
@@ -100,7 +112,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent }) =>
             {dayEvents.sort((a, b) => a.hora.localeCompare(b.hora)).map(event => (
               <div
                 key={event.id}
-                onClick={() => onSelectEvent?.(event)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectEvent?.(event);
+                }}
                 className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 hover:border-primary/30 cursor-pointer transition-all"
               >
                 <p className="text-[10px] font-bold text-primary mb-1">{event.hora}</p>
@@ -139,7 +154,14 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent }) =>
         </div>
         <div className="p-6 space-y-4">
           {dayEvents.length > 0 ? dayEvents.map(event => (
-            <div key={event.id} onClick={() => onSelectEvent?.(event)} className="flex items-center gap-6 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:shadow-lg hover:border-primary/20 transition-all cursor-pointer group">
+            <div
+              key={event.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectEvent?.(event);
+              }}
+              className="flex items-center gap-6 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:shadow-lg hover:border-primary/20 transition-all cursor-pointer group"
+            >
               <div className="text-center min-w-[60px]">
                 <p className="text-xl font-black text-primary">{event.hora}</p>
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Início</p>
