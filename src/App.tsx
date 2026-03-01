@@ -208,7 +208,20 @@ const App: React.FC = () => {
               </button>
               <div>
                 <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                  {currentPage === 'dashboard' ? 'Overview Geral' : currentPage.replace('-', ' ')}
+                  {(() => {
+                    const pageNames: Record<string, string> = {
+                      dashboard: 'Overview Geral',
+                      diario: 'Ocorrências',
+                      'audit-logs': 'Logs de Auditoria',
+                      avisos: 'Avisos',
+                      vencimentos: 'Vencimentos',
+                      agendamentos: 'Agendamentos',
+                      usuarios: 'Cadastro de Usuários',
+                      empresas: 'Prestadores de Serviços',
+                      settings: 'Configurações',
+                    };
+                    return pageNames[currentPage] || currentPage.replace('-', ' ');
+                  })()}
                 </h2>
               </div>
             </div>
