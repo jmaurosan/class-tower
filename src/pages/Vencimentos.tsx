@@ -140,18 +140,15 @@ const Vencimentos: React.FC<VencimentosProps> = () => {
   );
 
   return (
-    <div className="p-8 space-y-10 animate-in fade-in duration-500 transition-colors duration-300 pb-20">
-      <div className="flex justify-between items-center">
-        <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Vencimentos</h3>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className={`flex items-center gap-1.5 px-3 py-2 md:px-5 md:py-2.5 rounded-xl font-bold text-xs md:text-sm shadow-lg hover:opacity-90 active:scale-95 transition-all ${showForm ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-white' : 'bg-primary text-white shadow-primary/20'
-            }`}
-        >
-          <span className="material-symbols-outlined text-lg md:text-xl">{showForm ? 'close' : 'add_task'}</span>
-          {showForm ? 'Cancelar' : 'Nova Obrigação'}
-        </button>
-      </div>
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500 transition-colors duration-300 pb-20">
+      <button
+        onClick={() => setShowForm(!showForm)}
+        className={`w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold shadow-lg hover:opacity-90 active:scale-95 transition-all text-sm ${showForm ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-white' : 'bg-primary text-white shadow-primary/20'
+          }`}
+      >
+        <span className="material-symbols-outlined text-xl">{showForm ? 'close' : 'add_task'}</span>
+        {showForm ? 'Cancelar' : 'Nova Obrigação'}
+      </button>
 
       {showForm && (
         <div className="bg-white dark:bg-[#1d222a] p-6 rounded-2xl border border-primary/20 shadow-xl space-y-4 transition-colors animate-in slide-in-from-top-4 duration-300 max-w-2xl">

@@ -220,37 +220,35 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
 
   return (
     <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
-        <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Agendamentos</h3>
+      <div className="flex flex-col gap-3">
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
+        >
+          <span className="material-symbols-outlined text-xl">{showForm ? 'close' : 'add_circle'}</span>
+          {showForm ? 'Cancelar' : 'Novo Evento'}
+        </button>
 
-        <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full lg:w-auto">
+        <div className="flex items-center gap-2">
           {/* Toggle de Visualização */}
-          <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl flex-1 lg:flex-none">
-            <button onClick={() => setViewType('calendar')} className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${viewType === 'calendar' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500'}`}>
-              <span className="material-symbols-outlined text-base md:text-lg">calendar_month</span> Calendário
+          <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl flex-1">
+            <button onClick={() => setViewType('calendar')} className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${viewType === 'calendar' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500'}`}>
+              <span className="material-symbols-outlined text-lg">calendar_month</span> Calendário
             </button>
-            <button onClick={() => setViewType('list')} className={`flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${viewType === 'list' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500'}`}>
-              <span className="material-symbols-outlined text-base md:text-lg">view_stream</span> Lista
+            <button onClick={() => setViewType('list')} className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${viewType === 'list' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500'}`}>
+              <span className="material-symbols-outlined text-lg">view_stream</span> Lista
             </button>
           </div>
 
           {user.role === 'admin' && (
             <button
               onClick={() => setShowRulesModal(!showRulesModal)}
-              className={`size-9 md:size-11 flex items-center justify-center rounded-xl border transition-all ${showRulesModal ? 'bg-slate-800 text-white border-slate-800' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800'}`}
+              className={`size-10 flex items-center justify-center rounded-xl border transition-all shrink-0 ${showRulesModal ? 'bg-slate-800 text-white border-slate-800' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800'}`}
               title="Configurar Regras"
             >
-              <span className="material-symbols-outlined text-lg md:text-xl">settings_suggest</span>
+              <span className="material-symbols-outlined text-xl">settings_suggest</span>
             </button>
           )}
-
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="flex items-center justify-center gap-1.5 px-3 py-2 md:px-5 md:py-2.5 bg-primary text-white rounded-xl font-bold text-xs md:text-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all whitespace-nowrap"
-          >
-            <span className="material-symbols-outlined text-lg md:text-xl">{showForm ? 'close' : 'add_circle'}</span>
-            {showForm ? 'Cancelar' : 'Novo Evento'}
-          </button>
         </div>
       </div>
 

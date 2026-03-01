@@ -210,7 +210,7 @@ const App: React.FC = () => {
                 <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
                   {(() => {
                     const pageNames: Record<string, string> = {
-                      dashboard: 'Overview Geral',
+                      dashboard: 'Dashboard',
                       diario: 'Ocorrências',
                       'audit-logs': 'Logs de Auditoria',
                       avisos: 'Avisos',

@@ -213,30 +213,27 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
   }
 
   return (
-    <div className="p-4 md:p-8">
-      <div className="flex justify-between items-center mb-6 md:mb-8">
-        <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Cadastro de Usuários</h1>
-        <button
-          onClick={() => {
-            setEditingUser(null);
-            setError('');
-            setSuccess('');
-            setFormData({
-              email: '',
-              password: '',
-              name: '',
-              role: 'sala',
-              sala_numero: '0000',
-              permissions: {}
-            });
-            setShowModal(true);
-          }}
-          className="flex items-center gap-1.5 px-3 py-2 md:px-5 md:py-2.5 bg-primary text-white font-bold rounded-xl text-xs md:text-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all whitespace-nowrap"
-        >
-          <span className="material-symbols-outlined text-lg md:text-xl">add</span>
-          Novo Usuário
-        </button>
-      </div>
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8">
+      <button
+        onClick={() => {
+          setEditingUser(null);
+          setError('');
+          setSuccess('');
+          setFormData({
+            email: '',
+            password: '',
+            name: '',
+            role: 'sala',
+            sala_numero: '0000',
+            permissions: {}
+          });
+          setShowModal(true);
+        }}
+        className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
+      >
+        <span className="material-symbols-outlined text-xl">add</span>
+        Novo Usuário
+      </button>
 
       {error && (
         <div className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 flex items-center gap-2">

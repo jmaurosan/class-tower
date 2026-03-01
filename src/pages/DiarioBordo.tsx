@@ -189,18 +189,15 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
 
   return (
     <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
-        <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Ocorrências</h3>
-        {!showForm && canManage && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-1.5 px-3 py-2 md:px-5 md:py-2.5 bg-primary text-white rounded-xl font-bold text-xs md:text-sm transition-all shadow-lg shadow-primary/20 active:scale-95 hover:opacity-90 whitespace-nowrap"
-          >
-            <span className="material-symbols-outlined text-lg md:text-xl">edit_note</span>
-            Nova Entrada
-          </button>
-        )}
-      </div>
+      {!showForm && canManage && (
+        <button
+          onClick={() => setShowForm(true)}
+          className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
+        >
+          <span className="material-symbols-outlined text-xl">edit_note</span>
+          Nova Entrada
+        </button>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Formulário Coluna Esquerda */}

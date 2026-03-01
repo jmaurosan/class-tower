@@ -183,19 +183,16 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
 
   return (
     <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
-        <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Prestadores de Serviço</h3>
-        {canManage && (
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className={`flex items-center gap-1.5 px-3 py-2 md:px-5 md:py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all shadow-lg active:scale-95 whitespace-nowrap ${showForm ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-white' : 'bg-primary text-white shadow-primary/20'
-              }`}
-          >
-            <span className="material-symbols-outlined text-lg md:text-xl">{showForm ? 'close' : 'person_add'}</span>
-            {showForm ? 'Cancelar' : 'Novo Prestador'}
-          </button>
-        )}
-      </div>
+      {canManage && (
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className={`w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-all text-sm ${showForm ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-white' : 'bg-primary text-white shadow-primary/20'
+            }`}
+        >
+          <span className="material-symbols-outlined text-xl">{showForm ? 'close' : 'person_add'}</span>
+          {showForm ? 'Cancelar' : 'Novo Prestador'}
+        </button>
+      )}
 
       {showForm && (
         <div className="bg-white dark:bg-[#1d222a] p-8 rounded-2xl border border-primary/20 shadow-2xl animate-in slide-in-from-top duration-300">

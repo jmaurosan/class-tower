@@ -83,18 +83,15 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
 
   return (
     <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
-        <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Avisos</h3>
-        {canManage && (
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-1.5 px-3 py-2 md:px-5 md:py-2.5 bg-primary text-white rounded-xl font-bold text-xs md:text-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all whitespace-nowrap"
-          >
-            <span className="material-symbols-outlined text-lg md:text-xl">{showForm ? 'close' : 'add_alert'}</span>
-            {showForm ? 'Cancelar' : 'Novo Aviso'}
-          </button>
-        )}
-      </div>
+      {canManage && (
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
+        >
+          <span className="material-symbols-outlined text-xl">{showForm ? 'close' : 'add_alert'}</span>
+          {showForm ? 'Cancelar' : 'Novo Aviso'}
+        </button>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Lado Esquerdo: Formulário (Apenas Staff) */}
