@@ -164,46 +164,43 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
   });
 
   return (
-    <div className="p-8 space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Gestão de Encomendas</h3>
-        </div>
-
-        <div className="flex flex-1 w-full max-w-xl items-center gap-4">
-          <div className="relative flex-1">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-            <input
-              type="text"
-              placeholder="Buscar por sala, destinatário ou remetente..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#1d222a] border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-sm transition-all"
-            />
-          </div>
-
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-3">
+        <div className="flex justify-between items-center">
+          <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Gestão de Encomendas</h3>
           {canManage && (
             <button
               onClick={() => setIsFormOpen(true)}
-              className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3 py-2 md:px-5 md:py-2.5 bg-primary text-white rounded-xl font-bold text-xs md:text-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all whitespace-nowrap"
             >
-              <span className="material-symbols-outlined">add_box</span>
+              <span className="material-symbols-outlined text-lg md:text-xl">add_box</span>
               Registrar Entrada
             </button>
           )}
         </div>
+
+        <div className="relative">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+          <input
+            type="text"
+            placeholder="Buscar por sala, destinatário ou remetente..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#1d222a] border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-sm transition-all"
+          />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-[#1d222a] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Aguardando Retirada</p>
-          <h4 className="text-3xl font-black text-amber-500">{encomendas.filter(e => e.status === 'Pendente').length}</h4>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+        <div className="bg-white dark:bg-[#1d222a] p-4 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <p className="text-slate-500 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-1">Aguardando</p>
+          <h4 className="text-2xl md:text-3xl font-black text-amber-500">{encomendas.filter(e => e.status === 'Pendente').length}</h4>
         </div>
-        <div className="bg-white dark:bg-[#1d222a] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Entregues</p>
-          <h4 className="text-3xl font-black text-emerald-500">{encomendas.filter(e => e.status === 'Retirado').length}</h4>
+        <div className="bg-white dark:bg-[#1d222a] p-4 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <p className="text-slate-500 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-1">Entregues</p>
+          <h4 className="text-2xl md:text-3xl font-black text-emerald-500">{encomendas.filter(e => e.status === 'Retirado').length}</h4>
         </div>
-        <div className="bg-white dark:bg-[#1d222a] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-center">
+        <div className="col-span-2 md:col-span-1 bg-white dark:bg-[#1d222a] p-4 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-center">
           <div className="flex flex-wrap gap-2 w-full justify-center">
             {(['Todos', 'Pendente', 'Retirado', 'Cancelado'] as const).map(f => (
               <button
@@ -220,63 +217,65 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
         {filtered.map(enc => (
-          <div key={enc.id} className={`bg-white dark:bg-[#1d222a] rounded-3xl border p-6 flex gap-6 transition-all group ${enc.status !== 'Pendente' ? 'border-slate-100 dark:border-slate-900 opacity-75' : 'border-slate-200 dark:border-slate-800 hover:border-primary/50 hover:shadow-xl'}`}>
-            <div className="relative size-32 shrink-0 overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-              <img src={enc.fotoUrl} alt="Pacote" className="size-full object-cover" />
-              <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/60 text-white text-[9px] font-bold uppercase backdrop-blur-sm">
-                {enc.categoria}
-              </div>
-            </div>
-
-            <div className="flex-1 space-y-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h5 className="text-xl font-black text-slate-900 dark:text-white">{enc.destinatario}</h5>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Enviado por: {enc.remetente}</p>
+          <div key={enc.id} className={`bg-white dark:bg-[#1d222a] rounded-2xl md:rounded-3xl border p-4 md:p-6 transition-all group overflow-hidden ${enc.status !== 'Pendente' ? 'border-slate-100 dark:border-slate-900 opacity-75' : 'border-slate-200 dark:border-slate-800 hover:border-primary/50 hover:shadow-xl'}`}>
+            <div className="flex flex-col sm:flex-row gap-4 md:gap-6">
+              <div className="relative w-full sm:w-32 h-40 sm:h-32 shrink-0 overflow-hidden rounded-xl md:rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                <img src={enc.fotoUrl} alt="Pacote" className="size-full object-cover" />
+                <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/60 text-white text-[9px] font-bold uppercase backdrop-blur-sm">
+                  {enc.categoria}
                 </div>
-                <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter border ${enc.status === 'Pendente' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' :
-                  enc.status === 'Retirado' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
-                    'bg-red-500/10 text-red-600 border-red-500/20'
-                  }`}>
-                  {enc.status}
-                </span>
               </div>
 
-              <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
-                <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Características</p>
-                <p className="text-xs text-slate-600 dark:text-slate-400">{enc.caracteristicas}</p>
-                {enc.justificativaCancelamento && (
-                  <div className="mt-2 pt-2 border-t border-red-100 dark:border-red-900/30">
-                    <p className="text-[10px] text-red-400 font-bold uppercase">Justificativa de Cancelamento</p>
-                    <p className="text-xs text-red-500 italic">{enc.justificativaCancelamento}</p>
+              <div className="flex-1 space-y-3 min-w-0">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="min-w-0">
+                    <h5 className="text-lg md:text-xl font-black text-slate-900 dark:text-white truncate">{enc.destinatario}</h5>
+                    <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest">Enviado por: {enc.remetente}</p>
                   </div>
-                )}
-              </div>
-
-              <div className="flex justify-between items-end pt-2">
-                <div className="text-[9px] font-bold text-slate-400 space-y-0.5">
-                  <p>ENTRADA: {enc.dataEntrada}</p>
-                  {enc.dataRetirada && <p className="text-emerald-500">RETIRADA: {enc.dataRetirada} por {enc.quemRetirou}</p>}
+                  <span className={`shrink-0 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter border ${enc.status === 'Pendente' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' :
+                    enc.status === 'Retirado' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
+                      'bg-red-500/10 text-red-600 border-red-500/20'
+                    }`}>
+                    {enc.status}
+                  </span>
                 </div>
-                {enc.status === 'Pendente' && canManage && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleCancel(enc.id)}
-                      className="size-9 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all flex items-center justify-center border border-red-100"
-                      title="Cancelar Encomenda"
-                    >
-                      <span className="material-symbols-outlined text-sm">cancel</span>
-                    </button>
-                    <button
-                      onClick={() => markAsDelivered(enc.id)}
-                      className="px-4 py-2 bg-emerald-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
-                    >
-                      Dar Baixa
-                    </button>
+
+                <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Características</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 break-words">{enc.caracteristicas}</p>
+                  {enc.justificativaCancelamento && (
+                    <div className="mt-2 pt-2 border-t border-red-100 dark:border-red-900/30">
+                      <p className="text-[10px] text-red-400 font-bold uppercase">Justificativa de Cancelamento</p>
+                      <p className="text-xs text-red-500 italic">{enc.justificativaCancelamento}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 pt-2">
+                  <div className="text-[9px] font-bold text-slate-400 space-y-0.5">
+                    <p>ENTRADA: {enc.dataEntrada}</p>
+                    {enc.dataRetirada && <p className="text-emerald-500">RETIRADA: {enc.dataRetirada} por {enc.quemRetirou}</p>}
                   </div>
-                )}
+                  {enc.status === 'Pendente' && canManage && (
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => handleCancel(enc.id)}
+                        className="size-9 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all flex items-center justify-center border border-red-100"
+                        title="Cancelar Encomenda"
+                      >
+                        <span className="material-symbols-outlined text-sm">cancel</span>
+                      </button>
+                      <button
+                        onClick={() => markAsDelivered(enc.id)}
+                        className="px-3 py-2 bg-emerald-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
+                      >
+                        Dar Baixa
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
