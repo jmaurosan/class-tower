@@ -23,6 +23,8 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
     destinatarioOriginal: ''
   });
 
+  const [showTodayOnly, setShowTodayOnly] = useState(false);
+
   // Refs para câmera
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -101,7 +103,7 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
         fotoUrl: foto_url,
         dataEntrada: new Date().toISOString(),
         sala_id: newPackage.destinatario?.replace('Unidade ', '') || '0000'
-      });
+      }, user.id, user.name);
 
       handleCloseModal();
     } catch (err) {
@@ -126,7 +128,7 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
         status: 'Retirado',
         dataRetirada: new Date().toISOString(),
         quemRetirou: nome
-      });
+      }, user.id, user.name);
     } catch (err) {
       console.error('Erro ao dar baixa:', err);
       alert('Erro ao atualizar no banco de dados.');
@@ -141,7 +143,7 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
       await updateStatus(id, {
         status: 'Cancelado',
         justificativaCancelamento: justificativa
-      });
+      }, user.id, user.name);
     } catch (err) {
       console.error('Erro ao cancelar encomenda:', err);
       alert('Erro ao atualizar no banco de dados.');
@@ -160,35 +162,44 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
       enc.sala_id.toLowerCase().includes(searchLower) ||
       enc.remetente.toLowerCase().includes(searchLower);
 
-    return matchesFilter && matchesSearch;
+    let matchesDate = true;
+    if (showTodayOnly) {
+      const today = new Date().toLocaleDateString('pt-BR');
+      const entryDate = new Date(enc.dataEntrada).toLocaleDateString('pt-BR');
+      matchesDate = today === entryDate;
+    }
+
+    return matchesFilter && matchesSearch && matchesDate;
   });
 
   return (
     <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-3">
-        {canManage && (
-          <button
-            onClick={() => setIsFormOpen(true)}
-            className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
-          >
-            <span className="material-symbols-outlined text-xl">add_box</span>
-            Registrar Entrada
-          </button>
-        )}
+        <div className="flex flex-col md:flex-row gap-4">
+          {canManage && (
+            <button
+              onClick={() => setIsFormOpen(true)}
+              className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
+            >
+              <span className="material-symbols-outlined text-xl">add_box</span>
+              Registrar Entrada
+            </button>
+          )}
 
-        <div className="relative">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
-          <input
-            type="text"
-            placeholder="Buscar por sala, destinatário ou remetente..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#1d222a] border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-sm transition-all"
-          />
+          <div className="relative flex-1">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+            <input
+              type="text"
+              placeholder="Buscar por sala, destinatário ou remetente..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#1d222a] border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-sm transition-all"
+            />
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
         <div className="bg-white dark:bg-[#1d222a] p-4 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
           <p className="text-slate-500 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-1">Aguardando</p>
           <h4 className="text-2xl md:text-3xl font-black text-amber-500">{encomendas.filter(e => e.status === 'Pendente').length}</h4>
@@ -197,8 +208,8 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
           <p className="text-slate-500 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-1">Entregues</p>
           <h4 className="text-2xl md:text-3xl font-black text-emerald-500">{encomendas.filter(e => e.status === 'Retirado').length}</h4>
         </div>
-        <div className="col-span-2 md:col-span-1 bg-white dark:bg-[#1d222a] p-4 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-center">
-          <div className="flex flex-wrap gap-2 w-full justify-center">
+        <div className="col-span-2 md:col-span-2 bg-white dark:bg-[#1d222a] p-4 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between gap-4">
+          <div className="flex flex-wrap gap-2 w-full justify-center md:justify-start">
             {(['Todos', 'Pendente', 'Retirado', 'Cancelado'] as const).map(f => (
               <button
                 key={f}
@@ -211,6 +222,16 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
               </button>
             ))}
           </div>
+          <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden md:block"></div>
+          <button
+            onClick={() => setShowTodayOnly(!showTodayOnly)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all border ${showTodayOnly
+              ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+              : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-800 hover:border-primary/50'}`}
+          >
+            <span className="material-symbols-outlined text-sm">calendar_today</span>
+            Hoje
+          </button>
         </div>
       </div>
 

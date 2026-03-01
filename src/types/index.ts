@@ -94,6 +94,7 @@ export interface DiarioEntry {
   sala_id?: string;
   status: 'Pendente' | 'Resolvido';
   solucao?: string;
+  created_at?: string;
 }
 
 export interface Aviso {

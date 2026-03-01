@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../services/supabase';
+import { diarioService } from '../services/diarioService';
 import { DiarioEntry, User } from '../types';
 
 interface DiarioBordoProps {
@@ -20,31 +20,13 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
     solucao: ''
   });
   const [isNovaCategoria, setIsNovaCategoria] = useState(false);
+  const [showTodayOnly, setShowTodayOnly] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchEntries = async () => {
     try {
-      const { data, error } = await supabase
-        .from('diario')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      if (data) {
-        const mappedData: DiarioEntry[] = data.map(item => ({
-          id: item.id,
-          data: new Date(item.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }),
-          hora: new Date(item.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-          titulo: item.titulo,
-          descricao: item.descricao,
-          categoria: item.categoria,
-          usuario: item.usuario,
-          sala_id: item.sala_id,
-          status: item.status || 'Pendente',
-          solucao: item.solucao || ''
-        }));
-        setEntries(mappedData);
-      }
+      const data = await diarioService.getAll();
+      setEntries(data as DiarioEntry[]);
     } catch (err) {
       console.error('Erro ao buscar ocorrências:', err);
     } finally {
@@ -55,15 +37,12 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
   useEffect(() => {
     fetchEntries();
 
-    const channel = supabase
-      .channel('diario_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'diario' }, () => {
-        fetchEntries();
-      })
-      .subscribe();
+    const subscription = diarioService.subscribe(() => {
+      fetchEntries();
+    });
 
     return () => {
-      supabase.removeChannel(channel);
+      subscription.unsubscribe();
     };
   }, []);
 
@@ -107,33 +86,24 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
       const finalCategoria = isNovaCategoria ? newEntry.novaCategoria : newEntry.categoria;
 
       if (editingId) {
-        const { error } = await supabase
-          .from('diario')
-          .update({
-            titulo: newEntry.titulo,
-            descricao: newEntry.descricao,
-            categoria: finalCategoria,
-            status: newEntry.status,
-            solucao: newEntry.solucao
-          })
-          .eq('id', editingId);
-
-        if (error) throw error;
+        await diarioService.update(editingId, {
+          titulo: newEntry.titulo,
+          descricao: newEntry.descricao,
+          categoria: finalCategoria,
+          status: newEntry.status,
+          solucao: newEntry.solucao
+        }, user.id, user.name);
         setEditingId(null);
       } else {
-        const { error } = await supabase
-          .from('diario')
-          .insert([{
-            titulo: newEntry.titulo,
-            descricao: newEntry.descricao,
-            categoria: finalCategoria,
-            usuario: user.name,
-            sala_id: user.sala_numero,
-            user_id: user.id,
-            status: 'Pendente'
-          }]);
-
-        if (error) throw error;
+        await diarioService.create({
+          titulo: newEntry.titulo,
+          descricao: newEntry.descricao,
+          categoria: finalCategoria,
+          usuario: user.name,
+          sala_id: user.sala_numero,
+          user_id: user.id,
+          status: 'Pendente'
+        }, user.id, user.name);
       }
 
       setNewEntry({ titulo: '', descricao: '', categoria: 'Outros', novaCategoria: '', status: 'Pendente', solucao: '' });
@@ -164,12 +134,7 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
     if (!confirm('Tem certeza que deseja excluir este registro permanentemente?')) return;
 
     try {
-      const { error } = await supabase
-        .from('diario')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await diarioService.delete(id, user.id, user.name);
     } catch (err) {
       console.error('Erro ao excluir ocorrência:', err);
       alert('Erro ao excluir do banco de dados.');
@@ -183,21 +148,60 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
     setIsNovaCategoria(false);
   };
 
+  const filteredEntries = entries.filter(entry => {
+    const matchesSearch =
+      entry.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.categoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.usuario.toLowerCase().includes(searchTerm.toLowerCase());
+
+    if (showTodayOnly) {
+      const today = new Date().toLocaleDateString('pt-BR');
+      const entryDate = new Date(entry.created_at || '').toLocaleDateString('pt-BR');
+      return today === entryDate && matchesSearch;
+    }
+    return matchesSearch;
+  });
+
   const isAdmin = user.role === 'admin';
   const isAtendente = user.role === 'atendente';
   const canManage = isAdmin || isAtendente;
 
   return (
     <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
-      {!showForm && canManage && (
-        <button
-          onClick={() => setShowForm(true)}
-          className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
-        >
-          <span className="material-symbols-outlined text-xl">edit_note</span>
-          Nova Entrada
-        </button>
-      )}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        {!showForm && canManage && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
+          >
+            <span className="material-symbols-outlined text-xl">edit_note</span>
+            Nova Entrada
+          </button>
+        )}
+
+        <div className="flex items-center gap-3 w-full md:w-auto flex-1 max-w-xl justify-end">
+          <div className="relative w-full max-w-xs">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+            <input
+              type="text"
+              placeholder="Buscar ocorrência..."
+              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-primary/20 transition-all dark:text-white shadow-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <button
+            onClick={() => setShowTodayOnly(!showTodayOnly)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border whitespace-nowrap ${showTodayOnly
+              ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+              : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-800 hover:border-primary/50 shadow-sm'}`}
+          >
+            <span className="material-symbols-outlined text-sm">calendar_today</span>
+            Hoje
+          </button>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Formulário Coluna Esquerda */}
@@ -311,8 +315,8 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
 
         {/* Lista Coluna Direita */}
         <div className={`${showForm ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-6`}>
-          {entries.length > 0 ? (
-            entries.map((entry) => (
+          {filteredEntries.length > 0 ? (
+            filteredEntries.map((entry) => (
               <div
                 key={entry.id}
                 className={`group bg-white dark:bg-[#1d222a] p-4 md:p-6 rounded-2xl border-l-4 border border-slate-200 dark:border-slate-800 transition-all duration-300 relative hover:shadow-md ${getCategoryBorderColor(entry.categoria)} ${editingId === entry.id ? 'ring-1 ring-primary/20 shadow-lg' : ''}`}

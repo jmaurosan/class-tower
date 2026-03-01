@@ -4,13 +4,28 @@ import { supabase } from './supabase';
 
 export const avisosService = {
   async getAll() {
-    const { data, error } = await supabase
-      .from('avisos')
-      .select('*, creator:profiles!criado_por(role)')
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('avisos')
+        .select('*, creator:profiles!criado_por(role)')
+        .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return data;
+      if (error) {
+        console.error('Error fetching avisos with join:', error);
+        // Fallback to simple select if join fails
+        const { data: simpleData, error: simpleError } = await supabase
+          .from('avisos')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (simpleError) throw simpleError;
+        return simpleData;
+      }
+      return data;
+    } catch (error) {
+      console.error('Fatal error in avisosService.getAll:', error);
+      throw error;
+    }
   },
 
   async create(aviso: Omit<Aviso, 'id'>) {

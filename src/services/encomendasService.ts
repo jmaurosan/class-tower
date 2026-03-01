@@ -21,7 +21,7 @@ export const encomendasService = {
     })) as Encomenda[];
   },
 
-  async create(encomenda: Omit<Encomenda, 'id'>) {
+  async create(encomenda: Omit<Encomenda, 'id'>, userId?: string, userName?: string) {
     const dbItem = {
       destinatario: encomenda.destinatario,
       remetente: encomenda.remetente,
@@ -39,15 +39,35 @@ export const encomendasService = {
       .single();
 
     if (error) throw error;
+
+    // Log the action
+    if (userId) {
+      await supabase.from('audit_logs').insert([{
+        table_name: 'encomendas',
+        record_id: data.id,
+        action: 'INSERT',
+        executed_by: userId,
+        executed_by_name: userName,
+        new_data: data
+      }]);
+    }
+
     return data;
   },
 
-  async updateStatus(id: string, updates: Partial<Encomenda>) {
+  async updateStatus(id: string, updates: Partial<Encomenda>, userId?: string, userName?: string) {
     const dbUpdates: any = {};
     if (updates.status) dbUpdates.status = updates.status;
     if (updates.quemRetirou) dbUpdates.quem_retirou = updates.quemRetirou;
     if (updates.dataRetirada) dbUpdates.data_retirada = updates.dataRetirada;
     if (updates.justificativaCancelamento) dbUpdates.justificativa_cancelamento = updates.justificativaCancelamento;
+
+    // Get old data for audit log
+    const { data: oldData } = await supabase
+      .from('encomendas')
+      .select('*')
+      .eq('id', id)
+      .single();
 
     const { error } = await supabase
       .from('encomendas')
@@ -55,6 +75,19 @@ export const encomendasService = {
       .eq('id', id);
 
     if (error) throw error;
+
+    // Log the action
+    if (userId) {
+      await supabase.from('audit_logs').insert([{
+        table_name: 'encomendas',
+        record_id: id,
+        action: 'UPDATE',
+        executed_by: userId,
+        executed_by_name: userName,
+        old_data: oldData,
+        new_data: dbUpdates
+      }]);
+    }
   },
 
   subscribe(callback: (payload: any) => void) {

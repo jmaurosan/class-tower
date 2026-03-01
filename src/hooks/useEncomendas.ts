@@ -34,20 +34,20 @@ export const useEncomendas = (salaFilter?: string) => {
     };
   }, [fetchEncomendas]);
 
-  const addEncomenda = async (encomenda: Omit<Encomenda, 'id'>) => {
+  const addEncomenda = async (encomenda: Omit<Encomenda, 'id'>, userId?: string, userName?: string) => {
     if (!navigator.onLine) {
       offlineService.enqueue('encomendas', 'create', encomenda);
       return { id: 'pending-' + Date.now() } as any;
     }
-    return await encomendasService.create(encomenda);
+    return await encomendasService.create(encomenda, userId, userName);
   };
 
-  const updateStatus = async (id: string, updates: Partial<Encomenda>) => {
+  const updateStatus = async (id: string, updates: Partial<Encomenda>, userId?: string, userName?: string) => {
     if (!navigator.onLine) {
       offlineService.enqueue('encomendas', 'updateStatus', { id, ...updates });
       return;
     }
-    await encomendasService.updateStatus(id, updates);
+    await encomendasService.updateStatus(id, updates, userId, userName);
   };
 
   return { encomendas, loading, addEncomenda, updateStatus, refresh: fetchEncomendas };
