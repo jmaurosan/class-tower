@@ -141,16 +141,14 @@ const Vencimentos: React.FC<VencimentosProps> = () => {
 
   return (
     <div className="p-8 space-y-10 animate-in fade-in duration-500 transition-colors duration-300 pb-20">
-      <div className="flex justify-between items-end">
-        <div>
-          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Vencimentos</h3>
-        </div>
+      <div className="flex justify-between items-center">
+        <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Vencimentos</h3>
         <button
           onClick={() => setShowForm(!showForm)}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold shadow-lg hover:opacity-90 active:scale-95 transition-all ${showForm ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-white' : 'bg-primary text-white shadow-primary/20'
+          className={`flex items-center gap-1.5 px-3 py-2 md:px-5 md:py-2.5 rounded-xl font-bold text-xs md:text-sm shadow-lg hover:opacity-90 active:scale-95 transition-all ${showForm ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-white' : 'bg-primary text-white shadow-primary/20'
             }`}
         >
-          <span className="material-symbols-outlined">{showForm ? 'close' : 'add_task'}</span>
+          <span className="material-symbols-outlined text-lg md:text-xl">{showForm ? 'close' : 'add_task'}</span>
           {showForm ? 'Cancelar' : 'Nova Obrigação'}
         </button>
       </div>
