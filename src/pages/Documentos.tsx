@@ -18,7 +18,7 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
     categoria: 'Outros' as DocumentoAnexo['categoria']
   });
 
-  const categorias: string[] = ['Todos', 'Atas', 'Regimento Interno', 'Plantas', 'Seguros', 'Certidões', 'Outros'];
+  const categorias: string[] = ['Todos', 'Atas', 'Regimento Interno', 'Certidões', 'Outros'];
 
   const filteredDocs = filter === 'Todos'
     ? documentos
@@ -83,18 +83,16 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
   };
 
   return (
-    <div className="p-8 space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-        <div>
-          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Documentos</h3>
-        </div>
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
+      <div className="flex justify-between items-center">
+        <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Documentos</h3>
 
         {canUpload && (
           <button
             onClick={() => setShowUploadModal(true)}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm whitespace-nowrap"
+            className="flex items-center gap-1.5 px-3 py-2 md:px-5 md:py-2.5 bg-primary text-white rounded-xl font-bold text-xs md:text-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all whitespace-nowrap"
           >
-            <span className="material-symbols-outlined text-xl">cloud_upload</span>
+            <span className="material-symbols-outlined text-lg md:text-xl">cloud_upload</span>
             Anexar Documento
           </button>
         )}
@@ -115,9 +113,9 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {filteredDocs.map((doc) => (
-          <div key={doc.id} className="group bg-white dark:bg-[#1d222a] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 hover:shadow-xl transition-all duration-300 relative">
+          <div key={doc.id} className="group bg-white dark:bg-[#1d222a] p-4 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 hover:shadow-xl transition-all duration-300 relative">
             <div className="flex items-start justify-between mb-4">
               <div className={`size-12 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center ${getIconColor(doc.tipo)}`}>
                 <span className="material-symbols-outlined text-3xl">{getFileIcon(doc.tipo)}</span>
