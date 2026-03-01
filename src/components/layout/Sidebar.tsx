@@ -14,13 +14,13 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
   // Configuração centralizada de itens de menu
   const allMenuItems = [
     { id: 'dashboard', icon: 'dashboard', label: 'Dashboard', roles: ['admin'] },
-    { id: 'avisos', icon: 'campaign', label: 'Avisos', roles: ['admin', 'atendente', 'sala'] },
+    { id: 'agendamentos', icon: 'calendar_today', label: 'Agendamentos', roles: ['admin', 'atendente', 'sala'] },
     { id: 'encomendas', icon: 'package_2', label: 'Encomendas', roles: ['admin', 'atendente', 'sala'] },
+    { id: 'diario', icon: 'menu_book', label: 'Ocorrências', roles: ['admin', 'atendente'] },
+    { id: 'avisos', icon: 'campaign', label: 'Avisos', roles: ['admin', 'atendente', 'sala'] },
+    { id: 'documentos', icon: 'folder_open', label: 'Documentos', roles: ['admin', 'sala'] },
     { id: 'vistorias', icon: 'fact_check', label: 'Vistorias', roles: ['admin'] },
     { id: 'vencimentos', icon: 'assignment_late', label: 'Vencimentos', roles: ['admin'] },
-    { id: 'agendamentos', icon: 'calendar_today', label: 'Agendamentos', roles: ['admin', 'atendente', 'sala'] },
-    { id: 'diario', icon: 'menu_book', label: 'Ocorrências', roles: ['admin', 'atendente'] },
-    { id: 'documentos', icon: 'folder_open', label: 'Documentos', roles: ['admin', 'sala'] },
     { id: 'usuarios', icon: 'group', label: 'Cadastro de Usuários', roles: ['admin'] },
     { id: 'salas', icon: 'meeting_room', label: 'Cadastro de Salas', roles: ['admin', 'atendente'] },
     { id: 'empresas', icon: 'engineering', label: 'Prestadores de Serviço', roles: ['admin', 'atendente', 'sala'] },

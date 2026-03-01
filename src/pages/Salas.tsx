@@ -111,144 +111,108 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-full animate-in fade-in duration-500 overflow-hidden">
-      {/* Mobile Floor Selector */}
-      <div className="md:hidden bg-white dark:bg-[#1d222a] border-b border-slate-200 dark:border-slate-800 p-4 shrink-0 overflow-x-auto custom-scrollbar">
-        <div className="flex gap-3 min-w-max">
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
+      {/* Seletor de andar em card */}
+      <div className="bg-white dark:bg-[#1d222a] p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-9 gap-2">
           {Array.from({ length: 18 }, (_, i) => i).map((andar) => (
             <button
               key={andar}
               onClick={() => setSelectedAndar(andar)}
-              className={`px-5 py-2.5 rounded-xl transition-all font-bold text-sm whitespace-nowrap ${selectedAndar === andar
-                ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-100 dark:border-slate-700'
+              className={`px-2 py-2.5 rounded-lg text-xs font-bold transition-all border text-center ${selectedAndar === andar
+                ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
+                : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-primary/50'
                 }`}
             >
-              {andar === 0 ? 'Térreo' : `${andar}º Andar`}
+              {andar === 0 ? 'T' : `${andar}°A`}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-48 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1d222a] overflow-y-auto custom-scrollbar flex-col shrink-0">
-        <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Andares</h4>
+      <div className="space-y-6 md:space-y-8">
+        <div className="flex items-center gap-3 bg-white dark:bg-[#1d222a] px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <span className="material-symbols-outlined text-primary text-lg">info</span>
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
+            {selectedAndar === 0 ? 'Térreo' : `${selectedAndar}º Andar`} · {selectedAndar === 0 ? '2 Unidades' : (selectedAndar === 16 || selectedAndar === 17) ? '3 Salas' : '6 Salas'}
+          </span>
         </div>
-        <nav className="flex-1 p-2 space-y-1">
-          {Array.from({ length: 18 }, (_, i) => i).map((andar) => (
-            <button
-              key={andar}
-              onClick={() => setSelectedAndar(andar)}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${selectedAndar === andar
-                ? 'bg-primary text-white shadow-lg shadow-primary/20 font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-                }`}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {currentFloorRooms.map((sala) => (
+            <div
+              key={sala.numero}
+              className={`group bg-white dark:bg-[#1d222a] rounded-[24px] border transition-all duration-300 relative p-6 ${sala.nome ? 'border-primary/20 shadow-sm' : 'border-slate-200 dark:border-slate-800 border-dashed opacity-80'
+                } hover:shadow-xl hover:scale-[1.02]`}
             >
-              <span className="text-sm">{andar === 0 ? 'Térreo' : `${andar}º Andar`}</span>
-              <span className="material-symbols-outlined text-sm opacity-50">chevron_right</span>
-            </button>
-          ))}
-        </nav>
-      </aside>
-
-      <main className="flex-1 overflow-y-auto p-8 bg-[#fbfcfc] dark:bg-[#15191e] custom-scrollbar">
-        <div className="max-w-5xl mx-auto space-y-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                Salas do {selectedAndar === 0 ? 'Térreo' : `${selectedAndar}º Andar`}
-              </h3>
-              <p className="text-slate-500 dark:text-slate-400 font-medium">
-                {selectedAndar === 0
-                  ? 'Gerencie as unidades especiais localizadas no pavimento térreo'
-                  : `Gerencie as ${(selectedAndar === 16 || selectedAndar === 17) ? '3' : '6'} unidades deste pavimento`}
-              </p>
-            </div>
-            <div className="flex items-center gap-3 bg-white dark:bg-[#1d222a] px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-              <span className="material-symbols-outlined text-primary">info</span>
-              <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">
-                Padrão: {selectedAndar === 0 ? '2 Unidades' : (selectedAndar === 16 || selectedAndar === 17) ? '3 Salas' : '6 Salas'}
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {currentFloorRooms.map((sala) => (
-              <div
-                key={sala.numero}
-                className={`group bg-white dark:bg-[#1d222a] rounded-[24px] border transition-all duration-300 relative p-6 ${sala.nome ? 'border-primary/20 shadow-sm' : 'border-slate-200 dark:border-slate-800 border-dashed opacity-80'
-                  } hover:shadow-xl hover:scale-[1.02]`}
-              >
-                <div className="flex justify-between items-start mb-6">
-                  <div className="size-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-primary border border-slate-100 dark:border-slate-700 shadow-sm">
-                    <span className="text-lg font-black">{sala.numero}</span>
-                  </div>
-                  <button
-                    onClick={() => setEditingSala(sala)}
-                    className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
-                  >
-                    <span className="material-symbols-outlined text-xl">edit_square</span>
-                  </button>
+              <div className="flex justify-between items-start mb-6">
+                <div className="size-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-primary border border-slate-100 dark:border-slate-700 shadow-sm">
+                  <span className="text-lg font-black">{sala.numero}</span>
                 </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Empresa / Nome</p>
-                    <p className={`text-sm font-bold truncate ${sala.nome ? 'text-slate-900 dark:text-white' : 'text-slate-300 italic'}`}>
-                      {sala.nome || 'Vago'}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-3 pt-2">
-                    <div>
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Responsável 1</p>
-                      <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[14px] text-slate-400">person</span>
-                        <p className={`text-xs font-bold truncate ${sala.responsavel1 ? 'text-slate-700 dark:text-slate-300' : 'text-slate-300 italic'}`}>
-                          {sala.responsavel1 || 'Não informado'}
-                        </p>
-                      </div>
-                      {sala.telefone1 && (
-                        <p className="text-[10px] text-slate-500 ml-5 font-medium">{sala.telefone1}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Responsável 2</p>
-                      <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[14px] text-slate-400">person</span>
-                        <p className={`text-xs font-bold truncate ${sala.responsavel2 ? 'text-slate-700 dark:text-slate-300' : 'text-slate-300 italic'}`}>
-                          {sala.responsavel2 || 'Não informado'}
-                        </p>
-                      </div>
-                      {sala.telefone2 && (
-                        <p className="text-[10px] text-slate-500 ml-5 font-medium">{sala.telefone2}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {sala.nome && (
-                  <div className="absolute top-4 right-12">
-                    <span className="flex h-2 w-2 rounded-full bg-emerald-500 ring-4 ring-emerald-500/10"></span>
-                  </div>
-                )}
+                <button
+                  onClick={() => setEditingSala(sala)}
+                  className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
+                >
+                  <span className="material-symbols-outlined text-xl">edit_square</span>
+                </button>
               </div>
-            ))}
-          </div>
 
-          <div className="p-6 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 rounded-3xl flex items-start gap-4">
-            <span className="material-symbols-outlined text-blue-500">lightbulb</span>
-            <div className="space-y-1">
-              <p className="text-sm font-bold text-blue-900 dark:text-blue-200">Estrutura das Unidades</p>
-              <p className="text-xs text-blue-700 dark:text-blue-400 leading-relaxed">
-                Os andares 16 e 17 possuem 3 unidades exclusivas de maior metragem. Os demais andares seguem o padrão de 6 unidades por pavimento.
-              </p>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Empresa / Nome</p>
+                  <p className={`text-sm font-bold truncate ${sala.nome ? 'text-slate-900 dark:text-white' : 'text-slate-300 italic'}`}>
+                    {sala.nome || 'Vago'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 pt-2">
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Responsável 1</p>
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[14px] text-slate-400">person</span>
+                      <p className={`text-xs font-bold truncate ${sala.responsavel1 ? 'text-slate-700 dark:text-slate-300' : 'text-slate-300 italic'}`}>
+                        {sala.responsavel1 || 'Não informado'}
+                      </p>
+                    </div>
+                    {sala.telefone1 && (
+                      <p className="text-[10px] text-slate-500 ml-5 font-medium">{sala.telefone1}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Responsável 2</p>
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[14px] text-slate-400">person</span>
+                      <p className={`text-xs font-bold truncate ${sala.responsavel2 ? 'text-slate-700 dark:text-slate-300' : 'text-slate-300 italic'}`}>
+                        {sala.responsavel2 || 'Não informado'}
+                      </p>
+                    </div>
+                    {sala.telefone2 && (
+                      <p className="text-[10px] text-slate-500 ml-5 font-medium">{sala.telefone2}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {sala.nome && (
+                <div className="absolute top-4 right-12">
+                  <span className="flex h-2 w-2 rounded-full bg-emerald-500 ring-4 ring-emerald-500/10"></span>
+                </div>
+              )}
             </div>
+          ))}
+        </div>
+
+        <div className="p-6 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 rounded-3xl flex items-start gap-4">
+          <span className="material-symbols-outlined text-blue-500">lightbulb</span>
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-blue-900 dark:text-blue-200">Estrutura das Unidades</p>
+            <p className="text-xs text-blue-700 dark:text-blue-400 leading-relaxed">
+              Os andares 16 e 17 possuem 3 unidades exclusivas de maior metragem. Os demais andares seguem o padrão de 6 unidades por pavimento.
+            </p>
           </div>
         </div>
-      </main>
+      </div>
 
       {editingSala && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
@@ -349,7 +313,8 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
             </div>
           </div>
         </div>
-      )}
+      )
+      }
     </div>
   );
 };
