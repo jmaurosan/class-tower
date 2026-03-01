@@ -1,5 +1,6 @@
-
 import React, { useEffect, useState } from 'react';
+import CalendarRules, { CalendarRule } from '../components/CalendarRules';
+import CalendarView from '../components/CalendarView';
 import { supabase } from '../services/supabase';
 import { Agendamento, User } from '../types';
 
@@ -7,30 +8,14 @@ interface AgendamentosProps {
   user: User;
 }
 
-interface CalendarRule {
-  id: string;
-  date: string;
-  description: string;
-  is_blocked: boolean;
-  allowed_start_time?: string;
-  allowed_end_time?: string;
-}
-
 const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [rules, setRules] = useState<CalendarRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [viewType, setViewType] = useState<'list' | 'calendar'>('calendar');
 
-  // Estado para Admin gerenciar regras
   const [showRulesModal, setShowRulesModal] = useState(false);
-  const [newRule, setNewRule] = useState({
-    date: '',
-    description: '',
-    is_blocked: true,
-    allowed_start_time: '08:00',
-    allowed_end_time: '18:00'
-  });
 
   const [formData, setFormData] = useState({
     titulo: '',
@@ -188,35 +173,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
     }
   };
 
-  const handleCreateRule = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const { error } = await supabase
-        .from('condo_calendar_rules')
-        .insert([{
-          date: newRule.date,
-          description: newRule.description,
-          is_blocked: newRule.is_blocked,
-          allowed_start_time: newRule.is_blocked ? null : newRule.allowed_start_time,
-          allowed_end_time: newRule.is_blocked ? null : newRule.allowed_end_time,
-          created_by: user.id
-        }]);
 
-      if (error) throw error;
-      setNewRule({ date: '', description: '', is_blocked: true, allowed_start_time: '08:00', allowed_end_time: '18:00' });
-      setShowRulesModal(false);
-      alert('Regra criada com sucesso!');
-    } catch (err) {
-      console.error('Erro ao criar regra:', err);
-      alert('Erro ao salvar regra.');
-    }
-  };
-
-  const handleDeleteRule = async (id: string) => {
-    if (!confirm('Excluir esta regra?')) return;
-    const { error } = await supabase.from('condo_calendar_rules').delete().eq('id', id);
-    if (error) alert('Erro ao excluir regra');
-  };
 
   const handleCancel = async (id: string) => {
     if (!confirm('Deseja cancelar este agendamento?')) return;
@@ -263,89 +220,45 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
 
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
           <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Agendamento</h3>
+          <p className="text-sm text-slate-500 font-medium">Gerencie mudanças, manutenções e reservas</p>
         </div>
-        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+          {/* Toggle de Visualização */}
+          <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-full lg:w-auto">
+            <button onClick={() => setViewType('calendar')} className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewType === 'calendar' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500'}`}>
+              <span className="material-symbols-outlined text-lg">calendar_month</span> Calendário
+            </button>
+            <button onClick={() => setViewType('list')} className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewType === 'list' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500'}`}>
+              <span className="material-symbols-outlined text-lg">view_stream</span> Lista
+            </button>
+          </div>
+
           {user.role === 'admin' && (
             <button
               onClick={() => setShowRulesModal(!showRulesModal)}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-800 dark:bg-slate-700 text-white rounded-xl font-bold hover:bg-slate-700 transition-all text-sm whitespace-nowrap"
+              className={`size-11 flex items-center justify-center rounded-xl border transition-all ${showRulesModal ? 'bg-slate-800 text-white border-slate-800' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800'}`}
+              title="Configurar Regras"
             >
-              <span className="material-symbols-outlined text-xl">edit_calendar</span>
-              Configurar Feriados
+              <span className="material-symbols-outlined">settings_suggest</span>
             </button>
           )}
+
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm whitespace-nowrap"
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm whitespace-nowrap"
           >
-            <span className="material-symbols-outlined text-xl">{showForm ? 'close' : 'calendar_add_on'}</span>
-            {showForm ? 'Cancelar' : 'Agendar Novo'}
+            <span className="material-symbols-outlined text-xl">{showForm ? 'close' : 'add_circle'}</span>
+            {showForm ? 'Cancelar' : 'Novo Evento'}
           </button>
         </div>
       </div>
 
-      {/* MODAL / PAINEL DE REGRAS (ADMIN) */}
-      {showRulesModal && (
-        <div className="bg-slate-100 dark:bg-slate-800 p-6 rounded-2xl border border-slate-300 dark:border-slate-700 mb-8 animate-in slide-in-from-top-4">
-          <h4 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-            <span className="material-symbols-outlined">edit_calendar</span>
-            Gerenciar Feriados e Exceções
-          </h4>
+      {showRulesModal && <CalendarRules user={user} rules={rules} onUpdate={fetchData} />}
 
-          <form onSubmit={handleCreateRule} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <input type="date" required className="px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 dark:text-white"
-              value={newRule.date} onChange={e => setNewRule({ ...newRule, date: e.target.value })}
-            />
-            <input type="text" required placeholder="Descrição (ex: Natal)" className="px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 dark:text-white"
-              value={newRule.description} onChange={e => setNewRule({ ...newRule, description: e.target.value })}
-            />
-            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 px-4 rounded-xl border border-slate-300 dark:border-slate-700">
-              <input type="checkbox" id="blocked" checked={newRule.is_blocked} onChange={e => setNewRule({ ...newRule, is_blocked: e.target.checked })} className="size-5 accent-primary" />
-              <label htmlFor="blocked" className="text-sm font-bold text-slate-600 dark:text-slate-300 cursor-pointer">Bloquear Dia Inteiro</label>
-            </div>
-
-            {!newRule.is_blocked && (
-              <div className="flex gap-2">
-                <input type="time" required value={newRule.allowed_start_time} onChange={e => setNewRule({ ...newRule, allowed_start_time: e.target.value })} className="w-1/2 px-2 py-2 rounded-xl bg-white dark:bg-slate-900 border dark:text-white" title="Início" />
-                <input type="time" required value={newRule.allowed_end_time} onChange={e => setNewRule({ ...newRule, allowed_end_time: e.target.value })} className="w-1/2 px-2 py-2 rounded-xl bg-white dark:bg-slate-900 border dark:text-white" title="Fim" />
-              </div>
-            )}
-
-            <button type="submit" className="col-span-full md:col-span-1 lg:col-span-1 py-2 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transistion-colors">
-              Adicionar Regra
-            </button>
-          </form>
-
-          {/* Lista de Regras Existentes */}
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {rules.map(rule => (
-              <div key={rule.id} className="flex justify-between items-center p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-4">
-                  <div className="font-mono font-bold text-slate-500 dark:text-slate-400">
-                    {new Date(rule.date).toLocaleDateString('pt-BR')}
-                  </div>
-                  <div className="font-bold text-slate-800 dark:text-white">{rule.description}</div>
-                  {rule.is_blocked ? (
-                    <span className="px-2 py-1 bg-red-100 text-red-600 text-xs font-bold rounded">BLOQUEADO</span>
-                  ) : (
-                    <span className="px-2 py-1 bg-green-100 text-green-600 text-xs font-bold rounded">
-                      {rule.allowed_start_time?.slice(0, 5)} - {rule.allowed_end_time?.slice(0, 5)}
-                    </span>
-                  )}
-                </div>
-                <button onClick={() => handleDeleteRule(rule.id)} className="text-slate-400 hover:text-red-500">
-                  <span className="material-symbols-outlined">delete</span>
-                </button>
-              </div>
-            ))}
-            {rules.length === 0 && <p className="text-center text-slate-400 py-2">Nenhuma regra especial cadastrada.</p>}
-          </div>
-
-        </div>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Lado Esquerdo: Filtros e Formulário */}
@@ -408,60 +321,57 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
           )}
         </div>
 
-        {/* Lado Direito: Timeline de Agendamentos */}
+        {/* ÁREA DE CONTEÚDO PRINCIPAL (TIMELINE OU CALENDÁRIO) */}
         <div className="lg:col-span-3 space-y-4">
-          {agendamentos.map((item) => (
-            <div key={item.id} className="group flex flex-wrap md:flex-nowrap items-center gap-4 md:gap-6 bg-white dark:bg-[#1d222a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all relative">
-              <div className="flex flex-col items-center justify-center min-w-[70px] md:min-w-[80px] py-1 md:py-2 border-r border-slate-100 dark:border-slate-800">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{new Date(item.data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short' })}</span>
-                <span className="text-lg md:text-xl font-black text-slate-900 dark:text-white">{new Date(item.data + 'T00:00:00').getDate()}</span>
-                <span className="text-[10px] font-bold text-primary uppercase">{item.hora}</span>
-              </div>
+          {viewType === 'calendar' ? (
+            <CalendarView
+              events={agendamentos.filter(a => a.status !== 'Cancelado')}
+            />
+          ) : (
+            <div className="space-y-4">
+              {agendamentos.map((item) => (
+                <div key={item.id} className="group flex flex-wrap md:flex-nowrap items-center gap-4 md:gap-6 bg-white dark:bg-[#1d222a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all relative">
+                  {/* ... (rest of the card remains the same) */}
+                  <div className="flex flex-col items-center justify-center min-w-[70px] md:min-w-[80px] py-1 md:py-2 border-r border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{new Date(item.data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short' })}</span>
+                    <span className="text-lg md:text-xl font-black text-slate-900 dark:text-white">{new Date(item.data + 'T00:00:00').getDate()}</span>
+                    <span className="text-[10px] font-bold text-primary uppercase">{item.hora}</span>
+                  </div>
 
-              <div className="size-10 md:size-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors shrink-0">
-                <span className="material-symbols-outlined text-xl md:text-2xl">{getIcon(item.tipo)}</span>
-              </div>
+                  <div className="size-10 md:size-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors shrink-0">
+                    <span className="material-symbols-outlined text-xl md:text-2xl">{getIcon(item.tipo)}</span>
+                  </div>
 
-              <div className="flex-1 min-w-[200px]">
-                <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <span className={`px-2 py-0.5 rounded text-[9px] font-bold border ${getStatusStyle(item.status)} uppercase tracking-tighter`}>{item.status}</span>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">• {item.tipo}</span>
-                  {item.sala_id && <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">• Unid {item.sala_id}</span>}
+                  <div className="flex-1 min-w-[200px]">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold border ${getStatusStyle(item.status)} uppercase tracking-tighter`}>{item.status}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">• {item.tipo}</span>
+                      {item.sala_id && <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">• Unid {item.sala_id}</span>}
+                    </div>
+                    <h4 className="text-base md:text-lg font-extrabold text-slate-900 dark:text-white leading-tight">{item.titulo}</h4>
+                    <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-[11px] md:text-xs">
+                      <span className="material-symbols-outlined text-sm">location_on</span>
+                      {item.local}
+                    </div>
+                  </div>
+
+                  <div className="opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0 mt-2 md:mt-0">
+                    {(user.role === 'admin' || item.sala_id === user.sala_numero) && item.status !== 'Cancelado' && (
+                      <button onClick={() => handleCancel(item.id)} className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors" title="Cancelar"><span className="material-symbols-outlined text-xl">event_busy</span></button>
+                    )}
+                    {(user.role === 'admin' || item.sala_id === user.sala_numero) && (
+                      <button onClick={() => handleDelete(item.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Excluir"><span className="material-symbols-outlined text-xl">delete</span></button>
+                    )}
+                  </div>
                 </div>
-                <h4 className="text-base md:text-lg font-extrabold text-slate-900 dark:text-white leading-tight">{item.titulo}</h4>
-                <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-[11px] md:text-xs">
-                  <span className="material-symbols-outlined text-sm">location_on</span>
-                  {item.local}
+              ))}
+
+              {agendamentos.length === 0 && (
+                <div className="text-center py-20 bg-white dark:bg-[#1d222a] rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
+                  <span className="material-symbols-outlined text-6xl text-slate-200 mb-4">calendar_month</span>
+                  <p className="text-slate-500 font-bold uppercase tracking-widest">Nenhum agendamento futuro</p>
                 </div>
-              </div>
-
-              <div className="opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0 mt-2 md:mt-0">
-                {(user.role === 'admin' || item.sala_id === user.sala_numero) && item.status !== 'Cancelado' && (
-                  <button
-                    onClick={() => handleCancel(item.id)}
-                    className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
-                    title="Cancelar Agendamento"
-                  >
-                    <span className="material-symbols-outlined text-xl">event_busy</span>
-                  </button>
-                )}
-                {(user.role === 'admin' || item.sala_id === user.sala_numero) && (
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                    title="Excluir Permanentemente"
-                  >
-                    <span className="material-symbols-outlined text-xl">delete</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-
-          {agendamentos.length === 0 && (
-            <div className="text-center py-20 bg-white dark:bg-[#1d222a] rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
-              <span className="material-symbols-outlined text-6xl text-slate-200 mb-4">calendar_month</span>
-              <p className="text-slate-500 font-bold uppercase tracking-widest">Nenhum agendamento futuro</p>
+              )}
             </div>
           )}
         </div>
