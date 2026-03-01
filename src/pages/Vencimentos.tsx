@@ -70,15 +70,69 @@ const Vencimentos: React.FC<VencimentosProps> = () => {
         <h4 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">{title}</h4>
         <span className="ml-auto bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px] font-bold text-slate-500">{list.length}</span>
       </div>
-      <div className="bg-white dark:bg-[#1d222a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-all">
+
+      {/* Mobile: Cards */}
+      <div className="md:hidden space-y-3">
+        {list.map((doc) => {
+          const expirationDate = new Date(doc.dataVencimento);
+          const hoje = new Date();
+          hoje.setHours(0, 0, 0, 0);
+          const diffDays = Math.ceil((expirationDate.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+
+          return (
+            <div key={doc.id} className="bg-white dark:bg-[#1d222a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 space-y-3">
+              <div className="flex justify-between items-start">
+                <span className="text-sm font-bold text-slate-900 dark:text-white">{doc.titulo}</span>
+                <button
+                  onClick={() => deleteVencimento(doc.id)}
+                  className="p-1 text-slate-300 hover:text-red-500 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-lg">delete</span>
+                </button>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-slate-400 text-sm">calendar_today</span>
+                  <span className="text-xs font-medium text-slate-500">
+                    {new Date(doc.dataVencimento).toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className={`size-2 rounded-full shrink-0 ${getAtencaoColor(doc, diffDays).replace('text-', 'bg-')}`} />
+                  <span className={`text-xs font-bold ${getAtencaoColor(doc, diffDays)}`}>
+                    {doc.status === 'Feito'
+                      ? 'Conforme'
+                      : diffDays < 0 ? `Vencido ${Math.abs(diffDays)}d` : diffDays === 1 ? 'Amanhã!' : `${diffDays}d`
+                    }
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => updateVencimentoStatus(doc.id, doc.status === 'Feito' ? 'Em Andamento' : 'Feito', false)}
+                className={`w-full px-3 py-2 rounded-lg text-[10px] font-black uppercase border transition-all active:scale-95 ${getStatusBadgeStyle(doc.status)}`}
+              >
+                {doc.status}
+              </button>
+            </div>
+          );
+        })}
+        {list.length === 0 && (
+          <div className="bg-white dark:bg-[#1d222a] rounded-2xl border border-slate-200 dark:border-slate-800 p-8 text-center">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{emptyMsg}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop: Tabela */}
+      <div className="hidden md:block bg-white dark:bg-[#1d222a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-all">
         <table className="w-full text-left">
           <thead>
             <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Categoria</th>
-              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vencimento</th>
-              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Atenção</th>
-              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
-              <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Ações</th>
+              <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Categoria</th>
+              <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vencimento</th>
+              <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Atenção</th>
+              <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
+              <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
@@ -90,15 +144,15 @@ const Vencimentos: React.FC<VencimentosProps> = () => {
 
               return (
                 <tr key={doc.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
-                  <td className="px-6 py-5">
+                  <td className="px-4 py-4">
                     <span className="text-sm font-bold text-slate-900 dark:text-white">{doc.titulo}</span>
                   </td>
-                  <td className="px-6 py-5">
+                  <td className="px-4 py-4">
                     <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
                       {new Date(doc.dataVencimento).toLocaleDateString('pt-BR')}
                     </span>
                   </td>
-                  <td className="px-6 py-5">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
                       <span className={`size-2 rounded-full shrink-0 ${getAtencaoColor(doc, diffDays).replace('text-', 'bg-')}`} />
                       <span className={`text-sm font-bold ${getAtencaoColor(doc, diffDays)}`}>
@@ -109,7 +163,7 @@ const Vencimentos: React.FC<VencimentosProps> = () => {
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-5">
+                  <td className="px-4 py-4">
                     <button
                       onClick={() => updateVencimentoStatus(doc.id, doc.status === 'Feito' ? 'Em Andamento' : 'Feito', false)}
                       className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase border transition-all hover:scale-105 active:scale-95 ${getStatusBadgeStyle(doc.status)}`}
@@ -117,7 +171,7 @@ const Vencimentos: React.FC<VencimentosProps> = () => {
                       {doc.status}
                     </button>
                   </td>
-                  <td className="px-6 py-5 text-right">
+                  <td className="px-4 py-4 text-right">
                     <button
                       onClick={() => deleteVencimento(doc.id)}
                       className="p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
