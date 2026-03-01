@@ -82,26 +82,24 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
 
 
   return (
-    <div className="p-8 space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-end">
-        <div>
-          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Avisos</h3>
-        </div>
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
+      <div className="flex justify-between items-center">
+        <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Avisos</h3>
         {canManage && (
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-5 py-2 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
+            className="flex items-center gap-1.5 px-3 py-2 md:px-5 md:py-2.5 bg-primary text-white rounded-xl font-bold text-xs md:text-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all whitespace-nowrap"
           >
-            <span className="material-symbols-outlined text-xl">{showForm ? 'close' : 'add_alert'}</span>
+            <span className="material-symbols-outlined text-lg md:text-xl">{showForm ? 'close' : 'add_alert'}</span>
             {showForm ? 'Cancelar' : 'Novo Aviso'}
           </button>
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Lado Esquerdo: Formulário (Apenas Staff) */}
         {canManage && showForm && (
-          <div className="lg:col-span-1 border-r border-slate-100 dark:border-slate-800 pr-8 animate-in slide-in-from-left duration-300">
+          <div className="lg:col-span-1 animate-in slide-in-from-left duration-300">
             <div className="bg-white dark:bg-[#1d222a] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
               <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest mb-4">Criar Comunicado</h4>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -132,7 +130,7 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
         )}
 
         {/* Lado Direito: Feed de Avisos */}
-        <div className={`${showForm && canManage ? 'lg:col-span-3' : 'lg:col-span-4'} space-y-6`}>
+        <div className={`${showForm && canManage ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-4 md:space-y-6`}>
           {filteredAvisos.length > 0 ? (
             filteredAvisos.map((aviso) => (
               <div key={aviso.id} className="group relative bg-white dark:bg-[#1d222a] p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
