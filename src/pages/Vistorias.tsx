@@ -120,26 +120,28 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
             </button>
           )}
 
-          {/* Filtros - scrollável no mobile */}
-          <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar -mx-1 px-1">
-            {(['Todos', 'Pendente', 'Em Andamento', 'Concluído'] as const).map((status) => (
-              <button
-                key={status}
-                onClick={() => setFilter(status)}
-                className={`flex-shrink-0 px-3 py-2 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all border flex items-center gap-1.5 ${filter === status
-                  ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
-                  : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-primary/50'
-                  }`}
-              >
-                {status}
-                <span className={`px-1.5 py-0.5 rounded-full text-[8px] ${filter === status
-                  ? 'bg-white/20 text-white dark:bg-slate-900/20 dark:text-slate-900'
-                  : 'bg-slate-100 dark:bg-slate-700 text-slate-400'
-                  }`}>
-                  {counts[status]}
-                </span>
-              </button>
-            ))}
+          {/* Filtros - card container */}
+          <div className="bg-white dark:bg-[#1d222a] p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
+              {(['Todos', 'Pendente', 'Em Andamento', 'Concluído'] as const).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setFilter(status)}
+                  className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all border flex items-center justify-center gap-1.5 ${filter === status
+                    ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
+                    : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-primary/50'
+                    }`}
+                >
+                  {status}
+                  <span className={`px-1.5 py-0.5 rounded-full text-[8px] ${filter === status
+                    ? 'bg-white/20 text-white dark:bg-slate-900/20 dark:text-slate-900'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-400'
+                    }`}>
+                    {counts[status]}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

@@ -182,18 +182,16 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
   const canManage = isAdmin || isAtendente;
 
   return (
-    <div className="p-8 space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-end">
-        <div>
-          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Prestadores de Serviço</h3>
-        </div>
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
+      <div className="flex justify-between items-center">
+        <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Prestadores de Serviço</h3>
         {canManage && (
           <button
             onClick={() => setShowForm(!showForm)}
-            className={`flex items-center gap-2 px-5 py-2 rounded-xl font-bold transition-all shadow-lg active:scale-95 text-sm ${showForm ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-white' : 'bg-primary text-white shadow-primary/20'
+            className={`flex items-center gap-1.5 px-3 py-2 md:px-5 md:py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all shadow-lg active:scale-95 whitespace-nowrap ${showForm ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-white' : 'bg-primary text-white shadow-primary/20'
               }`}
           >
-            <span className="material-symbols-outlined text-xl">{showForm ? 'close' : 'person_add'}</span>
+            <span className="material-symbols-outlined text-lg md:text-xl">{showForm ? 'close' : 'person_add'}</span>
             {showForm ? 'Cancelar' : 'Novo Prestador'}
           </button>
         )}
@@ -278,19 +276,21 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
         </div>
       )}
 
-      <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-        {['Todos', ...setores].map(setor => (
-          <button
-            key={setor}
-            onClick={() => setFilterSetor(setor)}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all border ${filterSetor === setor
-              ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
-              : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-primary/50'
-              }`}
-          >
-            {setor}
-          </button>
-        ))}
+      <div className="bg-white dark:bg-[#1d222a] p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
+          {['Todos', ...setores].map(setor => (
+            <button
+              key={setor}
+              onClick={() => setFilterSetor(setor)}
+              className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all border text-center ${filterSetor === setor
+                ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
+                : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-primary/50'
+                }`}
+            >
+              {setor}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

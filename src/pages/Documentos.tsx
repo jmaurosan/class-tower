@@ -98,19 +98,21 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2 pb-2">
-        {categorias.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setFilter(cat)}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all border ${filter === cat
-              ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
-              : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-primary/50'
-              }`}
-          >
-            {cat}
-          </button>
-        ))}
+      <div className="bg-white dark:bg-[#1d222a] p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
+          {categorias.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setFilter(cat)}
+              className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all border text-center ${filter === cat
+                ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
+                : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-primary/50'
+                }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
