@@ -57,9 +57,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
 
   const metricCards = [
     { label: 'Empresas', value: stats.ocupacao, icon: 'meeting_room', color: 'text-emerald-400', bg: 'from-emerald-500/20 to-emerald-500/5', border: 'border-emerald-500/20', target: 'salas' as Page },
-    { label: 'Vistorias Pendentes', value: stats.vistorias, icon: 'assignment_turned_in', color: 'text-amber-400', bg: 'from-amber-500/20 to-amber-500/5', border: 'border-amber-500/20', target: 'vistorias' as Page },
-    { label: 'Docs. Urgentes', value: criticalDocs.length.toString(), icon: 'notification_important', color: 'text-red-400', bg: 'from-red-500/20 to-red-500/5', border: 'border-red-500/20', target: 'vencimentos' as Page },
-    { label: 'Agendamentos Ativos', value: stats.agendamentos, icon: 'calendar_month', color: 'text-blue-400', bg: 'from-blue-500/20 to-blue-500/5', border: 'border-blue-500/20', target: 'agendamentos' as Page },
+    { label: 'Vistorias', value: stats.vistorias, icon: 'assignment_turned_in', color: 'text-amber-400', bg: 'from-amber-500/20 to-amber-500/5', border: 'border-amber-500/20', target: 'vistorias' as Page },
+    { label: 'Documentos', value: criticalDocs.length.toString(), icon: 'notification_important', color: 'text-red-400', bg: 'from-red-500/20 to-red-500/5', border: 'border-red-500/20', target: 'vencimentos' as Page },
+    { label: 'Agendamentos', value: stats.agendamentos, icon: 'calendar_month', color: 'text-blue-400', bg: 'from-blue-500/20 to-blue-500/5', border: 'border-blue-500/20', target: 'agendamentos' as Page },
   ];
 
   const quickActions = [
