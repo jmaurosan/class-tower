@@ -198,28 +198,27 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent, onDa
               <span className="material-symbols-outlined text-xl md:text-2xl">chevron_left</span>
             </button>
             <h3 className="text-sm md:text-lg font-black text-slate-900 dark:text-white text-center capitalize whitespace-nowrap">
-              {currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+              {viewMode === 'day'
+                ? currentDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })
+                : currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
             </h3>
             <button onClick={() => navigate(1)} className="p-1.5 md:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0">
               <span className="material-symbols-outlined text-xl md:text-2xl">chevron_right</span>
             </button>
           </div>
-          <button onClick={resetToToday} className="px-2.5 py-1 md:px-3 md:py-1.5 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors shrink-0">
-            Hoje
-          </button>
-        </div>
 
-        <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl self-center md:self-end">
-          {(['month', 'week', 'day'] as ViewMode[]).map(mode => (
-            <button
-              key={mode}
-              onClick={() => setViewMode(mode)}
-              className={`px-3 md:px-4 py-1.5 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === mode ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                }`}
-            >
-              {mode === 'month' ? 'Mês' : mode === 'week' ? 'Semana' : 'Dia'}
-            </button>
-          ))}
+          <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl">
+            {(['month', 'week', 'day'] as ViewMode[]).map(mode => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                className={`px-3 md:px-4 py-1.5 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === mode ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                  }`}
+              >
+                {mode === 'month' ? 'Mês' : mode === 'week' ? 'Semana' : 'Dia'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
