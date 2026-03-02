@@ -12,12 +12,19 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
   const { documentos, updateVencimentoStatus } = useVencimentos();
-  const [stats, setStats] = useState({ empresas: '0', vistorias: '0', agendamentos: '0' });
+  const [stats, setStats] = useState({ ocupacao: '0%', vistorias: '0', agendamentos: '0' });
 
   const fetchStats = async () => {
     try {
-      const { count: empresasCount } = await supabase.from('empresas').select('*', { count: 'exact', head: true });
-      if (empresasCount !== null) setStats(prev => ({ ...prev, empresas: empresasCount.toString() }));
+      // Calcular taxa de ocupação baseado nas salas
+      const { data: salasData, error: salasError } = await supabase.from('salas').select('nome');
+      if (!salasError && salasData) {
+        const totalSalas = 100; // Padrão do prédio (16 andares * 6 + 2 * 3 + 2 térreo = 96 + 6 + 2 = 104, mas arredondando ou usando total real se preferir)
+        // Vamos contar quantas salas tem nome preenchido
+        const salasOcupadas = salasData.filter(s => s.nome && s.nome.trim() !== '').length;
+        const porcentagem = totalSalas > 0 ? Math.round((salasOcupadas / totalSalas) * 100) : 0;
+        setStats(prev => ({ ...prev, ocupacao: `${porcentagem}%` }));
+      }
 
       const { count: agendamentosCount } = await supabase.from('agendamentos').select('*', { count: 'exact', head: true }).neq('status', 'Cancelado');
       if (agendamentosCount !== null) setStats(prev => ({ ...prev, agendamentos: agendamentosCount.toString() }));
@@ -49,7 +56,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
   };
 
   const metricCards = [
-    { label: 'Empresas Cadastradas', value: stats.empresas, icon: 'business', color: 'text-emerald-400', bg: 'from-emerald-500/20 to-emerald-500/5', border: 'border-emerald-500/20', target: 'empresas' as Page },
+    { label: 'Empresas', value: stats.ocupacao, icon: 'meeting_room', color: 'text-emerald-400', bg: 'from-emerald-500/20 to-emerald-500/5', border: 'border-emerald-500/20', target: 'salas' as Page },
     { label: 'Vistorias Pendentes', value: stats.vistorias, icon: 'assignment_turned_in', color: 'text-amber-400', bg: 'from-amber-500/20 to-amber-500/5', border: 'border-amber-500/20', target: 'vistorias' as Page },
     { label: 'Docs. Urgentes', value: criticalDocs.length.toString(), icon: 'notification_important', color: 'text-red-400', bg: 'from-red-500/20 to-red-500/5', border: 'border-red-500/20', target: 'vencimentos' as Page },
     { label: 'Agendamentos Ativos', value: stats.agendamentos, icon: 'calendar_month', color: 'text-blue-400', bg: 'from-blue-500/20 to-blue-500/5', border: 'border-blue-500/20', target: 'agendamentos' as Page },
