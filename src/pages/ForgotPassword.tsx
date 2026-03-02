@@ -19,7 +19,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ isDarkMode, toggleDarkM
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}/reset-password`
       });
 
@@ -67,7 +67,8 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ isDarkMode, toggleDarkM
                 Email
               </label>
               <input
-                type="email"
+                data-testid="forgot-password-email-input"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
@@ -81,7 +82,10 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ isDarkMode, toggleDarkM
 
             {/* Error Message */}
             {error && (
-              <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-sm flex items-start gap-2">
+              <div
+                data-testid="forgot-password-error-message"
+                className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-sm flex items-start gap-2"
+              >
                 <span className="material-symbols-outlined text-lg mt-0.5">error</span>
                 <span>{error}</span>
               </div>
@@ -89,7 +93,10 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ isDarkMode, toggleDarkM
 
             {/* Success Message */}
             {success && (
-              <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-500 text-sm flex items-start gap-2">
+              <div
+                data-testid="forgot-password-success-message"
+                className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-500 text-sm flex items-start gap-2"
+              >
                 <span className="material-symbols-outlined text-lg mt-0.5">check_circle</span>
                 <span>{success}</span>
               </div>

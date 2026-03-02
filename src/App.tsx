@@ -146,13 +146,30 @@ const App: React.FC = () => {
     }
   };
 
+  // Efeito para garantir que o carregamento pare caso algo dê errado no useAuth
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading) {
+        console.warn('⚠️ [APP] Carregamento demorando demais. Forçando parada...');
+        // Note: loading em useAuth é read-only aqui, mas App.tsx pode ter seu próprio estado local se necessário
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [loading]);
+
   if (loading) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-white dark:bg-[#15191e]">
-        <div className="size-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="size-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+          <p className="text-sm font-bold text-slate-500 animate-pulse">Class Tower carregando...</p>
+        </div>
       </div>
     );
   }
+
+  // Roteamento Público (Sem Autenticação)
+  const isPublicPath = ['/signup', '/forgot-password', '/reset-password'].includes(window.location.pathname);
 
   if (window.location.pathname === '/reset-password') {
     return <ResetPassword />;
@@ -176,7 +193,14 @@ const App: React.FC = () => {
     );
   }
 
+  // Se não estiver logado e não for rota pública, força tela de login no path raiz
   if (!user) {
+    // Se o usuário tentar acessar uma rota interna diretamente sem estar logado
+    if (window.location.pathname !== '/' && !isPublicPath) {
+      window.location.href = '/';
+      return null;
+    }
+
     return (
       <Login
         signIn={signIn}

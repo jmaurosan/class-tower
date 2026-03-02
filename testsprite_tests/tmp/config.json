@@ -1,21 +1,20 @@
 {
-  "status": "init",
+  "status": "commited",
   "type": "frontend",
   "scope": "codebase",
-  "localEndpoint": "http://localhost:3000/",
-  "loginUser": "mauromonit@gmail.com",
-  "loginPassword": "Tower@9644#",
+  "localEndpoint": "http://localhost:3002",
+  "loginUser": "admin@classtower.com.br",
+  "loginPassword": "Admin@2026",
   "executionArgs": {
-    "projectName": "ClassTower",
+    "projectName": "ClassTower-UI-Test-with-Data-Creation",
     "projectPath": "c:\\Users\\Mauro\\PROJETOS\\ClassTower",
-    "testIds": [
-      "TC005"
-    ],
-    "additionalInstruction": "Use credentials for Atendente: user@classtower.com.br / user123. Ensure to login via the form with data-testid 'email-input' and 'password-input', then click 'login-submit-button'. Once logged in, go to Encomendas, register a package with photo, and verify. Project is running on http://localhost:3000.",
+    "testIds": [],
+    "additionalInstruction": "POR FAVOR: Primeiro crie dados de teste! Vá em Vistorias e crie uma nova vistoria. Vá em Avisos e crie um aviso. Vá em Encomendas e registre uma encomenda. SOMENTE APÓS CRIAR ESTES DADOS, realize os testes de edição e exclusão. Teste se os modais de exclusão exigem motivo e se os audit logs funcionam corretamente. Use o login admin@classtower.com.br / Admin@2026.",
+    "serverMode": "development",
     "envs": {
       "API_KEY": "sk-user-O8P5qT_lRfY5MjavyWa-QDD6Oozl6N55_2VTJxp6XWdMEPFW-8a7GKSGcBnk_jJuZdRdvejvwdtGWZf0PDU79oUoYGZ-Z6LjCTh4ycqVhQTNsvv24CL8YACqwsbwhVZuCSc"
     }
   },
-  "proxy": "http://934d4def-182d-4506-ab8e-775a8ab4b722:0lscRrSeCPDTbBPXRu8CGE8GnzxcvYOT@tun.testsprite.com:8080",
-  "serverPort": 56910
+  "serverPort": 61047,
+  "proxy": "http://44e828bc-5f76-46da-9c14-f93486983529:gdBMJjHdpDmaflJVrj7uDJsPMi20Ii9X@tun.testsprite.com:8080"
 }

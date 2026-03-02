@@ -1,0 +1,54 @@
+version: "2"
+type: frontend
+tech_stack:
+  - TypeScript
+  - React
+  - Tailwind CSS
+  - Supabase (Backend as a Service)
+  - Vite
+  - Material Symbols
+routes:
+  - path: /
+    file: src/pages/Login.tsx
+    auth_required: false
+    description: Login page
+  - path: /dashboard
+    file: src/pages/Dashboard.tsx
+    auth_required: true
+    description: Operational overview
+  - path: /usuarios
+    file: src/pages/Usuarios.tsx
+    auth_required: true
+    description: User management and role configuration
+  - path: /encomendas
+    file: src/pages/Encomendas.tsx
+    auth_required: true
+    description: Parcel management and delivery tracking
+  - path: /vistorias
+    file: src/pages/Vistorias.tsx
+    auth_required: true
+    description: Technical inspection reports and management
+  - path: /diario
+    file: src/pages/DiarioBordo.tsx
+    auth_required: true
+    description: Daily occurrence logging
+  - path: /audit-logs
+    file: src/pages/AuditLogs.tsx
+    auth_required: true
+    description: System-wide audit trail
+features:
+  - name: User Management
+    description: CRUD for users.
+    files: [src/pages/Usuarios.tsx]
+    entry_route: /usuarios
+    user_interactions: [Create user, Delete user with reason]
+    api_calls: [{method: UPDATE, endpoint: profiles}]
+    auth_required: true
+  - name: Inspection Management (Vistorias)
+    description: CRUD for vistorias.
+    files: [src/pages/Vistorias.tsx]
+    entry_route: /vistorias
+    user_interactions: [Create vistoria, Delete vistoria with reason, Mark as completed]
+    api_calls: [{method: INSERT, endpoint: vistorias}]
+    auth_required: true
+known_limitations: []

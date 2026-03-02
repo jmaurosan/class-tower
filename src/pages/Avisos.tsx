@@ -11,10 +11,12 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
   const { avisos, loading, addAviso, deleteAviso } = useAvisos();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    titulo: '',
-    conteudo: '',
     prioridade: 'Baixa' as Aviso['prioridade']
   });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [idToDelete, setIdToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const getPriorityStyle = (prioridade: Aviso['prioridade']) => {
     switch (prioridade) {
@@ -70,13 +72,24 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
     });
   }, [avisos, user.id, canManage]);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Deseja excluir este aviso?')) return;
+  const handleDeleteClick = (id: string) => {
+    setIdToDelete(id);
+    setErrorMessage(null);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!idToDelete) return;
     try {
-      await deleteAviso(id);
-    } catch (err) {
+      setIsDeleting(true);
+      await deleteAviso(idToDelete);
+      setShowDeleteModal(false);
+      setIdToDelete(null);
+    } catch (err: any) {
       console.error('Erro ao excluir:', err);
-      alert('Erro ao excluir aviso.');
+      setErrorMessage(err.message || 'Erro ao excluir aviso');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -158,7 +171,7 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
 
                   {canManage && (
                     <button
-                      onClick={() => handleDelete(aviso.id)}
+                      onClick={() => handleDeleteClick(aviso.id)}
                       className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-3 text-slate-400 md:text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl transition-all shrink-0"
                       title="Excluir Aviso"
                     >
@@ -178,6 +191,51 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
           )}
         </div>
       </div>
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+          <div className="bg-white dark:bg-[#1d222a] rounded-[24px] shadow-2xl max-w-sm w-full p-8 border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-300">
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="size-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mb-4">
+                <span className="material-symbols-outlined text-3xl">delete_forever</span>
+              </div>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Excluir Comunicado?</h3>
+              <p className="text-slate-500 text-sm mt-2">Esta ação removerá o aviso para todos os usuários.</p>
+            </div>
+
+            <div className="space-y-4">
+              {errorMessage && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold">
+                  {errorMessage}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-600/20 hover:bg-red-700 active:scale-95 transition-all text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isDeleting ? (
+                    <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    'Confirmar'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

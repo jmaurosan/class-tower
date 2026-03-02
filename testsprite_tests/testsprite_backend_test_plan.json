@@ -1,0 +1,37 @@
+[
+  {
+    "id": "TC001",
+    "title": "user_management_search_and_edit_role",
+    "description": "Test searching users by name or unit, editing a user's role, and verifying the updated role is reflected in the user list."
+  },
+  {
+    "id": "TC002",
+    "title": "user_management_create_new_user_with_role",
+    "description": "Test creating a new user with all required fields including role assignment, and verify the new user appears in the user list."
+  },
+  {
+    "id": "TC003",
+    "title": "user_management_block_and_unblock_user",
+    "description": "Test blocking a user and confirming the status changes to 'Blocked', then unblocking and verifying status reverts."
+  },
+  {
+    "id": "TC004",
+    "title": "user_management_delete_user_with_reason_validation",
+    "description": "Test deleting a user with and without providing a mandatory deletion reason, verifying validation error when reason is missing."
+  },
+  {
+    "id": "TC005",
+    "title": "inspection_management_register_and_edit_inspection",
+    "description": "Test registering a new inspection with details and photo, editing existing inspection fields, and verifying audit entries are recorded."
+  },
+  {
+    "id": "TC006",
+    "title": "inspection_management_mark_completed_and_delete_validation",
+    "description": "Test marking an inspection as completed and verifying status update, and test deletion with missing reason to trigger validation error."
+  },
+  {
+    "id": "TC007",
+    "title": "password_recovery_request_and_reset_flow",
+    "description": "Test requesting a password reset email with valid and unknown emails, and resetting password using valid and invalid/expired tokens."
+  }
+]

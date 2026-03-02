@@ -67,6 +67,7 @@ const ResetPassword: React.FC = () => {
             <div className="relative">
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
               <input
+                data-testid="reset-password-input"
                 required
                 type="password"
                 placeholder="••••••••"
@@ -82,6 +83,7 @@ const ResetPassword: React.FC = () => {
             <div className="relative">
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock_open</span>
               <input
+                data-testid="reset-password-confirm-input"
                 required
                 type="password"
                 placeholder="••••••••"
@@ -95,14 +97,20 @@ const ResetPassword: React.FC = () => {
           <PasswordChecklist password={password} />
 
           {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 text-red-500 text-xs font-bold">
+            <div
+              data-testid="reset-password-error-message"
+              className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 text-red-500 text-xs font-bold"
+            >
               <span className="material-symbols-outlined text-sm">error</span>
               {error}
             </div>
           )}
 
           {success && (
-            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-2 text-emerald-600 text-xs font-bold">
+            <div
+              data-testid="reset-password-success-message"
+              className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-2 text-emerald-600 text-xs font-bold"
+            >
               <span className="material-symbols-outlined text-sm">check_circle</span>
               {success}
             </div>

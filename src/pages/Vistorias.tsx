@@ -20,6 +20,11 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
     tecnico: user.name,
     descricao: ''
   });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [idToDelete, setIdToDelete] = useState<string | null>(null);
+  const [deleteReason, setDeleteReason] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const filteredVistorias = useMemo(() => {
     if (filter === 'Todos') return vistorias;
@@ -82,23 +87,31 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja EXCLUIR permanentemente esta vistoria?')) return;
+  const handleDeleteClick = (id: string) => {
+    setIdToDelete(id);
+    setDeleteReason('');
+    setErrorMessage(null);
+    setShowDeleteModal(true);
+  };
 
-    const motivo = prompt('Por favor, detalhe o motivo da exclusão:');
-    if (!motivo) {
-      alert('A exclusão foi cancelada. É necessário informar um motivo.');
+  const confirmDelete = async () => {
+    if (!idToDelete || !deleteReason.trim()) {
+      setErrorMessage('Por favor, detalhe o motivo da exclusão.');
       return;
     }
 
     try {
-      await deleteVistoria(id, motivo, user.id, user.name);
+      setIsDeleting(true);
+      await deleteVistoria(idToDelete, deleteReason, user.id, user.name);
       setSelectedId(null);
+      setShowDeleteModal(false);
+      setIdToDelete(null);
       await refresh();
-      alert('Vistoria excluída com sucesso.');
     } catch (err) {
       console.error('Erro ao excluir vistoria:', err);
-      alert('Erro ao excluir do banco de dados.');
+      setErrorMessage('Falha ao excluir vistoria. Tente novamente.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -270,11 +283,14 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
                         <span className="material-symbols-outlined text-base">edit</span>
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleDelete(v.id); }}
-                        className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClick(v.id);
+                        }}
+                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"
                         title="Excluir"
                       >
-                        <span className="material-symbols-outlined text-base">delete</span>
+                        <span className="material-symbols-outlined text-xl">delete</span>
                       </button>
                     </div>
                   </td>
@@ -314,7 +330,7 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
                     <span className="material-symbols-outlined text-sm">edit</span>
                   </button>
                   <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(v.id); }}
+                    onClick={(e) => { e.stopPropagation(); handleDeleteClick(v.id); }}
                     className="p-1 text-red-500"
                   >
                     <span className="material-symbols-outlined text-sm">delete</span>
@@ -419,6 +435,63 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
             </div>
           </aside>
         </>
+      )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-white dark:bg-[#1d222a] rounded-[24px] shadow-2xl max-w-sm w-full p-8 border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-300">
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="size-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mb-4">
+                <span className="material-symbols-outlined text-3xl">delete_forever</span>
+              </div>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Excluir Vistoria?</h3>
+              <p className="text-slate-500 text-sm mt-2">Esta ação é irreversível e será registrada em log.</p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Motivo da Exclusão *</label>
+                <textarea
+                  required
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  placeholder="Ex: Registro duplicado ou erro técnico"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-red-500/20 dark:text-white text-sm min-h-[100px] resize-none"
+                />
+              </div>
+
+              {errorMessage && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold">
+                  {errorMessage}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDelete}
+                  disabled={!deleteReason.trim() || isDeleting}
+                  className="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-600/20 hover:bg-red-700 active:scale-95 transition-all text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isDeleting ? (
+                    <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    'Confirmar'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

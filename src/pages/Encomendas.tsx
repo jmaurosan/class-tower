@@ -18,12 +18,11 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
   const [filter, setFilter] = useState<'Todos' | 'Pendente' | 'Retirado' | 'Cancelado'>('Todos');
   const [searchTerm, setSearchTerm] = useState('');
   const [newPackage, setNewPackage] = useState<Partial<Encomenda & { destinatarioOriginal: string }>>({
-    categoria: 'Caixa',
-    status: 'Pendente',
-    destinatarioOriginal: ''
+    destinatario: '',
+    sala_id: ''
   });
-
   const [showTodayOnly, setShowTodayOnly] = useState(false);
+
 
   // Refs para câmera
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -143,56 +142,60 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
     setNewPackage({ categoria: 'Caixa', status: 'Pendente', destinatarioOriginal: '' });
   };
 
-  const markAsDelivered = async (id: string) => {
-    const nome = prompt('Quem está retirando a encomenda?');
-    if (!nome) return;
+  const [modalMode, setModalMode] = useState<'delete' | 'cancel' | 'deliver' | null>(null);
+  const [idToTarget, setIdToTarget] = useState<string | null>(null);
+  const [modalInputValue, setModalInputValue] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    try {
-      await updateStatus(id, {
-        status: 'Retirado',
-        dataRetirada: new Date().toISOString(),
-        quemRetirou: nome
-      }, user.id, user.name);
-      await refresh();
-    } catch (err) {
-      console.error('Erro ao dar baixa:', err);
-      alert('Erro ao atualizar no banco de dados.');
-    }
+  const openActionModal = (id: string, mode: 'delete' | 'cancel' | 'deliver') => {
+    setIdToTarget(id);
+    setModalMode(mode);
+    setModalInputValue('');
+    setErrorMessage(null);
   };
 
-  const handleCancel = async (id: string) => {
-    const justificativa = prompt('Por favor, informe a justificativa para o cancelamento:');
-    if (!justificativa) return;
-
-    try {
-      await updateStatus(id, {
-        status: 'Cancelado',
-        justificativaCancelamento: justificativa
-      }, user.id, user.name);
-      await refresh();
-    } catch (err) {
-      console.error('Erro ao cancelar encomenda:', err);
-      alert('Erro ao atualizar no banco de dados.');
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja EXCLUIR permanentemente este registro?')) return;
-
-    const motivo = prompt('Por favor, detalhe o motivo da exclusão:');
-    if (!motivo) {
-      alert('A exclusão foi cancelada. É necessário informar um motivo.');
+  const handleModalConfirm = async () => {
+    if (!idToTarget || !modalMode) return;
+    if (!modalInputValue.trim()) {
+      setErrorMessage('Este campo é obrigatório.');
       return;
     }
 
     try {
-      await deleteEncomenda(id, motivo, user.id, user.name);
+      setIsProcessing(true);
+      setErrorMessage(null);
+
+      if (modalMode === 'delete') {
+        await deleteEncomenda(idToTarget, modalInputValue, user.id, user.name);
+      } else if (modalMode === 'cancel') {
+        await updateStatus(idToTarget, {
+          status: 'Cancelado',
+          justificativaCancelamento: modalInputValue
+        }, user.id, user.name);
+      } else if (modalMode === 'deliver') {
+        await updateStatus(idToTarget, {
+          status: 'Retirado',
+          dataRetirada: new Date().toISOString(),
+          quemRetirou: modalInputValue
+        }, user.id, user.name);
+      }
+
+      setModalMode(null);
+      setIdToTarget(null);
       await refresh();
-      alert('Registro excluído com sucesso.');
-    } catch (err) {
-      console.error('Erro ao excluir encomenda:', err);
-      alert('Erro ao excluir do banco de dados.');
+    } catch (err: any) {
+      console.error(`Erro na ação ${modalMode}:`, err);
+      setErrorMessage(err.message || `Erro ao processar ${modalMode}`);
+    } finally {
+      setIsProcessing(false);
     }
+  };
+
+  const handleCloseActionModal = () => {
+    if (isProcessing) return;
+    setModalMode(null);
+    setIdToTarget(null);
   };
 
   const isAdmin = user.role === 'admin';
@@ -324,21 +327,21 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
                   {enc.status === 'Pendente' && canManage && (
                     <div className="flex gap-2 shrink-0">
                       <button
-                        onClick={() => handleCancel(enc.id)}
+                        onClick={() => openActionModal(enc.id, 'cancel')}
                         className="size-9 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all flex items-center justify-center border border-red-100"
                         title="Cancelar Encomenda"
                       >
                         <span className="material-symbols-outlined text-sm">cancel</span>
                       </button>
                       <button
-                        onClick={() => handleDelete(enc.id)}
+                        onClick={() => openActionModal(enc.id, 'delete')}
                         className="size-9 bg-slate-50 text-slate-400 hover:bg-red-500 hover:text-white rounded-lg transition-all flex items-center justify-center border border-slate-100"
                         title="Excluir Registro"
                       >
                         <span className="material-symbols-outlined text-sm">delete</span>
                       </button>
                       <button
-                        onClick={() => markAsDelivered(enc.id)}
+                        onClick={() => openActionModal(enc.id, 'deliver')}
                         className="px-3 py-2 bg-emerald-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
                       >
                         Dar Baixa
@@ -348,7 +351,7 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
                   {enc.status !== 'Pendente' && canManage && (
                     <div className="flex gap-2 shrink-0">
                       <button
-                        onClick={() => handleDelete(enc.id)}
+                        onClick={() => openActionModal(enc.id, 'delete')}
                         className="size-9 bg-slate-50 text-slate-400 hover:bg-red-500 hover:text-white rounded-lg transition-all flex items-center justify-center border border-slate-100"
                         title="Excluir Registro"
                       >
@@ -374,24 +377,36 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
             <form onSubmit={handleAdd} className="p-8 space-y-6 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Unidade de Destino</label>
-                  <input required placeholder="Ex: Unidade 1402" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-sm transition-all" onChange={e => setNewPackage({ ...newPackage, destinatario: e.target.value })} />
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Unidade / Sala</label>
+                  <input
+                    required
+                    placeholder="Ex: 1402"
+                    value={newPackage.sala_id}
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-sm transition-all"
+                    onChange={e => setNewPackage({ ...newPackage, sala_id: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Remetente</label>
-                  <input required placeholder="Ex: Amazon, Mercado Livre, João da Silva" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-sm transition-all" onChange={e => setNewPackage({ ...newPackage, remetente: e.target.value })} />
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Destinatário (Pessoa)</label>
+                  <input
+                    required
+                    placeholder="Ex: João da Silva"
+                    value={newPackage.destinatario}
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-sm transition-all"
+                    onChange={e => setNewPackage({ ...newPackage, destinatario: e.target.value })}
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-6">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Destinatário</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Remetente / Transportadora</label>
                   <input
                     required
-                    placeholder="Ex: Portaria A, Recepção Social, Zeladoria..."
+                    placeholder="Ex: Amazon, Mercado Livre, DHL..."
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-sm transition-all"
-                    onChange={e => setNewPackage({ ...newPackage, destinatarioOriginal: e.target.value })}
-                    value={newPackage.destinatarioOriginal}
+                    onChange={e => setNewPackage({ ...newPackage, remetente: e.target.value })}
+                    value={newPackage.remetente}
                   />
                 </div>
               </div>
@@ -470,6 +485,81 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
                 <button type="submit" className="flex-1 py-4 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all">Finalizar Registro</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Modal de Ação Customizado */}
+      {modalMode && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+          <div className="bg-white dark:bg-[#1d222a] rounded-[24px] shadow-2xl max-w-sm w-full p-8 border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-300">
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className={`size-16 rounded-full flex items-center justify-center mb-4 ${modalMode === 'delete' ? 'bg-red-500/10 text-red-500' :
+                  modalMode === 'cancel' ? 'bg-amber-500/10 text-amber-500' :
+                    'bg-emerald-500/10 text-emerald-500'
+                }`}>
+                <span className="material-symbols-outlined text-3xl">
+                  {modalMode === 'delete' ? 'delete_forever' :
+                    modalMode === 'cancel' ? 'cancel' : 'person_check'}
+                </span>
+              </div>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
+                {modalMode === 'delete' ? 'Excluir Encomenda?' :
+                  modalMode === 'cancel' ? 'Cancelar Entrega?' : 'Confirmar Entrega'}
+              </h3>
+              <p className="text-slate-500 text-sm mt-2">
+                {modalMode === 'delete' ? 'Esta ação é irreversível.' :
+                  modalMode === 'cancel' ? 'Informe o motivo do cancelamento.' : 'Informe o nome de quem retirou.'}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                  {modalMode === 'delete' ? 'Motivo da Exclusão *' :
+                    modalMode === 'cancel' ? 'Justificativa *' : 'Nome do Recebedor *'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={modalInputValue}
+                  onChange={(e) => setModalInputValue(e.target.value)}
+                  placeholder={modalMode === 'deliver' ? 'Nome completo' : 'Detalhes...'}
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-sm"
+                />
+              </div>
+
+              {errorMessage && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold">
+                  {errorMessage}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleCloseActionModal}
+                  disabled={isProcessing}
+                  className="flex-1 px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleModalConfirm}
+                  disabled={!modalInputValue.trim() || isProcessing}
+                  className={`flex-1 px-4 py-3 text-white font-bold rounded-xl shadow-lg transition-all text-sm disabled:opacity-50 flex items-center justify-center gap-2 ${modalMode === 'delete' ? 'bg-red-600 shadow-red-600/20 hover:bg-red-700' :
+                      modalMode === 'cancel' ? 'bg-amber-600 shadow-amber-600/20 hover:bg-amber-700' :
+                        'bg-emerald-600 shadow-emerald-600/20 hover:bg-emerald-700'
+                    }`}
+                >
+                  {isProcessing ? (
+                    <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    'Confirmar'
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
