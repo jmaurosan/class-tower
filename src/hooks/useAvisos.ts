@@ -32,15 +32,15 @@ export const useAvisos = () => {
     };
   }, [fetchAvisos]);
 
-  const addAviso = async (aviso: Omit<Aviso, 'id'>) => {
+  const addAviso = async (aviso: Omit<Aviso, 'id'>, userId?: string, userName?: string) => {
     if (!navigator.onLine) {
       offlineService.enqueue('avisos', 'create', aviso);
       return { id: 'pending-' + Date.now() } as any;
     }
-    return await avisosService.create(aviso);
+    return await avisosService.create(aviso, userId, userName);
   };
 
-  const deleteAviso = async (id: string) => {
+  const deleteAviso = async (id: string, userId?: string, userName?: string) => {
     // 1. Optimistic Update: Remove from UI immediately
     const originalAvisos = [...avisos];
     setAvisos(current => current.filter(a => a.id !== id));
@@ -50,7 +50,7 @@ export const useAvisos = () => {
         offlineService.enqueue('avisos', 'delete', { id });
         return;
       }
-      await avisosService.delete(id);
+      await avisosService.delete(id, userId, userName);
 
       // 2. Force refresh to ensure sync (optional, but good for consistency)
       // await fetchAvisos(); // Commented out to trust optimistic update for speed

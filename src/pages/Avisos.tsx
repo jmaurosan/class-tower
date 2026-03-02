@@ -45,7 +45,7 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
         data: agora.toISOString().split('T')[0],
         hora: agora.toTimeString().split(' ')[0].substring(0, 5),
         criado_por: user.id
-      });
+      }, user.id, user.name);
 
       setShowForm(false);
       setFormData({ titulo: '', conteudo: '', prioridade: 'Baixa' });
@@ -82,7 +82,7 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
     if (!idToDelete) return;
     try {
       setIsDeleting(true);
-      await deleteAviso(idToDelete);
+      await deleteAviso(idToDelete, user.id, user.name);
       setShowDeleteModal(false);
       setIdToDelete(null);
     } catch (err: any) {

@@ -1,9 +1,11 @@
 
 import React from 'react';
 import { useAuditLogs } from '../hooks/useAuditLogs';
+import { AuditLog } from '../types';
 
 const AuditLogs: React.FC = () => {
   const { logs, loading } = useAuditLogs();
+  const [selectedLog, setSelectedLog] = React.useState<AuditLog | null>(null);
 
   const getActionColor = (action: string) => {
     switch (action) {
@@ -22,6 +24,7 @@ const AuditLogs: React.FC = () => {
       case 'vistorias': return 'Vistoria';
       case 'vencimentos': return 'Vencimento';
       case 'profiles': return 'Perfil / Permissão';
+      case 'agendamentos': return 'Agendamento';
       case 'ocorrencias':
       case 'diario': return 'Ocorrência (Diário)';
       default: return table;
@@ -37,7 +40,7 @@ const AuditLogs: React.FC = () => {
   }
 
   return (
-    <div className="p-8 space-y-8 animate-in fade-in duration-500">
+    <div className="p-8 space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="bg-slate-900 dark:bg-black text-white p-8 rounded-[32px] border border-slate-800 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-10">
           <span className="material-symbols-outlined text-[120px]">security</span>
@@ -48,7 +51,7 @@ const AuditLogs: React.FC = () => {
             <h4 className="text-sm font-black uppercase tracking-[0.2em]">Painel de Auditoria</h4>
           </div>
           <p className="mt-4 text-slate-400 max-w-xl">
-            Rastreabilidade total do sistema. Cada alteração em registros críticos é capturada automaticamente via triggers de banco de dados para garantir transparência e integridade.
+            Rastreabilidade total do sistema. Cada alteração em registros críticos é capturada automaticamente para garantir transparência e integridade.
           </p>
         </div>
       </div>
@@ -62,7 +65,7 @@ const AuditLogs: React.FC = () => {
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Ação</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Módulo</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Executado Por</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">ID Registro</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">Detalhes</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -74,7 +77,7 @@ const AuditLogs: React.FC = () => {
                         {new Date(log.created_at).toLocaleDateString('pt-BR')}
                       </span>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        {new Date(log.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        {new Date(log.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                   </td>
@@ -84,20 +87,23 @@ const AuditLogs: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-slate-900 dark:text-white">{formatTableName(log.table_name)}</span>
-                    </div>
+                    <span className="text-sm font-bold text-slate-900 dark:text-white">{formatTableName(log.table_name)}</span>
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-3">
-                      <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                      <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0">
                         {log.executed_by_name?.charAt(0) || 'S'}
                       </div>
-                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{log.executed_by_name}</span>
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate max-w-[150px]">{log.executed_by_name}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-5 text-right font-mono text-[10px] text-slate-400">
-                    #{log.record_id.substring(0, 8)}
+                  <td className="px-6 py-5 text-right">
+                    <button
+                      onClick={() => setSelectedLog(log)}
+                      className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all text-slate-400 hover:text-primary"
+                    >
+                      <span className="material-symbols-outlined text-xl">visibility</span>
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -111,6 +117,68 @@ const AuditLogs: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* MODAL DE DETALHES DO LOG */}
+      {selectedLog && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 lg:p-8">
+          <div className="bg-white dark:bg-[#1d222a] rounded-[32px] shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
+              <div className="flex items-center gap-3">
+                <div className={`size-10 rounded-xl flex items-center justify-center border ${getActionColor(selectedLog.action)}`}>
+                  <span className="material-symbols-outlined">{selectedLog.action === 'DELETE' ? 'delete' : selectedLog.action === 'INSERT' ? 'add' : 'edit'}</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter">Detalhes da Ação</h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID: #{selectedLog.record_id}</p>
+                </div>
+              </div>
+              <button onClick={() => setSelectedLog(null)} className="size-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Módulo</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{formatTableName(selectedLog.table_name)}</p>
+                </div>
+                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Responsável</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{selectedLog.executed_by_name}</p>
+                </div>
+              </div>
+
+              {selectedLog.old_data && (
+                <div className="space-y-2">
+                  <h5 className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1">Dados Anteriores (Removidos/Alterados)</h5>
+                  <pre className="p-4 bg-red-500/5 dark:bg-red-500/10 border border-red-500/20 rounded-2xl text-[11px] text-red-700 dark:text-red-400 font-mono overflow-x-auto whitespace-pre-wrap">
+                    {JSON.stringify(selectedLog.old_data, null, 2)}
+                  </pre>
+                </div>
+              )}
+
+              {selectedLog.new_data && (
+                <div className="space-y-2">
+                  <h5 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest ml-1">Novos Dados (Adicionados/Atualizados)</h5>
+                  <pre className="p-4 bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-[11px] text-emerald-700 dark:text-emerald-400 font-mono overflow-x-auto whitespace-pre-wrap">
+                    {JSON.stringify(selectedLog.new_data, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800">
+              <button
+                onClick={() => setSelectedLog(null)}
+                className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black rounded-2xl hover:opacity-90 transition-all text-xs uppercase tracking-widest"
+              >
+                Fechar Visualização
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

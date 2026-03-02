@@ -28,7 +28,7 @@ export const avisosService = {
     }
   },
 
-  async create(aviso: Omit<Aviso, 'id'>) {
+  async create(aviso: Omit<Aviso, 'id'>, userId?: string, userName?: string) {
     const { data, error } = await supabase
       .from('avisos')
       .insert([aviso])
@@ -39,16 +39,54 @@ export const avisosService = {
       console.error('Database Error:', error);
       throw new Error(error.message);
     }
+
+    if (userId) {
+      try {
+        await supabase.from('audit_logs').insert([{
+          table_name: 'avisos',
+          record_id: data.id,
+          action: 'INSERT',
+          executed_by: userId,
+          executed_by_name: userName,
+          new_data: data
+        }]);
+      } catch (logErr) {
+        console.warn('Logging failed but data was saved:', logErr);
+      }
+    }
+
     return data;
   },
 
-  async delete(id: string) {
+  async delete(id: string, userId?: string, userName?: string) {
+    // Get old data for audit log
+    const { data: oldData } = await supabase
+      .from('avisos')
+      .select('*')
+      .eq('id', id)
+      .single();
+
     const { error } = await supabase
       .from('avisos')
       .delete()
       .eq('id', id);
 
     if (error) throw error;
+
+    if (userId) {
+      try {
+        await supabase.from('audit_logs').insert([{
+          table_name: 'avisos',
+          record_id: id,
+          action: 'DELETE',
+          executed_by: userId,
+          executed_by_name: userName,
+          old_data: oldData
+        }]);
+      } catch (logErr) {
+        console.warn('Logging failed but data was deleted:', logErr);
+      }
+    }
   },
 
   subscribe(callback: (payload: any) => void) {

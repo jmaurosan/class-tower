@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import CalendarRules, { CalendarRule } from '../components/CalendarRules';
 import CalendarView from '../components/CalendarView';
+import { agendamentosService } from '../services/agendamentosService';
 import { supabase } from '../services/supabase';
 import { Agendamento, User } from '../types';
 
@@ -25,24 +26,20 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
     tipo: 'Mudança' as Agendamento['tipo']
   });
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [idToDelete, setIdToDelete] = useState<string | null>(null);
+  const [deleteReason, setDeleteReason] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const fetchData = async () => {
     try {
       setLoading(true);
-      // Buscar Agendamentos
-      const { data: agendamentosData } = await supabase
-        .from('agendamentos')
-        .select('*')
-        .order('data', { ascending: true });
+      const agendamentosData = await agendamentosService.getAll();
+      setAgendamentos(agendamentosData);
 
-      if (agendamentosData) setAgendamentos(agendamentosData);
-
-      // Buscar Regras de Calendário
-      const { data: rulesData } = await supabase
-        .from('condo_calendar_rules')
-        .select('*');
-
-      if (rulesData) setRules(rulesData);
-
+      const rulesData = await agendamentosService.getCalendarRules();
+      setRules(rulesData);
     } catch (err) {
       console.error('Erro ao buscar dados:', err);
     } finally {
@@ -130,7 +127,6 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validar regras
     const validationError = validateScheduling(formData.data, formData.hora, formData.tipo);
     if (validationError && user.role !== 'admin') {
       alert(validationError);
@@ -138,22 +134,20 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
     }
 
     try {
-      const { error } = await supabase
-        .from('agendamentos')
-        .insert([{
-          ...formData,
-          status: 'Pendente',
-          sala_id: user.sala_numero || '0000',
-          user_id: user.id
-        }]);
+      await agendamentosService.create({
+        ...formData,
+        status: 'Pendente',
+        sala_id: user.sala_numero || '0000',
+        user_id: user.id
+      }, user.id, user.name);
 
-      if (error) throw error;
-
-      // AUTO-GERAR AVISO SE FOR MUDANÇA
       if (formData.tipo === 'Mudança') {
         const agora = new Date();
         const dataFormatada = new Date(formData.data + 'T00:00:00').toLocaleDateString('pt-BR');
 
+        // Note: Avisos creation still using direct supabase for now as it's a side effect, 
+        // but could also be moved to a service.
+        const { supabase } = await import('../services/supabase');
         await supabase.from('avisos').insert([{
           titulo: `🚚 Nova Mudança Agendada - Unidade ${user.sala_numero || user.name}`,
           conteudo: `Uma mudança foi agendada para o dia ${dataFormatada} às ${formData.hora}.\nLocal: ${formData.local}\nResponsável: ${user.name}`,
@@ -166,6 +160,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
 
       setShowForm(false);
       setFormData({ titulo: '', data: '', hora: '', local: '', tipo: 'Mudança' });
+      fetchData();
       alert('Solicitação de agendamento enviada com sucesso!');
     } catch (err) {
       console.error('Erro ao agendar:', err);
@@ -178,11 +173,8 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
   const handleCancel = async (id: string) => {
     if (!confirm('Deseja cancelar este agendamento?')) return;
     try {
-      const { error } = await supabase
-        .from('agendamentos')
-        .update({ status: 'Cancelado' })
-        .eq('id', id);
-      if (error) throw error;
+      await agendamentosService.updateStatus(id, 'Cancelado', user.id, user.name);
+      fetchData();
       alert('Agendamento cancelado com sucesso!');
     } catch (err) {
       console.error('Erro ao cancelar:', err);
@@ -190,14 +182,32 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Deseja EXCLUIR permanentemente este agendamento?')) return;
+  const handleDeleteClick = (id: string) => {
+    setIdToDelete(id);
+    setDeleteReason('');
+    setErrorMessage(null);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!idToDelete || !deleteReason.trim()) {
+      setErrorMessage('Por favor, detalhe o motivo da exclusão.');
+      return;
+    }
+
     try {
-      const { error } = await supabase.from('agendamentos').delete().eq('id', id);
-      if (error) throw error;
-    } catch (err) {
+      setIsDeleting(true);
+      await agendamentosService.delete(idToDelete, deleteReason, user.id, user.name);
+      setShowDeleteModal(false);
+      setIdToDelete(null);
+      setAgendamentos(prev => prev.filter(a => a.id !== idToDelete));
+      fetchData();
+      alert('Agendamento excluído com sucesso!');
+    } catch (err: any) {
       console.error('Erro ao excluir:', err);
-      alert('Erro ao excluir agendamento.');
+      setErrorMessage(err.message || 'Erro ao excluir agendamento.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -329,7 +339,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
             />
           ) : (
             <div className="space-y-4">
-              {agendamentos.map((item) => (
+              {agendamentos.filter(a => a.status !== 'Cancelado').map((item) => (
                 <div key={item.id} className="group flex flex-wrap md:flex-nowrap items-center gap-4 md:gap-6 bg-white dark:bg-[#1d222a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all relative">
                   {/* ... (rest of the card remains the same) */}
                   <div className="flex flex-col items-center justify-center min-w-[70px] md:min-w-[80px] py-1 md:py-2 border-r border-slate-100 dark:border-slate-800">
@@ -360,7 +370,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                       <button onClick={() => handleCancel(item.id)} className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors" title="Cancelar"><span className="material-symbols-outlined text-xl">event_busy</span></button>
                     )}
                     {(user.role === 'admin' || item.sala_id === user.sala_numero) && (
-                      <button onClick={() => handleDelete(item.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Excluir"><span className="material-symbols-outlined text-xl">delete</span></button>
+                      <button onClick={() => handleDeleteClick(item.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Excluir"><span className="material-symbols-outlined text-xl">delete</span></button>
                     )}
                   </div>
                 </div>
@@ -376,6 +386,62 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
           )}
         </div>
       </div>
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+          <div className="bg-white dark:bg-[#1d222a] rounded-[24px] shadow-2xl max-w-sm w-full p-8 border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-300">
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="size-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mb-4">
+                <span className="material-symbols-outlined text-3xl">delete_forever</span>
+              </div>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Excluir Agendamento?</h3>
+              <p className="text-slate-500 text-sm mt-2">Esta ação é irreversível e será registrada em auditoria.</p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Motivo da Exclusão *</label>
+                <textarea
+                  required
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  placeholder="Ex: Erro no preenchimento ou desistência"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-red-500/20 dark:text-white text-sm min-h-[100px] resize-none"
+                />
+              </div>
+
+              {errorMessage && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold">
+                  {errorMessage}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDelete}
+                  disabled={!deleteReason.trim() || isDeleting}
+                  className="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-600/20 hover:bg-red-700 active:scale-95 transition-all text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isDeleting ? (
+                    <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    'Confirmar'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
