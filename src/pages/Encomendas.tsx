@@ -480,7 +480,7 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
                 <textarea rows={3} placeholder="Ex: Grande, frágil, envelope pardo, caixa lacrada com fita amarela..." className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-sm resize-none transition-all" onChange={e => setNewPackage({ ...newPackage, caracteristicas: e.target.value })} />
               </div>
 
-              <div className="pt-4 flex gap-4 sticky bottom-0 bg-white dark:bg-[#1d222a] py-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="pt-6 flex gap-4 border-t border-slate-100 dark:border-slate-800">
                 <button type="button" onClick={handleCloseModal} className="flex-1 py-3 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition-colors">Cancelar</button>
                 <button type="submit" className="flex-1 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all">Finalizar Registro</button>
               </div>

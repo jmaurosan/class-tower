@@ -414,7 +414,7 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
                 )}
               </section>
 
-              <div className="space-y-3 pt-2 sticky bottom-0 bg-white dark:bg-[#1d222a] pb-4">
+              <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
                 {selectedVistoria.status !== 'Concluído' && isAdmin && (
                   <button
                     onClick={() => markAsCompleted(selectedVistoria.id)}
