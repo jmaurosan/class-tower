@@ -82,6 +82,9 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
     return rooms;
   }, [selectedAndar, salas]);
 
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+
   const handleSaveSala = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSala) return;
@@ -104,9 +107,51 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
       if (error) throw error;
       setEditingSala(null);
       fetchSalas();
+
+      // Auditoria manual
+      await supabase.from('audit_logs').insert([{
+        table_name: 'salas',
+        record_id: editingSala.numero,
+        action: 'UPDATE',
+        executed_by: user.id,
+        executed_by_name: user.name,
+        new_data: editingSala
+      }]);
+
     } catch (err) {
       console.error('Erro ao salvar sala:', err);
       alert('Erro ao salvar dados no banco.');
+    }
+  };
+
+  const handleDeleteSala = async (numero: string) => {
+    try {
+      setIsDeleting(true);
+      // Na verdade, no modelo de salas, "excluir" significa limpar os dados da unidade para ela ficar "Vaga"
+      const { error } = await supabase
+        .from('salas')
+        .delete()
+        .eq('numero', numero);
+
+      if (error) throw error;
+
+      // Auditoria
+      await supabase.from('audit_logs').insert([{
+        table_name: 'salas',
+        record_id: numero,
+        action: 'DELETE',
+        executed_by: user.id,
+        executed_by_name: user.name,
+        old_data: salas.find(s => s.numero === numero)
+      }]);
+
+      setShowDeleteConfirm(null);
+      fetchSalas();
+    } catch (err) {
+      console.error('Erro ao excluir sala:', err);
+      alert('Erro ao remover dados da unidade.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -149,12 +194,24 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
                 <div className="size-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-primary border border-slate-100 dark:border-slate-700 shadow-sm">
                   <span className="text-lg font-black">{sala.numero}</span>
                 </div>
-                <button
-                  onClick={() => setEditingSala(sala)}
-                  className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
-                >
-                  <span className="material-symbols-outlined text-xl">edit_square</span>
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setEditingSala(sala)}
+                    className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
+                    title="Editar Unidade"
+                  >
+                    <span className="material-symbols-outlined text-xl">edit_square</span>
+                  </button>
+                  {sala.nome && (
+                    <button
+                      onClick={() => setShowDeleteConfirm(sala.numero)}
+                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                      title="Excluir / Limpar Unidade"
+                    >
+                      <span className="material-symbols-outlined text-xl">delete</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -313,8 +370,41 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
             </div>
           </div>
         </div>
-      )
-      }
+      )}
+
+      {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-[#1d222a] w-full max-w-sm rounded-[32px] shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in zoom-in-95">
+            <div className="p-8 text-center space-y-4">
+              <div className="size-16 rounded-2xl bg-red-50 dark:bg-red-500/10 flex items-center justify-center text-red-500 mx-auto mb-2">
+                <span className="material-symbols-outlined text-3xl">warning</span>
+              </div>
+              <h4 className="text-xl font-black text-slate-900 dark:text-white">Limpar Unidade?</h4>
+              <p className="text-sm text-slate-500 leading-relaxed">
+                Isso removerá todos os dados do locatário da sala <span className="font-bold text-slate-900 dark:text-white">{showDeleteConfirm}</span>. A unidade voltará ao estado vago.
+              </p>
+
+              <div className="pt-4 flex flex-col gap-2">
+                <button
+                  disabled={isDeleting}
+                  onClick={() => handleDeleteSala(showDeleteConfirm)}
+                  className="w-full py-4 bg-red-500 text-white font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-red-600 disabled:opacity-50 transition-all"
+                >
+                  {isDeleting ? 'Limpando...' : 'Confirmar Exclusão'}
+                </button>
+                <button
+                  disabled={isDeleting}
+                  onClick={() => setShowDeleteConfirm(null)}
+                  className="w-full py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
