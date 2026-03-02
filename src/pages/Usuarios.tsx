@@ -32,6 +32,7 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Carregar usuários
   useEffect(() => {
@@ -212,28 +213,51 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
     );
   }
 
+  const filteredUsers = users.filter((u) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (u.full_name || '').toLowerCase().includes(searchLower) ||
+      (u.email || '').toLowerCase().includes(searchLower) ||
+      (u.sala_numero || '').toLowerCase().includes(searchLower) ||
+      (u.role || '').toLowerCase().includes(searchLower)
+    );
+  });
+
   return (
-    <div className="p-4 md:p-8 space-y-6 md:space-y-8">
-      <button
-        onClick={() => {
-          setEditingUser(null);
-          setError('');
-          setSuccess('');
-          setFormData({
-            email: '',
-            password: '',
-            name: '',
-            role: 'sala',
-            sala_numero: '0000',
-            permissions: {}
-          });
-          setShowModal(true);
-        }}
-        className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
-      >
-        <span className="material-symbols-outlined text-xl">add</span>
-        Novo Usuário
-      </button>
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row gap-4">
+        <button
+          onClick={() => {
+            setEditingUser(null);
+            setError('');
+            setSuccess('');
+            setFormData({
+              email: '',
+              password: '',
+              name: '',
+              role: 'sala',
+              sala_numero: '0000',
+              permissions: {}
+            });
+            setShowModal(true);
+          }}
+          className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
+        >
+          <span className="material-symbols-outlined text-xl">person_add</span>
+          Novo Usuário
+        </button>
+
+        <div className="relative flex-1">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+          <input
+            type="text"
+            placeholder="Buscar por nome, e-mail ou unidade..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#1d222a] border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-sm transition-all shadow-sm"
+          />
+        </div>
+      </div>
 
       {error && (
         <div className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 flex items-center gap-2">
@@ -255,47 +279,54 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
         </div>
       ) : (
         <div className="space-y-3 md:space-y-4">
-          {users.map((user) => (
-            <div key={user.id} className="bg-white dark:bg-[#1d222a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:shadow-md transition-all">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <h4 className="text-sm md:text-base font-black text-slate-900 dark:text-white truncate">{user.full_name || 'Sem nome'}</h4>
-                    {getRoleBadge(user.role)}
-                    <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${user.status === 'Bloqueado' ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
-                      {user.status || 'Ativo'}
-                    </span>
+          {filteredUsers.length > 0 ? (
+            filteredUsers.map((user) => (
+              <div key={user.id} className="bg-white dark:bg-[#1d222a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:shadow-md transition-all">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <h4 className="text-sm md:text-base font-black text-slate-900 dark:text-white truncate">{user.full_name || 'Sem nome'}</h4>
+                      {getRoleBadge(user.role)}
+                      <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${user.status === 'Bloqueado' ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                        {user.status || 'Ativo'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email || 'Sem email'}</p>
+                    {user.sala_numero && <p className="text-[10px] text-slate-400 mt-0.5">Unidade: {user.sala_numero}</p>}
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email || 'Sem email'}</p>
-                  {user.sala_numero && <p className="text-[10px] text-slate-400 mt-0.5">Unidade: {user.sala_numero}</p>}
-                </div>
 
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={() => toggleBlockStatus(user)}
-                    className={`p-1.5 ${user.status === 'Bloqueado' ? 'text-emerald-500 hover:bg-emerald-500/10' : 'text-amber-500 hover:bg-amber-500/10'} rounded-lg transition-colors`}
-                    title={user.status === 'Bloqueado' ? 'Desbloquear' : 'Bloquear'}
-                    disabled={user.id === currentUser.id}
-                  >
-                    <span className="material-symbols-outlined text-base">{user.status === 'Bloqueado' ? 'lock_open' : 'lock'}</span>
-                  </button>
-                  <button
-                    onClick={() => handleEdit(user)}
-                    className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-base">edit</span>
-                  </button>
-                  <button
-                    onClick={() => handleDelete(user.id)}
-                    className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                    disabled={user.id === currentUser.id}
-                  >
-                    <span className="material-symbols-outlined text-base">delete</span>
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => toggleBlockStatus(user)}
+                      className={`p-1.5 ${user.status === 'Bloqueado' ? 'text-emerald-500 hover:bg-emerald-500/10' : 'text-amber-500 hover:bg-amber-500/10'} rounded-lg transition-colors`}
+                      title={user.status === 'Bloqueado' ? 'Desbloquear' : 'Bloquear'}
+                      disabled={user.id === currentUser.id}
+                    >
+                      <span className="material-symbols-outlined text-base">{user.status === 'Bloqueado' ? 'lock_open' : 'lock'}</span>
+                    </button>
+                    <button
+                      onClick={() => handleEdit(user)}
+                      className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-base">edit</span>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(user.id)}
+                      className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                      disabled={user.id === currentUser.id}
+                    >
+                      <span className="material-symbols-outlined text-base">delete</span>
+                    </button>
+                  </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="p-12 text-center bg-white dark:bg-[#1d222a] rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+              <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">person_search</span>
+              <p className="text-slate-500 text-sm">Nenhum usuário encontrado.</p>
             </div>
-          ))}
+          )}
         </div>
       )}
 

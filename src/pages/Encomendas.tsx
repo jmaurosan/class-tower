@@ -10,7 +10,7 @@ interface EncomendasProps {
 const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
   const isResident = user.role === 'sala';
   // If resident, filter by their own room (sala_numero)
-  const { encomendas, loading: loadingItems, addEncomenda, updateStatus } = useEncomendas(isResident ? user.sala_numero : undefined);
+  const { encomendas, loading: loadingItems, addEncomenda, updateStatus, deleteEncomenda, refresh } = useEncomendas(isResident ? user.sala_numero : undefined);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -32,25 +32,46 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
   const startCamera = async () => {
     setIsCameraActive(true);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      const constraints = {
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
     } catch (err) {
       console.error("Erro ao acessar a câmera:", err);
-      alert("Não foi possível acessar a câmera. Verifique as permissões.");
+      alert("Não foi possível acessar a câmera. Verifique as permissões de câmera do seu navegador.");
       setIsCameraActive(false);
     }
   };
 
   const takePhoto = () => {
     if (videoRef.current && canvasRef.current) {
-      const context = canvasRef.current.getContext('2d');
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+
       if (context) {
-        canvasRef.current.width = videoRef.current.videoWidth;
-        canvasRef.current.height = videoRef.current.videoHeight;
-        context.drawImage(videoRef.current, 0, 0);
-        const photoData = canvasRef.current.toDataURL('image/png');
+        // Forçamos uma resolução padrão de captura (16:9 ou similar)
+        const targetWidth = 1024;
+        const targetHeight = (video.videoHeight / video.videoWidth) * targetWidth;
+
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+
+        // Limpa o canvas
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Desenha a imagem redimensionada
+        context.drawImage(video, 0, 0, targetWidth, targetHeight);
+
+        // Converte para JPEG com compressão para economia de banda (0.8 = 80% qualidade)
+        const photoData = canvas.toDataURL('image/jpeg', 0.8);
         setCapturedPhoto(photoData);
         stopCamera();
       }
@@ -72,7 +93,7 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
       let foto_url = `https://picsum.photos/seed/${Math.random()}/200/200`;
 
       if (capturedPhoto) {
-        const fileName = `pkg-${Date.now()}.png`;
+        const fileName = `pkg-${Date.now()}.jpg`;
         const base64Data = capturedPhoto.split(',')[1];
         const byteCharacters = atob(base64Data);
         const byteNumbers = new Array(byteCharacters.length);
@@ -80,17 +101,19 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
           byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
         const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'image/png' });
+        const blob = new Blob([byteArray], { type: 'image/jpeg' });
 
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('documentos')
           .upload(`encomendas/${fileName}`, blob);
 
         if (!uploadError && uploadData) {
-          const { data: publicUrl } = supabase.storage
+          const { data: { publicUrl } } = supabase.storage
             .from('documentos')
-            .getPublicUrl(`encomendas/${uploadData.path}`);
-          foto_url = publicUrl.publicUrl;
+            .getPublicUrl(`encomendas/${fileName}`);
+          foto_url = publicUrl;
+        } else if (uploadError) {
+          console.error("Erro no upload da foto:", uploadError);
         }
       }
 
@@ -106,6 +129,7 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
       }, user.id, user.name);
 
       handleCloseModal();
+      await refresh();
     } catch (err) {
       console.error('Erro ao salvar encomenda:', err);
       alert('Erro ao salvar no banco de dados.');
@@ -129,6 +153,7 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
         dataRetirada: new Date().toISOString(),
         quemRetirou: nome
       }, user.id, user.name);
+      await refresh();
     } catch (err) {
       console.error('Erro ao dar baixa:', err);
       alert('Erro ao atualizar no banco de dados.');
@@ -144,9 +169,29 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
         status: 'Cancelado',
         justificativaCancelamento: justificativa
       }, user.id, user.name);
+      await refresh();
     } catch (err) {
       console.error('Erro ao cancelar encomenda:', err);
       alert('Erro ao atualizar no banco de dados.');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Tem certeza que deseja EXCLUIR permanentemente este registro?')) return;
+
+    const motivo = prompt('Por favor, detalhe o motivo da exclusão:');
+    if (!motivo) {
+      alert('A exclusão foi cancelada. É necessário informar um motivo.');
+      return;
+    }
+
+    try {
+      await deleteEncomenda(id, motivo, user.id, user.name);
+      await refresh();
+      alert('Registro excluído com sucesso.');
+    } catch (err) {
+      console.error('Erro ao excluir encomenda:', err);
+      alert('Erro ao excluir do banco de dados.');
     }
   };
 
@@ -286,10 +331,28 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
                         <span className="material-symbols-outlined text-sm">cancel</span>
                       </button>
                       <button
+                        onClick={() => handleDelete(enc.id)}
+                        className="size-9 bg-slate-50 text-slate-400 hover:bg-red-500 hover:text-white rounded-lg transition-all flex items-center justify-center border border-slate-100"
+                        title="Excluir Registro"
+                      >
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                      </button>
+                      <button
                         onClick={() => markAsDelivered(enc.id)}
                         className="px-3 py-2 bg-emerald-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
                       >
                         Dar Baixa
+                      </button>
+                    </div>
+                  )}
+                  {enc.status !== 'Pendente' && canManage && (
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => handleDelete(enc.id)}
+                        className="size-9 bg-slate-50 text-slate-400 hover:bg-red-500 hover:text-white rounded-lg transition-all flex items-center justify-center border border-slate-100"
+                        title="Excluir Registro"
+                      >
+                        <span className="material-symbols-outlined text-sm">delete</span>
                       </button>
                     </div>
                   )}

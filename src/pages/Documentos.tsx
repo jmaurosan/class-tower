@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useDocuments } from '../hooks/useDocuments';
 import { DocumentoAnexo, User } from '../types';
 
@@ -18,6 +18,60 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
     categoria: 'Outros' as DocumentoAnexo['categoria']
   });
 
+  // Novos estados para Câmera
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const startCamera = async () => {
+    setIsCameraActive(true);
+    try {
+      const constraints = {
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.error("Erro ao acessar a câmera:", err);
+      alert("Não foi possível acessar a câmera. Verifique as permissões.");
+      setIsCameraActive(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  const takePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      if (context) {
+        const targetWidth = 1024;
+        const targetHeight = (video.videoHeight / video.videoWidth) * targetWidth;
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        context.drawImage(video, 0, 0, targetWidth, targetHeight);
+        const photoData = canvas.toDataURL('image/jpeg', 0.8);
+        setCapturedPhoto(photoData);
+        stopCamera();
+      }
+    }
+  };
+
   const categorias: string[] = ['Todos', 'Atas', 'Regimento Interno', 'Certidões', 'Outros'];
 
   const filteredDocs = filter === 'Todos'
@@ -30,14 +84,35 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canUpload || !selectedFile) return;
+    if (!canUpload) return;
 
     setIsUploading(true);
     try {
-      await uploadDoc(selectedFile, newDoc);
+      let fileToUpload: File | Blob | null = selectedFile;
+
+      if (capturedPhoto) {
+        const base64Data = capturedPhoto.split(',')[1];
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        fileToUpload = new Blob([byteArray], { type: 'image/jpeg' });
+
+        // Criar um File faker para o serviço
+        const file = new File([fileToUpload], `doc-camera-${Date.now()}.jpg`, { type: 'image/jpeg' });
+        await uploadDoc(file, newDoc);
+      } else if (selectedFile) {
+        await uploadDoc(selectedFile, newDoc);
+      } else {
+        throw new Error("Selecione um arquivo ou tire uma foto");
+      }
+
       setShowUploadModal(false);
       setNewDoc({ nome: '', categoria: 'Outros' });
       setSelectedFile(null);
+      setCapturedPhoto(null);
     } catch (err) {
       console.error('Erro no upload:', err);
       alert('Falha ao enviar arquivo.');
@@ -208,18 +283,58 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
                   </select>
                 </div>
 
-                <label className="p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2 text-slate-400 bg-slate-50/50 dark:bg-slate-900/50 cursor-pointer hover:border-primary transition-colors group">
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={e => setSelectedFile(e.target.files?.[0] || null)}
-                  />
-                  <span className="material-symbols-outlined text-4xl group-hover:scale-110 transition-transform">upload_file</span>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-center px-4 truncate w-full">
-                    {selectedFile ? selectedFile.name : 'Clique para selecionar arquivo'}
-                  </p>
-                  <p className="text-[9px]">PDF, DOCX ou XLSX (Máx 20MB)</p>
-                </label>
+                {!isCameraActive ? (
+                  <div className="space-y-4">
+                    {capturedPhoto ? (
+                      <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                        <img src={capturedPhoto} alt="Captura" className="w-full h-48 object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setCapturedPhoto(null)}
+                          className="absolute top-2 right-2 size-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg"
+                        >
+                          <span className="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3">
+                        <label className="p-6 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2 text-slate-400 bg-slate-50/50 dark:bg-slate-900/50 cursor-pointer hover:border-primary transition-colors group">
+                          <input
+                            type="file"
+                            className="hidden"
+                            onChange={e => setSelectedFile(e.target.files?.[0] || null)}
+                          />
+                          <span className="material-symbols-outlined text-3xl">upload_file</span>
+                          <p className="text-[10px] font-bold uppercase text-center truncate w-full px-2">
+                            {selectedFile ? selectedFile.name : 'Arquivo'}
+                          </p>
+                        </label>
+
+                        <button
+                          type="button"
+                          onClick={startCamera}
+                          className="p-6 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-2 text-slate-400 bg-slate-50/50 dark:bg-slate-900/50 hover:border-primary transition-colors group"
+                        >
+                          <span className="material-symbols-outlined text-3xl">photo_camera</span>
+                          <p className="text-[10px] font-bold uppercase">Câmera</p>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="relative rounded-2xl overflow-hidden bg-black aspect-video">
+                    <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+                      <button type="button" onClick={stopCamera} className="size-12 bg-white/20 backdrop-blur-md text-white rounded-full flex items-center justify-center">
+                        <span className="material-symbols-outlined">close</span>
+                      </button>
+                      <button type="button" onClick={takePhoto} className="size-12 bg-white text-primary rounded-full flex items-center justify-center shadow-xl">
+                        <span className="material-symbols-outlined">photo_camera</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <canvas ref={canvasRef} className="hidden" />
 
                 <div className="pt-4 flex gap-3">
                   <button

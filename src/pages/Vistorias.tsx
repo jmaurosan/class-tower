@@ -8,10 +8,11 @@ interface VistoriasProps {
 }
 
 const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
-  const { vistorias, loading, addVistoria, updateVistoriaStatus } = useVistorias();
+  const { vistorias, loading, addVistoria, updateVistoriaStatus, updateVistoria, deleteVistoria, refresh } = useVistorias();
   const [filter, setFilter] = useState<'Todos' | 'Pendente' | 'Concluído' | 'Em Andamento'>('Todos');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     unidade: '',
     local: '',
@@ -41,11 +42,18 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addVistoria({
-        ...formData,
-        status: 'Pendente',
-        fotoUrl: `https://picsum.photos/seed/${Math.random()}/400/300`
-      });
+      if (editingId) {
+        await updateVistoria(editingId, {
+          ...formData
+        }, user.id, user.name);
+        setEditingId(null);
+      } else {
+        await addVistoria({
+          ...formData,
+          status: 'Pendente',
+          fotoUrl: `https://picsum.photos/seed/${Math.random()}/400/300`
+        }, user.id, user.name);
+      }
       setShowForm(false);
       setFormData({
         unidade: '',
@@ -54,17 +62,52 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
         tecnico: user.name,
         descricao: ''
       });
+      await refresh();
     } catch (err) {
       console.error('Erro ao salvar vistoria:', err);
       alert('Falha ao registrar vistoria.');
     }
   };
 
+  const handleEdit = (v: Vistoria) => {
+    setEditingId(v.id);
+    setFormData({
+      unidade: v.unidade,
+      local: v.local,
+      urgencia: v.urgencia,
+      tecnico: v.tecnico,
+      descricao: v.descricao || ''
+    });
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Tem certeza que deseja EXCLUIR permanentemente esta vistoria?')) return;
+
+    const motivo = prompt('Por favor, detalhe o motivo da exclusão:');
+    if (!motivo) {
+      alert('A exclusão foi cancelada. É necessário informar um motivo.');
+      return;
+    }
+
+    try {
+      await deleteVistoria(id, motivo, user.id, user.name);
+      setSelectedId(null);
+      await refresh();
+      alert('Vistoria excluída com sucesso.');
+    } catch (err) {
+      console.error('Erro ao excluir vistoria:', err);
+      alert('Erro ao excluir do banco de dados.');
+    }
+  };
+
   const markAsCompleted = async (id: string | undefined) => {
     if (!id) return;
     try {
-      await updateVistoriaStatus(id, 'Concluído');
+      await updateVistoriaStatus(id, 'Concluído', user.id, user.name);
       setSelectedId(null);
+      await refresh();
       alert('Vistoria concluída com sucesso!');
     } catch (err) {
       console.error('Erro ao concluir:', err);
@@ -149,8 +192,10 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
         {showForm && (
           <div className="mb-6 bg-white dark:bg-[#1d222a] p-5 md:p-6 rounded-2xl border border-primary/20 shadow-xl animate-in slide-in-from-top duration-300 print:hidden">
             <div className="flex justify-between items-center mb-5">
-              <h4 className="text-base md:text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Registrar Vistoria</h4>
-              <button onClick={() => setShowForm(false)} className="p-1 text-slate-400 hover:text-slate-600">
+              <h4 className="text-base md:text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                {editingId ? 'Editar Vistoria' : 'Registrar Vistoria'}
+              </h4>
+              <button onClick={() => { setShowForm(false); setEditingId(null); }} className="p-1 text-slate-400 hover:text-slate-600">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
@@ -182,7 +227,7 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Unidade / Local</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Urgência</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Técnico</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -215,6 +260,24 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
                       {v.status}
                     </span>
                   </td>
+                  <td className="px-6 py-5 text-right print:hidden">
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleEdit(v); }}
+                        className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"
+                        title="Editar"
+                      >
+                        <span className="material-symbols-outlined text-base">edit</span>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDelete(v.id); }}
+                        className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                        title="Excluir"
+                      >
+                        <span className="material-symbols-outlined text-base">delete</span>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -240,6 +303,23 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
                 <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold shrink-0 ml-2 ${getStatusStyle(v.status)}`}>
                   {v.status}
                 </span>
+              </div>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[10px] text-slate-400 uppercase font-bold truncate pr-10">{v.local}</p>
+                <div className="flex gap-3 print:hidden">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleEdit(v); }}
+                    className="p-1 text-blue-500"
+                  >
+                    <span className="material-symbols-outlined text-sm">edit</span>
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDelete(v.id); }}
+                    className="p-1 text-red-500"
+                  >
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                  </button>
+                </div>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">

@@ -109,6 +109,7 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
       setNewEntry({ titulo: '', descricao: '', categoria: 'Outros', novaCategoria: '', status: 'Pendente', solucao: '' });
       setIsNovaCategoria(false);
       setShowForm(false);
+      await fetchEntries();
     } catch (err) {
       console.error('Erro ao salvar ocorrência:', err);
       alert('Erro ao salvar no banco de dados.');
@@ -133,8 +134,16 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este registro permanentemente?')) return;
 
+    const motivo = prompt('Por favor, detalhe o motivo da exclusão:');
+    if (!motivo) {
+      alert('A exclusão foi cancelada. É necessário informar um motivo.');
+      return;
+    }
+
     try {
-      await diarioService.delete(id, user.id, user.name);
+      await diarioService.delete(id, motivo, user.id, user.name);
+      await fetchEntries();
+      alert('Registro excluído com sucesso.');
     } catch (err) {
       console.error('Erro ao excluir ocorrência:', err);
       alert('Erro ao excluir do banco de dados.');

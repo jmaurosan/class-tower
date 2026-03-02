@@ -82,7 +82,7 @@ export const diarioService = {
     return data;
   },
 
-  async delete(id: string, userId?: string, userName?: string) {
+  async delete(id: string, reason: string, userId?: string, userName?: string) {
     // Get old data for audit log
     const { data: oldData } = await supabase
       .from('diario')
@@ -105,7 +105,8 @@ export const diarioService = {
         action: 'DELETE',
         executed_by: userId,
         executed_by_name: userName,
-        old_data: oldData
+        old_data: oldData,
+        new_data: { motivo_exclusao: reason }
       }]);
     }
   },

@@ -95,5 +95,34 @@ export const encomendasService = {
       .channel('public:encomendas')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'encomendas' }, callback)
       .subscribe();
+  },
+
+  async delete(id: string, reason: string, userId?: string, userName?: string) {
+    // Get old data for audit log
+    const { data: oldData } = await supabase
+      .from('encomendas')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    const { error } = await supabase
+      .from('encomendas')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    // Log the action
+    if (userId) {
+      await supabase.from('audit_logs').insert([{
+        table_name: 'encomendas',
+        record_id: id,
+        action: 'DELETE',
+        executed_by: userId,
+        executed_by_name: userName,
+        old_data: oldData,
+        new_data: { motivo_exclusao: reason }
+      }]);
+    }
   }
 };

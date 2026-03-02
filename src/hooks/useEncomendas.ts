@@ -50,5 +50,9 @@ export const useEncomendas = (salaFilter?: string) => {
     await encomendasService.updateStatus(id, updates, userId, userName);
   };
 
-  return { encomendas, loading, addEncomenda, updateStatus, refresh: fetchEncomendas };
+  const deleteEncomenda = async (id: string, reason: string, userId?: string, userName?: string) => {
+    await encomendasService.delete(id, reason, userId, userName);
+  };
+
+  return { encomendas, loading, addEncomenda, updateStatus, deleteEncomenda, refresh: fetchEncomendas };
 };
