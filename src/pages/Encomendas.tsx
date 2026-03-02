@@ -481,8 +481,8 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
               </div>
 
               <div className="pt-4 flex gap-4 sticky bottom-0 bg-white dark:bg-[#1d222a] py-4 border-t border-slate-100 dark:border-slate-800">
-                <button type="button" onClick={handleCloseModal} className="flex-1 py-4 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition-colors">Cancelar</button>
-                <button type="submit" className="flex-1 py-4 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all">Finalizar Registro</button>
+                <button type="button" onClick={handleCloseModal} className="flex-1 py-3 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition-colors">Cancelar</button>
+                <button type="submit" className="flex-1 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all">Finalizar Registro</button>
               </div>
             </form>
           </div>
@@ -494,8 +494,8 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
           <div className="bg-white dark:bg-[#1d222a] rounded-[24px] shadow-2xl max-w-sm w-full p-8 border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-300">
             <div className="flex flex-col items-center text-center mb-6">
               <div className={`size-16 rounded-full flex items-center justify-center mb-4 ${modalMode === 'delete' ? 'bg-red-500/10 text-red-500' :
-                  modalMode === 'cancel' ? 'bg-amber-500/10 text-amber-500' :
-                    'bg-emerald-500/10 text-emerald-500'
+                modalMode === 'cancel' ? 'bg-amber-500/10 text-amber-500' :
+                  'bg-emerald-500/10 text-emerald-500'
                 }`}>
                 <span className="material-symbols-outlined text-3xl">
                   {modalMode === 'delete' ? 'delete_forever' :
@@ -548,8 +548,8 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
                   onClick={handleModalConfirm}
                   disabled={!modalInputValue.trim() || isProcessing}
                   className={`flex-1 px-4 py-3 text-white font-bold rounded-xl shadow-lg transition-all text-sm disabled:opacity-50 flex items-center justify-center gap-2 ${modalMode === 'delete' ? 'bg-red-600 shadow-red-600/20 hover:bg-red-700' :
-                      modalMode === 'cancel' ? 'bg-amber-600 shadow-amber-600/20 hover:bg-amber-700' :
-                        'bg-emerald-600 shadow-emerald-600/20 hover:bg-emerald-700'
+                    modalMode === 'cancel' ? 'bg-amber-600 shadow-amber-600/20 hover:bg-amber-700' :
+                      'bg-emerald-600 shadow-emerald-600/20 hover:bg-emerald-700'
                     }`}
                 >
                   {isProcessing ? (

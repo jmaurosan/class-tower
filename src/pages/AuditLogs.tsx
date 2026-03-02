@@ -171,7 +171,7 @@ const AuditLogs: React.FC = () => {
             <div className="p-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800">
               <button
                 onClick={() => setSelectedLog(null)}
-                className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black rounded-2xl hover:opacity-90 transition-all text-xs uppercase tracking-widest"
+                className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black rounded-2xl hover:opacity-90 transition-all text-xs uppercase tracking-widest"
               >
                 Fechar Visualização
               </button>

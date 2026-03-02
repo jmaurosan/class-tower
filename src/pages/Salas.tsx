@@ -355,13 +355,13 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
                   <button
                     type="button"
                     onClick={() => setEditingSala(null)}
-                    className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                    className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
                   >
                     Descartar
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-4 bg-primary text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                    className="flex-1 py-3 bg-primary text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
                   >
                     Salvar Dados
                   </button>
@@ -389,14 +389,14 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
                 <button
                   disabled={isDeleting}
                   onClick={() => handleDeleteSala(showDeleteConfirm)}
-                  className="w-full py-4 bg-red-500 text-white font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-red-600 disabled:opacity-50 transition-all"
+                  className="w-full py-3 bg-red-500 text-white font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-red-600 disabled:opacity-50 transition-all"
                 >
                   {isDeleting ? 'Limpando...' : 'Confirmar Exclusão'}
                 </button>
                 <button
                   disabled={isDeleting}
                   onClick={() => setShowDeleteConfirm(null)}
-                  className="w-full py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                  className="w-full py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
                 >
                   Cancelar
                 </button>
