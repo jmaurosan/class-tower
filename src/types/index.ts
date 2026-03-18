@@ -105,6 +105,9 @@ export interface Aviso {
   conteudo: string;
   prioridade: 'Baixa' | 'Media' | 'Alta' | 'Critica';
   criado_por: string;
+  sala_numero?: string;
+  status?: 'Ativo' | 'Cancelado';
+  justificativa_cancelamento?: string;
   creator?: {
     role: UserRole;
   };

@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useEncomendas } from '../hooks/useEncomendas';
+import { useToast } from '../context/ToastContext';
 import { supabase } from '../services/supabase';
 import { Encomenda, User } from '../types';
 
@@ -8,11 +9,12 @@ interface EncomendasProps {
 }
 
 const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
+  const { showToast } = useToast();
   const isResident = user.role === 'sala';
   // If resident, filter by their own room (sala_numero)
-  const { encomendas, loading: loadingItems, addEncomenda, updateStatus, deleteEncomenda, refresh } = useEncomendas(isResident ? user.sala_numero : undefined);
+  const { encomendas, loading, addEncomenda, updateStatus, updateEncomenda, deleteEncomenda, refresh } = useEncomendas(isResident ? user.sala_numero : undefined);
 
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
   const [filter, setFilter] = useState<'Todos' | 'Pendente' | 'Retirado' | 'Cancelado'>('Todos');
@@ -22,6 +24,8 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
     sala_id: ''
   });
   const [showTodayOnly, setShowTodayOnly] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
 
   // Refs para câmera
@@ -88,6 +92,8 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+
     try {
       let foto_url = `https://picsum.photos/seed/${Math.random()}/200/200`;
 
@@ -113,33 +119,64 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
           foto_url = publicUrl;
         } else if (uploadError) {
           console.error("Erro no upload da foto:", uploadError);
+          showToast("Erro ao fazer upload da foto.", "error");
         }
       }
 
-      await addEncomenda({
-        destinatario: newPackage.destinatario || '',
-        remetente: newPackage.remetente || '',
-        categoria: newPackage.categoria || 'Caixa',
-        caracteristicas: `${newPackage.caracteristicas || ''} [Recebido em: ${newPackage.destinatarioOriginal || 'N/A'}]`,
-        status: 'Pendente',
-        fotoUrl: foto_url,
-        dataEntrada: new Date().toISOString(),
-        sala_id: newPackage.destinatario?.replace('Unidade ', '') || '0000'
-      }, user.id, user.name);
+      if (editingId) {
+        await updateEncomenda(editingId, {
+          destinatario: newPackage.destinatario || '',
+          remetente: newPackage.remetente || '',
+          categoria: newPackage.categoria || 'Caixa',
+          caracteristicas: newPackage.caracteristicas || '',
+          fotoUrl: foto_url,
+          sala_id: newPackage.sala_id || '0000'
+        }, user.id, user.name);
+        showToast('Encomenda atualizada com sucesso!');
+      } else {
+        await addEncomenda({
+          destinatario: newPackage.destinatario || '',
+          remetente: newPackage.remetente || '',
+          categoria: newPackage.categoria || 'Caixa',
+          caracteristicas: `${newPackage.caracteristicas || ''} [Recebido em: ${newPackage.destinatarioOriginal || 'N/A'}]`,
+          status: 'Pendente',
+          fotoUrl: foto_url,
+          dataEntrada: new Date().toISOString(),
+          sala_id: newPackage.sala_id || '0000'
+        }, user.id, user.name);
+        showToast('Encomenda registrada com sucesso!');
+      }
 
       handleCloseModal();
       await refresh();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro ao salvar encomenda:', err);
-      alert('Erro ao salvar no banco de dados.');
+      showToast(err.message || 'Erro ao salvar no banco de dados.', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleCloseModal = () => {
     stopCamera();
-    setIsFormOpen(false);
+    setShowForm(false);
+    setEditingId(null);
     setCapturedPhoto(null);
     setNewPackage({ categoria: 'Caixa', status: 'Pendente', destinatarioOriginal: '' });
+  };
+
+  const handleEditClick = (enc: Encomenda) => {
+    setEditingId(enc.id);
+    setNewPackage({
+      destinatario: enc.destinatario,
+      remetente: enc.remetente,
+      categoria: enc.categoria,
+      caracteristicas: enc.caracteristicas,
+      sala_id: enc.sala_id,
+      status: enc.status
+    });
+    setCapturedPhoto(enc.fotoUrl || null);
+    setShowForm(true);
   };
 
   const [modalMode, setModalMode] = useState<'delete' | 'cancel' | 'deliver' | null>(null);
@@ -168,17 +205,20 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
 
       if (modalMode === 'delete') {
         await deleteEncomenda(idToTarget, modalInputValue, user.id, user.name);
+        showToast('Encomenda excluída com sucesso!', 'success');
       } else if (modalMode === 'cancel') {
         await updateStatus(idToTarget, {
           status: 'Cancelado',
           justificativaCancelamento: modalInputValue
         }, user.id, user.name);
+        showToast('Encomenda cancelada com sucesso!', 'success');
       } else if (modalMode === 'deliver') {
-        await updateStatus(idToTarget, {
+        await updateEncomenda(idToTarget, {
           status: 'Retirado',
           dataRetirada: new Date().toISOString(),
           quemRetirou: modalInputValue
         }, user.id, user.name);
+        showToast('Encomenda entregue com sucesso!', 'success');
       }
 
       setModalMode(null);
@@ -187,6 +227,7 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
     } catch (err: any) {
       console.error(`Erro na ação ${modalMode}:`, err);
       setErrorMessage(err.message || `Erro ao processar ${modalMode}`);
+      showToast(err.message || `Erro ao processar ${modalMode}`, 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -226,7 +267,7 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
         <div className="flex flex-col md:flex-row gap-4">
           {canManage && (
             <button
-              onClick={() => setIsFormOpen(true)}
+              onClick={() => setShowForm(true)}
               className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
             >
               <span className="material-symbols-outlined text-xl">add_box</span>
@@ -327,6 +368,13 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
                   {enc.status === 'Pendente' && canManage && (
                     <div className="flex gap-2 shrink-0">
                       <button
+                        onClick={() => handleEditClick(enc)}
+                        className="size-9 bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white rounded-lg transition-all flex items-center justify-center border border-blue-100"
+                        title="Editar Encomenda"
+                      >
+                        <span className="material-symbols-outlined text-sm">edit</span>
+                      </button>
+                      <button
                         onClick={() => openActionModal(enc.id, 'cancel')}
                         className="size-9 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all flex items-center justify-center border border-red-100"
                         title="Cancelar Encomenda"
@@ -348,8 +396,15 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
                       </button>
                     </div>
                   )}
-                  {enc.status !== 'Pendente' && canManage && (
+                  {(enc.status === 'Retirado' || enc.status === 'Cancelado') && canManage && (
                     <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => handleEditClick(enc)}
+                        className="size-9 bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white rounded-lg transition-all flex items-center justify-center border border-blue-100"
+                        title="Editar Encomenda"
+                      >
+                        <span className="material-symbols-outlined text-sm">edit</span>
+                      </button>
                       <button
                         onClick={() => openActionModal(enc.id, 'delete')}
                         className="size-9 bg-slate-50 text-slate-400 hover:bg-red-500 hover:text-white rounded-lg transition-all flex items-center justify-center border border-slate-100"
@@ -366,11 +421,13 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
         ))}
       </div>
 
-      {isFormOpen && (
+      {showForm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white dark:bg-[#1d222a] w-full max-w-2xl rounded-3xl shadow-2xl border dark:border-slate-800 animate-in zoom-in-95 overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
-              <h4 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Novo Registro de Encomenda</h4>
+              <h4 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                {editingId ? 'Editar Encomenda' : 'Novo Registro de Encomenda'}
+              </h4>
               <button onClick={handleCloseModal} className="text-slate-400 hover:text-slate-600"><span className="material-symbols-outlined">close</span></button>
             </div>
 
@@ -482,7 +539,13 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
 
               <div className="pt-6 flex gap-4 border-t border-slate-100 dark:border-slate-800">
                 <button type="button" onClick={handleCloseModal} className="flex-1 py-3 border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition-colors">Cancelar</button>
-                <button type="submit" className="flex-1 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all">Finalizar Registro</button>
+                <button type="submit" disabled={isSubmitting} className="flex-1 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all">
+                  {isSubmitting ? (
+                    <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto"></div>
+                  ) : (
+                    editingId ? 'Salvar Alterações' : 'Finalizar Registro'
+                  )}
+                </button>
               </div>
             </form>
           </div>

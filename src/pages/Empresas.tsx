@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase';
+import { useToast } from '../context/ToastContext';
 import { Empresa, User } from '../types';
 
 interface EmpresasProps {
@@ -7,6 +8,7 @@ interface EmpresasProps {
 }
 
 const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
+  const { showToast } = useToast();
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -44,10 +46,10 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
       if (error) throw error;
       setRatingModalOpen(false);
       fetchEmpresas(); // Recarregar média
-      alert('Avaliação enviada com sucesso!');
-    } catch (error) {
+      showToast('Avaliação enviada com sucesso!');
+    } catch (error: any) {
       console.error('Erro ao avaliar:', error);
-      alert('Erro ao enviar avaliação. Verifique se o banco de dados foi atualizado.');
+      showToast(error.message || 'Erro ao enviar avaliação.', 'error');
     }
   };
 
@@ -143,9 +145,10 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
       if (error) throw error;
       setShowForm(false);
       resetForm();
-    } catch (err) {
+      showToast('Prestador cadastrado com sucesso!');
+    } catch (err: any) {
       console.error('Erro ao salvar prestador:', err);
-      alert('Erro ao salvar no banco de dados.');
+      showToast(err.message || 'Erro ao salvar no banco de dados.', 'error');
     }
   };
 
@@ -157,9 +160,10 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
         .delete()
         .eq('id', id);
       if (error) throw error;
-    } catch (err) {
+      showToast('Prestador excluído com sucesso!');
+    } catch (err: any) {
       console.error('Erro ao excluir:', err);
-      alert('Erro ao excluir do banco de dados.');
+      showToast(err.message || 'Erro ao excluir do banco de dados.', 'error');
     }
   };
 

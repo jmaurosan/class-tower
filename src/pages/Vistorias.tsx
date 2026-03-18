@@ -1,6 +1,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useVistorias } from '../hooks/useVistorias';
+import { useToast } from '../context/ToastContext';
 import { User, Vistoria } from '../types';
 
 interface VistoriasProps {
@@ -8,6 +9,7 @@ interface VistoriasProps {
 }
 
 const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
+  const { showToast } = useToast();
   const { vistorias, loading, addVistoria, updateVistoriaStatus, updateVistoria, deleteVistoria, refresh } = useVistorias();
   const [filter, setFilter] = useState<'Todos' | 'Pendente' | 'Concluído' | 'Em Andamento'>('Todos');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -24,7 +26,6 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
   const [idToDelete, setIdToDelete] = useState<string | null>(null);
   const [deleteReason, setDeleteReason] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const filteredVistorias = useMemo(() => {
     if (filter === 'Todos') return vistorias;
@@ -68,9 +69,10 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
         descricao: ''
       });
       await refresh();
-    } catch (err) {
+      showToast(editingId ? 'Vistoria atualizada com sucesso!' : 'Vistoria registrada com sucesso!');
+    } catch (err: any) {
       console.error('Erro ao salvar vistoria:', err);
-      alert('Falha ao registrar vistoria.');
+      showToast(err.message || 'Falha ao registrar vistoria.', 'error');
     }
   };
 
@@ -90,26 +92,23 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
   const handleDeleteClick = (id: string) => {
     setIdToDelete(id);
     setDeleteReason('');
-    setErrorMessage(null);
     setShowDeleteModal(true);
   };
 
   const confirmDelete = async () => {
     if (!idToDelete || !deleteReason.trim()) {
-      setErrorMessage('Por favor, detalhe o motivo da exclusão.');
+      showToast('Por favor, detalhe o motivo da exclusão.', 'error');
       return;
     }
 
     try {
       setIsDeleting(true);
       await deleteVistoria(idToDelete, deleteReason, user.id, user.name);
-      setSelectedId(null);
-      setShowDeleteModal(false);
-      setIdToDelete(null);
+      showToast('Vistoria excluída com sucesso!');
       await refresh();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro ao excluir vistoria:', err);
-      setErrorMessage('Falha ao excluir vistoria. Tente novamente.');
+      showToast(err.message || 'Falha ao excluir vistoria. Tente novamente.', 'error');
     } finally {
       setIsDeleting(false);
     }
@@ -121,10 +120,10 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
       await updateVistoriaStatus(id, 'Concluído', user.id, user.name);
       setSelectedId(null);
       await refresh();
-      alert('Vistoria concluída com sucesso!');
-    } catch (err) {
+      showToast('Vistoria concluída com sucesso!');
+    } catch (err: any) {
       console.error('Erro ao concluir:', err);
-      alert('Erro ao concluir a vistoria. Verifique sua conexão.');
+      showToast(err.message || 'Erro ao concluir a vistoria. Verifique sua conexão.', 'error');
     }
   };
 
@@ -460,12 +459,6 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
                   className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-red-500/20 dark:text-white text-sm min-h-[100px] resize-none"
                 />
               </div>
-
-              {errorMessage && (
-                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold">
-                  {errorMessage}
-                </div>
-              )}
 
               <div className="flex gap-3 pt-2">
                 <button

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../services/supabase';
+import { useToast } from '../context/ToastContext';
 import { Sala, User } from '../types';
 
 interface SalasProps {
@@ -7,10 +8,13 @@ interface SalasProps {
 }
 
 const Salas: React.FC<SalasProps> = ({ user }) => {
+  const { showToast } = useToast();
   const [salas, setSalas] = useState<Sala[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAndar, setSelectedAndar] = useState<number>(1);
   const [editingSala, setEditingSala] = useState<Sala | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchSalas = async () => {
     try {
@@ -20,8 +24,9 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
 
       if (error) throw error;
       if (data) setSalas(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro ao buscar salas:', err);
+      showToast(err.message || 'Erro ao buscar unidades', 'error');
     } finally {
       setLoading(false);
     }
@@ -42,9 +47,44 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
     };
   }, []);
 
-  const currentFloorRooms = useMemo(() => {
-    const rooms = [];
+  const filteredSalas = useMemo(() => {
+    // Se houver busca, filtra globalmente em todas as salas cadastradas + gera placeholders se necessário
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      
+      // Filtra salas que já existem no banco
+      const matchedSalas = salas.filter(s => 
+        s.numero.toLowerCase().includes(term) ||
+        s.nome?.toLowerCase().includes(term) ||
+        s.responsavel1?.toLowerCase().includes(term) ||
+        s.responsavel2?.toLowerCase().includes(term) ||
+        s.telefone1?.toLowerCase().includes(term) ||
+        s.telefone2?.toLowerCase().includes(term)
+      );
 
+      // Se a busca for um número específico, garante que ele apareça mesmo que não esteja no banco
+      if (/^\d{3,4}$/.test(searchTerm) && !matchedSalas.some(s => s.numero === (searchTerm.padStart(4, '0')))) {
+        const num = searchTerm.padStart(4, '0');
+        const floor = parseInt(num.substring(0, num.length - 2));
+        if (floor >= 1 && floor <= 17) {
+          matchedSalas.push({
+            id: num,
+            numero: num,
+            andar: floor,
+            nome: '',
+            responsavel1: '',
+            telefone1: '',
+            responsavel2: '',
+            telefone2: ''
+          });
+        }
+      }
+
+      return matchedSalas.sort((a, b) => a.numero.localeCompare(b.numero));
+    }
+
+    // Lógica original de filtragem por andar
+    const rooms = [];
     if (selectedAndar === 0) {
       // Unidades especiais do Térreo
       const terreoRooms = ['T01', 'CO2'];
@@ -80,15 +120,16 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
       }
     }
     return rooms;
-  }, [selectedAndar, salas]);
+  }, [selectedAndar, salas, searchTerm]);
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
-  const handleSaveSala = async (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSala) return;
 
+    setIsSubmitting(true);
     try {
       // Upsert sala data
       const { error } = await supabase
@@ -107,6 +148,7 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
       if (error) throw error;
       setEditingSala(null);
       fetchSalas();
+      showToast('Unidade salva com sucesso!', 'success');
 
       // Auditoria manual
       await supabase.from('audit_logs').insert([{
@@ -118,9 +160,11 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
         new_data: editingSala
       }]);
 
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro ao salvar sala:', err);
-      alert('Erro ao salvar dados no banco.');
+      showToast(err.message || 'Erro ao salvar unidade', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -147,9 +191,10 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
 
       setShowDeleteConfirm(null);
       fetchSalas();
-    } catch (err) {
+      showToast('Unidade limpa com sucesso!', 'success');
+    } catch (err: any) {
       console.error('Erro ao excluir sala:', err);
-      alert('Erro ao remover dados da unidade.');
+      showToast(err.message || 'Erro ao remover dados da unidade.', 'error');
     } finally {
       setIsDeleting(false);
     }
@@ -157,39 +202,77 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
 
   return (
     <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
-      {/* Seletor de andar em card */}
-      <div className="bg-white dark:bg-[#1d222a] p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-9 gap-2">
-          {Array.from({ length: 18 }, (_, i) => i).map((andar) => (
-            <button
-              key={andar}
-              onClick={() => setSelectedAndar(andar)}
-              className={`px-2 py-2.5 rounded-lg text-xs font-bold transition-all border text-center ${selectedAndar === andar
-                ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
-                : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-primary/50'
-                }`}
-            >
-              {andar === 0 ? 'T' : `${andar}°A`}
+      <div className="flex flex-col md:flex-row gap-4">
+        {/* Seletor de andar em card */}
+        <div className="flex-1 bg-white dark:bg-[#1d222a] p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-9 gap-2">
+            {Array.from({ length: 18 }, (_, i) => i).map((andar) => (
+              <button
+                key={andar}
+                disabled={!!searchTerm}
+                onClick={() => setSelectedAndar(andar)}
+                className={`px-2 py-2.5 rounded-lg text-xs font-bold transition-all border text-center ${selectedAndar === andar && !searchTerm
+                  ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
+                  : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-primary/50'
+                  } ${searchTerm ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {andar === 0 ? 'T' : `${andar}°A`}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Campo de Pesquisa */}
+        <div className="w-full md:w-80 bg-white dark:bg-[#1d222a] p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
+          <span className="material-symbols-outlined text-slate-400">search</span>
+          <input
+            type="text"
+            placeholder="Pesquisar sala, empresa..."
+            className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {searchTerm && (
+            <button onClick={() => setSearchTerm('')} className="text-slate-400 hover:text-slate-600">
+              <span className="material-symbols-outlined text-lg">close</span>
             </button>
-          ))}
+          )}
         </div>
       </div>
 
       <div className="space-y-6 md:space-y-8">
-        <div className="flex items-center gap-3 bg-white dark:bg-[#1d222a] px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <span className="material-symbols-outlined text-primary text-lg">info</span>
-          <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
-            {selectedAndar === 0 ? 'Térreo' : `${selectedAndar}º Andar`} · {selectedAndar === 0 ? '2 Unidades' : (selectedAndar === 16 || selectedAndar === 17) ? '3 Salas' : '6 Salas'}
-          </span>
+        <div className="flex items-center gap-3 bg-white dark:bg-[#1d222a] px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm justify-between">
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-primary text-lg">{searchTerm ? 'manage_search' : 'info'}</span>
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
+              {searchTerm 
+                ? `Resultados da Pesquisa: ${filteredSalas.length} Unidade(s)` 
+                : `${selectedAndar === 0 ? 'Térreo' : `${selectedAndar}º Andar`} · ${selectedAndar === 0 ? '2 Unidades' : (selectedAndar === 16 || selectedAndar === 17) ? '3 Salas' : '6 Salas'}`
+              }
+            </span>
+          </div>
+          {searchTerm && (
+            <button 
+              onClick={() => setSearchTerm('')}
+              className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline"
+            >
+              Limpar Pesquisa
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {currentFloorRooms.map((sala) => (
+          {filteredSalas.map((sala) => (
             <div
               key={sala.numero}
               className={`group bg-white dark:bg-[#1d222a] rounded-[24px] border transition-all duration-300 relative p-6 ${sala.nome ? 'border-primary/20 shadow-sm' : 'border-slate-200 dark:border-slate-800 border-dashed opacity-80'
                 } hover:shadow-xl hover:scale-[1.02]`}
             >
+              {searchTerm && (
+                <div className="absolute -top-3 left-6 px-2 py-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[9px] font-black rounded-lg uppercase tracking-widest">
+                  {sala.andar === 0 ? 'Térreo' : `${sala.andar}° Andar`}
+                </div>
+              )}
               <div className="flex justify-between items-start mb-6">
                 <div className="size-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-primary border border-slate-100 dark:border-slate-700 shadow-sm">
                   <span className="text-lg font-black">{sala.numero}</span>
@@ -290,7 +373,7 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
                 </button>
               </div>
 
-              <form onSubmit={handleSaveSala} className="space-y-5">
+              <form onSubmit={handleSave} className="space-y-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome / Razão Social</label>
                   <input

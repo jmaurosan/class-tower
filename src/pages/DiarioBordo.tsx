@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { diarioService } from '../services/diarioService';
+import { useToast } from '../context/ToastContext';
 import { DiarioEntry, User } from '../types';
 
 interface DiarioBordoProps {
@@ -7,6 +8,7 @@ interface DiarioBordoProps {
 }
 
 const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
+  const { showToast } = useToast();
   const [entries, setEntries] = useState<DiarioEntry[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -26,7 +28,6 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
   const [idToDelete, setIdToDelete] = useState<string | null>(null);
   const [deleteReason, setDeleteReason] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fetchEntries = async () => {
     try {
@@ -42,19 +43,17 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
   const handleDeleteClick = (id: string) => {
     setIdToDelete(id);
     setDeleteReason('');
-    setErrorMessage(null);
     setShowDeleteModal(true);
   };
 
   const confirmDelete = async () => {
     if (!idToDelete || !deleteReason.trim()) {
-      setErrorMessage('Por favor, informe o motivo da exclusão.');
+      showToast('Por favor, informe o motivo da exclusão.', 'error');
       return;
     }
 
     try {
       setIsDeleting(true);
-      setErrorMessage(null);
 
       // Buscar dados antes de deletar para o log
       const oldEntry = entries.find(e => e.id === idToDelete);
@@ -64,12 +63,13 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
       // O log de auditoria é opcional aqui se o service já fizer, 
       // mas vamos garantir que a UI reflita o sucesso.
 
+      showToast('Ocorrência excluída com sucesso!');
       setShowDeleteModal(false);
       setIdToDelete(null);
       fetchEntries();
     } catch (err: any) {
       console.error('Erro ao excluir ocorrência:', err);
-      setErrorMessage(err.message || 'Erro ao excluir ocorrência');
+      showToast(err.message || 'Erro ao excluir ocorrência', 'error');
     } finally {
       setIsDeleting(false);
     }
@@ -150,10 +150,11 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
       setNewEntry({ titulo: '', descricao: '', categoria: 'Outros', novaCategoria: '', status: 'Pendente', solucao: '' });
       setIsNovaCategoria(false);
       setShowForm(false);
+      showToast(editingId ? 'Ocorrência atualizada com sucesso!' : 'Ocorrência registrada com sucesso!');
       await fetchEntries();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro ao salvar ocorrência:', err);
-      alert('Erro ao salvar no banco de dados.');
+      showToast(err.message || 'Erro ao salvar ocorrência', 'error');
     }
   };
 
@@ -441,12 +442,6 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
                   className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-red-500/20 dark:text-white text-sm min-h-[100px] resize-none"
                 />
               </div>
-
-              {errorMessage && (
-                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold">
-                  {errorMessage}
-                </div>
-              )}
 
               <div className="flex gap-3 pt-2">
                 <button

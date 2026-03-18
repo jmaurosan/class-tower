@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase';
 import { User, UserRole } from '../types';
-import { normalizeUserRole, getDisplayName } from '../utils/auth-validation';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -61,11 +60,19 @@ export const useAuth = () => {
       if (data) {
         console.log('✅ [PROFILE] Perfil encontrado:', data);
 
+        // Normalização de Role: Se vier algo como "Morador / Sala", converte para "sala"
+        let normalizedRole: UserRole = 'sala';
+        const rawRole = (data.role || '').toLowerCase();
+
+        if (rawRole.includes('admin')) normalizedRole = 'admin';
+        else if (rawRole.includes('atendente') || rawRole.includes('colaborador')) normalizedRole = 'atendente';
+        else normalizedRole = 'sala';
+
         setUser({
           id: data.id,
-          name: getDisplayName(data),
+          name: data.full_name || data.name || data.email?.split('@')[0],
           email: data.email || '',
-          role: normalizeUserRole(data.role),
+          role: normalizedRole,
           avatar: data.avatar_url || `https://picsum.photos/seed/${data.id}/100/100`,
           sala_numero: data.sala_numero,
           status: data.status as 'Ativo' | 'Bloqueado',

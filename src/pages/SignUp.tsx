@@ -40,14 +40,20 @@ const SignUp: React.FC<SignUpProps> = ({ isDarkMode, toggleDarkMode }) => {
     setLoading(true);
 
     try {
-      // 1. Buscar sala no banco
+      // 1. Buscar sala no banco (maybeSingle não dá erro se não achar nada)
       const { data: sala, error: salaError } = await supabase
         .from('salas')
         .select('*')
-        .eq('numero', formData.salaNumero)
-        .single();
+        .eq('numero', formData.salaNumero.trim())
+        .maybeSingle();
 
-      if (salaError || !sala) {
+      // Se houve erro de acesso (ex: RLS bloqueou usuário anônimo) OU sala não existe
+      if (salaError) {
+        console.error('[SIGNUP] Erro ao buscar sala:', salaError);
+        throw new Error('Erro ao verificar a sala. Tente novamente em instantes.');
+      }
+
+      if (!sala) {
         throw new Error('Sala não encontrada. Verifique o número informado.');
       }
 
@@ -60,21 +66,23 @@ const SignUp: React.FC<SignUpProps> = ({ isDarkMode, toggleDarkMode }) => {
         nomeNormalizado === responsavel1 ||
         nomeNormalizado === responsavel2 ||
         responsavel1.includes(nomeNormalizado) ||
-        responsavel2.includes(nomeNormalizado);
+        nomeNormalizado.includes(responsavel1) ||
+        responsavel2.includes(nomeNormalizado) ||
+        (responsavel2 && nomeNormalizado.includes(responsavel2));
 
-      if (!nomeValido) {
+      if (!nomeValido && responsavel1) {
         throw new Error(
           `Nome não corresponde aos responsáveis cadastrados para a sala ${formData.salaNumero}. ` +
           `Verifique com a administração se seus dados estão corretos.`
         );
       }
 
-      // 3. Verificar se já existe usuário para esta sala
+      // 3. Verificar se já existe usuário para esta sala (maybeSingle: não lança erro se não achar)
       const { data: existingProfile } = await supabase
         .from('profiles')
         .select('id')
-        .eq('sala_numero', formData.salaNumero)
-        .single();
+        .eq('sala_numero', formData.salaNumero.trim())
+        .maybeSingle();
 
       if (existingProfile) {
         throw new Error(

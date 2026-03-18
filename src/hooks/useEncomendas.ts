@@ -54,5 +54,13 @@ export const useEncomendas = (salaFilter?: string) => {
     await encomendasService.delete(id, reason, userId, userName);
   };
 
-  return { encomendas, loading, addEncomenda, updateStatus, deleteEncomenda, refresh: fetchEncomendas };
+  const updateEncomenda = async (id: string, updates: Partial<Encomenda>, userId?: string, userName?: string) => {
+    if (!navigator.onLine) {
+      offlineService.enqueue('encomendas', 'update', { id, ...updates });
+      return;
+    }
+    await encomendasService.update(id, updates, userId, userName);
+  };
+
+  return { encomendas, loading, addEncomenda, updateStatus, updateEncomenda, deleteEncomenda, refresh: fetchEncomendas };
 };

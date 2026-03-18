@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import CalendarRules, { CalendarRule } from '../components/CalendarRules';
 import CalendarView from '../components/CalendarView';
+import { useToast } from '../context/ToastContext';
 import { agendamentosService } from '../services/agendamentosService';
 import { supabase } from '../services/supabase';
 import { Agendamento, User } from '../types';
@@ -10,6 +11,7 @@ interface AgendamentosProps {
 }
 
 const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
+  const { showToast } = useToast();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [rules, setRules] = useState<CalendarRule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,8 +25,10 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
     data: '',
     hora: '',
     local: '',
-    tipo: 'Mudança' as Agendamento['tipo']
+    tipo: 'Mudança' as Agendamento['tipo'],
+    sala_id: ''
   });
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [idToDelete, setIdToDelete] = useState<string | null>(null);
@@ -127,19 +131,26 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const isStaff = user.role === 'admin' || user.role === 'atendente';
     const validationError = validateScheduling(formData.data, formData.hora, formData.tipo);
-    if (validationError && user.role !== 'admin') {
-      alert(validationError);
+    if (validationError && !isStaff) {
+      showToast(validationError, 'error');
       return;
     }
 
     try {
-      await agendamentosService.create({
-        ...formData,
-        status: 'Pendente',
-        sala_id: user.sala_numero || '0000',
-        user_id: user.id
-      }, user.id, user.name);
+      if (editingId) {
+        await agendamentosService.update(editingId, {
+          ...formData,
+        }, user.id, user.name);
+      } else {
+        await agendamentosService.create({
+          ...formData,
+          status: 'Pendente',
+          sala_id: (user.role === 'admin' || user.role === 'atendente') ? formData.sala_id : (user.sala_numero || '0000'),
+          user_id: user.id
+        }, user.id, user.name);
+      }
 
       if (formData.tipo === 'Mudança') {
         const agora = new Date();
@@ -158,27 +169,48 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
         }]);
       }
 
+      showToast(editingId ? 'Agendamento atualizado com sucesso!' : 'Agendamento realizado com sucesso!');
+      setFormData({
+        titulo: '',
+        data: '',
+        hora: '',
+        local: '',
+        tipo: 'Mudança', // Keep as 'Mudança' to match initial state and options
+        sala_id: ''
+      });
+      setEditingId(null);
       setShowForm(false);
-      setFormData({ titulo: '', data: '', hora: '', local: '', tipo: 'Mudança' });
       fetchData();
-      alert('Solicitação de agendamento enviada com sucesso!');
-    } catch (err) {
-      console.error('Erro ao agendar:', err);
-      alert('Erro ao salvar agendamento.');
+    } catch (err: any) {
+      console.error('Erro ao salvar agendamento:', err);
+      showToast(err.message || 'Erro ao realizar agendamento', 'error');
     }
   };
 
+  const handleSelectEvent = (event: Agendamento) => {
+    setFormData({
+      titulo: event.titulo,
+      data: event.data,
+      hora: event.hora,
+      local: event.local,
+      tipo: event.tipo,
+      sala_id: event.sala_id
+    });
+    setEditingId(event.id);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
 
   const handleCancel = async (id: string) => {
     if (!confirm('Deseja cancelar este agendamento?')) return;
     try {
       await agendamentosService.updateStatus(id, 'Cancelado', user.id, user.name);
+      showToast('Agendamento cancelado com sucesso!');
       fetchData();
-      alert('Agendamento cancelado com sucesso!');
-    } catch (err) {
-      console.error('Erro ao cancelar:', err);
-      alert('Erro ao cancelar agendamento.');
+    } catch (err: any) {
+      console.error('Erro ao cancelar agendamento:', err);
+      showToast(err.message || 'Erro ao cancelar agendamento', 'error');
     }
   };
 
@@ -198,14 +230,13 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
     try {
       setIsDeleting(true);
       await agendamentosService.delete(idToDelete, deleteReason, user.id, user.name);
+      showToast('Agendamento excluído com sucesso!');
       setShowDeleteModal(false);
       setIdToDelete(null);
-      setAgendamentos(prev => prev.filter(a => a.id !== idToDelete));
       fetchData();
-      alert('Agendamento excluído com sucesso!');
     } catch (err: any) {
-      console.error('Erro ao excluir:', err);
-      setErrorMessage(err.message || 'Erro ao excluir agendamento.');
+      console.error('Erro ao excluir agendamento:', err);
+      showToast(err.message || 'Erro ao excluir agendamento', 'error');
     } finally {
       setIsDeleting(false);
     }
@@ -250,7 +281,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
             </button>
           </div>
 
-          {user.role === 'admin' && (
+          {(user.role === 'admin' || user.role === 'atendente') && (
             <button
               onClick={() => setShowRulesModal(!showRulesModal)}
               className={`size-10 flex items-center justify-center rounded-xl border transition-all shrink-0 ${showRulesModal ? 'bg-slate-800 text-white border-slate-800' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800'}`}
@@ -270,13 +301,38 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
         <div className="lg:col-span-1 space-y-6">
           {showForm ? (
             <div className="bg-white dark:bg-[#1d222a] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl animate-in slide-in-from-left duration-300">
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest mb-4">Novo Evento</h4>
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">
+                  {editingId ? 'Editar Evento' : 'Novo Evento'}
+                </h4>
+                {editingId && (
+                  <button 
+                    onClick={() => {
+                      setEditingId(null);
+                      setFormData({ titulo: '', data: '', hora: '', local: '', tipo: 'Mudança', sala_id: '' });
+                    }}
+                    className="text-[10px] font-bold text-primary uppercase hover:underline"
+                  >
+                    Novo Evento
+                  </button>
+                )}
+              </div>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <input required type="text" placeholder="O que será agendado?" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white" value={formData.titulo} onChange={e => setFormData({ ...formData, titulo: e.target.value })} />
                 <div className="grid grid-cols-2 gap-2">
                   <input required type="date" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-xs" value={formData.data} onChange={e => setFormData({ ...formData, data: e.target.value })} />
                   <input required type="time" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-xs" value={formData.hora} onChange={e => setFormData({ ...formData, hora: e.target.value })} />
                 </div>
+                {(user.role === 'admin' || user.role === 'atendente') && (
+                  <input 
+                    required 
+                    type="text" 
+                    placeholder="Unidade / Sala" 
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-xs" 
+                    value={formData.sala_id} 
+                    onChange={e => setFormData({ ...formData, sala_id: e.target.value })} 
+                  />
+                )}
                 <select
                   className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white ${user.role === 'sala' ? 'opacity-50 cursor-not-allowed' : ''}`}
                   value={formData.tipo}
@@ -292,8 +348,17 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                     </>
                   )}
                 </select>
-                <input required type="text" placeholder="Local/Ambiente" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white" value={formData.local} onChange={e => setFormData({ ...formData, local: e.target.value })} />
-                <button type="submit" className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-sm">Confirmar Agendamento</button>
+                <input required disabled={editingId ? !(user.role === 'admin' || user.role === 'atendente' || formData.sala_id === user.sala_numero) : false} type="text" placeholder="Local/Ambiente" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white disabled:opacity-50" value={formData.local} onChange={e => setFormData({ ...formData, local: e.target.value })} />
+                {( !editingId || user.role === 'admin' || user.role === 'atendente' || formData.sala_id === user.sala_numero ) && (
+                  <button type="submit" className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-sm">
+                    {editingId ? 'Salvar Alterações' : 'Confirmar Agendamento'}
+                  </button>
+                )}
+                {editingId && !(user.role === 'admin' || user.role === 'atendente' || formData.sala_id === user.sala_numero) && (
+                  <p className="text-[10px] text-center font-bold text-amber-500 uppercase tracking-widest bg-amber-50 dark:bg-amber-900/10 p-2 rounded-lg border border-amber-100 dark:border-amber-800">
+                    Modo Visualização: Apenas proprietário ou staff podem editar
+                  </p>
+                )}
               </form>
             </div>
           ) : (
@@ -329,13 +394,16 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
         {/* ÁREA DE CONTEÚDO PRINCIPAL (TIMELINE OU CALENDÁRIO) */}
         <div className="lg:col-span-3 space-y-4">
           {viewType === 'calendar' ? (
-            <CalendarView
+          <CalendarView
               events={agendamentos.filter(a => a.status !== 'Cancelado')}
+              rules={rules}
               onDateClick={(date) => {
                 setFormData({ ...formData, data: date });
+                setEditingId(null);
                 setShowForm(true);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
+              onSelectEvent={handleSelectEvent}
             />
           ) : (
             <div className="space-y-4">
@@ -366,10 +434,13 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                   </div>
 
                   <div className="opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0 mt-2 md:mt-0">
-                    {(user.role === 'admin' || item.sala_id === user.sala_numero) && item.status !== 'Cancelado' && (
+                    {(user.role === 'admin' || user.role === 'atendente' || item.sala_id === user.sala_numero) && item.status !== 'Cancelado' && (
+                      <button onClick={() => handleSelectEvent(item)} className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Editar"><span className="material-symbols-outlined text-xl">edit</span></button>
+                    )}
+                    {(user.role === 'admin' || user.role === 'atendente' || item.sala_id === user.sala_numero) && item.status !== 'Cancelado' && (
                       <button onClick={() => handleCancel(item.id)} className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors" title="Cancelar"><span className="material-symbols-outlined text-xl">event_busy</span></button>
                     )}
-                    {(user.role === 'admin' || item.sala_id === user.sala_numero) && (
+                    {(user.role === 'admin' || user.role === 'atendente' || item.sala_id === user.sala_numero) && (
                       <button onClick={() => handleDeleteClick(item.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Excluir"><span className="material-symbols-outlined text-xl">delete</span></button>
                     )}
                   </div>

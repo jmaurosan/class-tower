@@ -31,6 +31,65 @@ const AuditLogs: React.FC = () => {
     }
   };
 
+  const renderData = (data: any) => {
+    if (!data) return null;
+    if (typeof data !== 'object') return String(data);
+
+    const labels: Record<string, string> = {
+      id: 'ID',
+      full_name: 'Nome Completo',
+      email: 'E-mail',
+      role: 'Perfil',
+      sala_numero: 'Unidade',
+      status: 'Status',
+      permissions: 'Permissões',
+      nome: 'Nome/Razão Social',
+      responsavel1: 'Responsável 1',
+      telefone1: 'Telefone 1',
+      responsavel2: 'Responsável 2',
+      telefone2: 'Telefone 2',
+      andar: 'Andar',
+      numero: 'Número',
+      created_at: 'Criado em',
+      updated_at: 'Atualizado em',
+      action: 'Ação',
+      reason: 'Motivo'
+    };
+
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {Object.entries(data).map(([key, value]) => {
+          if (key === 'permissions' && typeof value === 'object') {
+            const activePerms = Object.entries(value as any)
+              .filter(([_, enabled]) => enabled)
+              .map(([name]) => name)
+              .join(', ');
+            return activePerms ? (
+              <div key={key} className="p-3 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{labels[key] || key}</p>
+                <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{activePerms}</p>
+              </div>
+            ) : null;
+          }
+
+          if (value === null || value === undefined || value === '') return null;
+          
+          let displayValue = String(value);
+          if (key.includes('_at')) {
+            displayValue = new Date(displayValue).toLocaleString('pt-BR');
+          }
+
+          return (
+            <div key={key} className="p-3 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{labels[key] || key}</p>
+              <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{displayValue}</p>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   if (loading && logs.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -137,33 +196,39 @@ const AuditLogs: React.FC = () => {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/30 dark:bg-slate-900/10">
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <div className="p-4 bg-white dark:bg-[#1d222a] rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Módulo</p>
                   <p className="text-sm font-bold text-slate-900 dark:text-white">{formatTableName(selectedLog.table_name)}</p>
                 </div>
-                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <div className="p-4 bg-white dark:bg-[#1d222a] rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Responsável</p>
                   <p className="text-sm font-bold text-slate-900 dark:text-white">{selectedLog.executed_by_name}</p>
                 </div>
               </div>
 
               {selectedLog.old_data && (
-                <div className="space-y-2">
-                  <h5 className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1">Dados Anteriores (Removidos/Alterados)</h5>
-                  <pre className="p-4 bg-red-500/5 dark:bg-red-500/10 border border-red-500/20 rounded-2xl text-[11px] text-red-700 dark:text-red-400 font-mono overflow-x-auto whitespace-pre-wrap">
-                    {JSON.stringify(selectedLog.old_data, null, 2)}
-                  </pre>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 px-1">
+                    <span className="material-symbols-outlined text-red-500 text-sm">history</span>
+                    <h5 className="text-[10px] font-black text-red-500 uppercase tracking-widest">Informações Removidas / Alteradas</h5>
+                  </div>
+                  <div className="p-5 bg-red-50/30 dark:bg-red-500/5 border border-red-100 dark:border-red-500/10 rounded-3xl">
+                    {renderData(selectedLog.old_data)}
+                  </div>
                 </div>
               )}
 
               {selectedLog.new_data && (
-                <div className="space-y-2">
-                  <h5 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest ml-1">Novos Dados (Adicionados/Atualizados)</h5>
-                  <pre className="p-4 bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-[11px] text-emerald-700 dark:text-emerald-400 font-mono overflow-x-auto whitespace-pre-wrap">
-                    {JSON.stringify(selectedLog.new_data, null, 2)}
-                  </pre>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 px-1">
+                    <span className="material-symbols-outlined text-emerald-500 text-sm">verified</span>
+                    <h5 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Novas Informações Registradas</h5>
+                  </div>
+                  <div className="p-5 bg-emerald-50/30 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-500/10 rounded-3xl">
+                    {renderData(selectedLog.new_data)}
+                  </div>
                 </div>
               )}
             </div>

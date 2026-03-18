@@ -1,7 +1,10 @@
 
 import React, { useEffect, useState } from 'react';
 import WhatIsNewModal from './components/business/WhatIsNewModal';
+import NotificationBell from './components/NotificationBell';
 import Sidebar from './components/layout/Sidebar';
+import { ToastProvider } from './context/ToastContext';
+import ToastContainer from './components/ui/Toast';
 import { SyncProvider } from './components/SyncProvider';
 import { currentVersion } from './config/changelog';
 import { useAuth } from './hooks/useAuth';
@@ -211,65 +214,69 @@ const App: React.FC = () => {
   }
 
   return (
-    <SyncProvider>
-      <div className={`min-h-screen flex bg-slate-50 dark:bg-[#15191e] transition-colors duration-300 font-sans`}>
-        <Sidebar
-          user={user}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-        />
+    <ToastProvider>
+      <SyncProvider>
+        <div className={`min-h-screen w-full flex overflow-x-hidden bg-slate-50 dark:bg-[#15191e] transition-colors duration-300 font-sans`}>
+          <Sidebar
+            user={user}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+          />
 
-        <main className="flex-1 flex flex-col h-screen overflow-hidden">
-          <header className="h-20 bg-white dark:bg-[#1d222a] border-b border-slate-100 dark:border-slate-800 px-8 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="lg:hidden p-2 text-slate-500"
-              >
-                <span className="material-symbols-outlined">menu</span>
-              </button>
-              <div>
-                <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
-                  {(() => {
-                    const pageNames: Record<string, string> = {
-                      dashboard: 'Dashboard',
-                      diario: 'Ocorrências',
-                      'audit-logs': 'Logs de Auditoria',
-                      avisos: 'Avisos',
-                      vencimentos: 'Vencimentos',
-                      agendamentos: 'Agendamentos',
-                      usuarios: 'Cadastro de Usuários',
-                      empresas: 'Prestadores de Serviços',
-                      settings: 'Configurações',
-                    };
-                    return pageNames[currentPage] || currentPage.replace('-', ' ');
-                  })()}
-                </h2>
+          <main className="flex-1 flex flex-col h-screen overflow-hidden">
+            <header className="h-20 bg-white dark:bg-[#1d222a] border-b border-slate-100 dark:border-slate-800 px-8 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="lg:hidden p-2 text-slate-500"
+                >
+                  <span className="material-symbols-outlined">menu</span>
+                </button>
+                <div>
+                  <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                    {(() => {
+                      const pageNames: Record<string, string> = {
+                        dashboard: 'Dashboard',
+                        diario: 'Ocorrências',
+                        'audit-logs': 'Logs de Auditoria',
+                        avisos: 'Avisos',
+                        vencimentos: 'Vencimentos',
+                        agendamentos: 'Agendamentos',
+                        usuarios: 'Cadastro de Usuários',
+                        empresas: 'Prestadores de Serviços',
+                        settings: 'Configurações',
+                      };
+                      return pageNames[currentPage] || currentPage.replace('-', ' ');
+                    })()}
+                  </h2>
+                </div>
               </div>
+
+              <div className="flex items-center gap-2 md:gap-4">
+                <button onClick={() => setIsDarkMode(!isDarkMode)} className="size-10 flex items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800">
+                  <span className="material-symbols-outlined text-slate-500">{isDarkMode ? 'light_mode' : 'dark_mode'}</span>
+                </button>
+
+                {/* Sino de Notificações — filtra por sala do usuário */}
+                <NotificationBell user={user} />
+
+                <button onClick={logout} className="size-10 flex items-center justify-center rounded-lg bg-red-500/10 text-red-500 hover:bg-slate-900 transition-all ml-2" title="Sair do Sistema">
+                  <span className="material-symbols-outlined">logout</span>
+                </button>
+              </div>
+              <WhatIsNewModal isOpen={showNews} onClose={() => setShowNews(false)} />
+            </header>
+
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              {renderContent()}
             </div>
-
-            <div className="flex items-center gap-2 md:gap-4">
-
-
-              <button onClick={() => setIsDarkMode(!isDarkMode)} className="size-10 flex items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800">
-                <span className="material-symbols-outlined text-slate-500">{isDarkMode ? 'light_mode' : 'dark_mode'}</span>
-              </button>
-
-              <button onClick={logout} className="size-10 flex items-center justify-center rounded-lg bg-red-500/10 text-red-500 hover:bg-slate-900 transition-all ml-2" title="Sair do Sistema">
-                <span className="material-symbols-outlined">logout</span>
-              </button>
-            </div>
-            <WhatIsNewModal isOpen={showNews} onClose={() => setShowNews(false)} />
-          </header>
-
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
-            {renderContent()}
-          </div>
-        </main>
-      </div>
-    </SyncProvider>
+          </main>
+        </div>
+        <ToastContainer />
+      </SyncProvider>
+    </ToastProvider>
   );
 };
 

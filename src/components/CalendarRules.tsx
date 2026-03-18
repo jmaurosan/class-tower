@@ -85,27 +85,78 @@ const CalendarRules: React.FC<CalendarRulesProps> = ({ user, rules, onUpdate }) 
           Gerenciar Feriados e Exceções
         </h4>
 
-        <form onSubmit={handleCreateRule} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <input type="date" required className="px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 dark:text-white"
-            value={newRule.date} onChange={e => setNewRule({ ...newRule, date: e.target.value })}
-          />
-          <input type="text" required placeholder="Descrição (ex: Natal)" className="px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 dark:text-white"
-            value={newRule.description} onChange={e => setNewRule({ ...newRule, description: e.target.value })}
-          />
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 px-4 rounded-xl border border-slate-300 dark:border-slate-700">
-            <input type="checkbox" id="blocked" checked={newRule.is_blocked} onChange={e => setNewRule({ ...newRule, is_blocked: e.target.checked })} className="size-5 accent-primary" />
-            <label htmlFor="blocked" className="text-sm font-bold text-slate-600 dark:text-slate-300 cursor-pointer">Bloquear Dia Inteiro</label>
+        <form onSubmit={handleCreateRule} className="space-y-4 mb-6">
+          {/* Linha 1: Data e Descrição */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1 ml-1">Data</label>
+              <input type="date" required className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 dark:text-white"
+                value={newRule.date} onChange={e => setNewRule({ ...newRule, date: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1 ml-1">Descrição</label>
+              <input type="text" required placeholder="Ex: Feriado Nacional, Natal, Manutenção..." className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 dark:text-white"
+                value={newRule.description} onChange={e => setNewRule({ ...newRule, description: e.target.value })}
+              />
+            </div>
           </div>
 
+          {/* Linha 2: Opção de Bloqueio — Botões bem visíveis */}
+          <div>
+            <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Agendamento neste dia</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setNewRule({ ...newRule, is_blocked: true })}
+                className={`flex items-center justify-center gap-2 p-4 rounded-xl border-2 font-bold text-sm transition-all ${
+                  newRule.is_blocked
+                    ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/25'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-red-300'
+                }`}
+              >
+                <span className="material-symbols-outlined text-xl">block</span>
+                <span>Bloquear<br /><span className="text-[10px] font-medium opacity-80">Nenhum agendamento</span></span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setNewRule({ ...newRule, is_blocked: false })}
+                className={`flex items-center justify-center gap-2 p-4 rounded-xl border-2 font-bold text-sm transition-all ${
+                  !newRule.is_blocked
+                    ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/25'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-emerald-300'
+                }`}
+              >
+                <span className="material-symbols-outlined text-xl">schedule</span>
+                <span>Horário Especial<br /><span className="text-[10px] font-medium opacity-80">Definir janela de horário</span></span>
+              </button>
+            </div>
+          </div>
+
+          {/* Linha 3: Horários (só se "Horário Especial" estiver selecionado) */}
           {!newRule.is_blocked && (
-            <div className="flex gap-2">
-              <input type="time" required value={newRule.allowed_start_time} onChange={e => setNewRule({ ...newRule, allowed_start_time: e.target.value })} className="w-1/2 px-2 py-2 rounded-xl bg-white dark:bg-slate-900 border dark:text-white text-xs" title="Início" />
-              <input type="time" required value={newRule.allowed_end_time} onChange={e => setNewRule({ ...newRule, allowed_end_time: e.target.value })} className="w-1/2 px-2 py-2 rounded-xl bg-white dark:bg-slate-900 border dark:text-white text-xs" title="Fim" />
+            <div>
+              <label className="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Janela de Horário Permitido</label>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <input type="time" required value={newRule.allowed_start_time} onChange={e => setNewRule({ ...newRule, allowed_start_time: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 dark:text-white" />
+                  <p className="text-[9px] text-slate-400 mt-1 ml-1">Início permitido</p>
+                </div>
+                <div className="self-center font-bold text-slate-400">→</div>
+                <div className="flex-1">
+                  <input type="time" required value={newRule.allowed_end_time} onChange={e => setNewRule({ ...newRule, allowed_end_time: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 dark:text-white" />
+                  <p className="text-[9px] text-slate-400 mt-1 ml-1">Fim permitido</p>
+                </div>
+              </div>
             </div>
           )}
 
-          <button type="submit" className="col-span-full md:col-span-1 lg:col-span-1 py-2 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors text-sm">
-            Adicionar Regra
+          <button type="submit" className="w-full py-3 bg-slate-800 dark:bg-white text-white dark:text-slate-900 font-black rounded-xl hover:opacity-90 transition-all text-sm tracking-wide flex items-center justify-center gap-2">
+            <span className="material-symbols-outlined text-lg">add_circle</span>
+            Salvar Regra
           </button>
         </form>
 

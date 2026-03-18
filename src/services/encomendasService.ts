@@ -55,6 +55,44 @@ export const encomendasService = {
     return data;
   },
 
+  async update(id: string, updates: Partial<Encomenda>, userId?: string, userName?: string) {
+    const dbUpdates: any = {};
+    if (updates.destinatario) dbUpdates.destinatario = updates.destinatario;
+    if (updates.remetente) dbUpdates.remetente = updates.remetente;
+    if (updates.categoria) dbUpdates.categoria = updates.categoria;
+    if (updates.caracteristicas) dbUpdates.caracteristicas = updates.caracteristicas;
+    if (updates.fotoUrl) dbUpdates.foto_url = updates.fotoUrl;
+    if (updates.sala_id) dbUpdates.sala_id = updates.sala_id;
+    if (updates.status) dbUpdates.status = updates.status;
+
+    // Get old data for audit log
+    const { data: oldData } = await supabase
+      .from('encomendas')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    const { error } = await supabase
+      .from('encomendas')
+      .update(dbUpdates)
+      .eq('id', id);
+
+    if (error) throw error;
+
+    // Log the action
+    if (userId) {
+      await supabase.from('audit_logs').insert([{
+        table_name: 'encomendas',
+        record_id: id,
+        action: 'UPDATE',
+        executed_by: userId,
+        executed_by_name: userName,
+        old_data: oldData,
+        new_data: dbUpdates
+      }]);
+    }
+  },
+
   async updateStatus(id: string, updates: Partial<Encomenda>, userId?: string, userName?: string) {
     const dbUpdates: any = {};
     if (updates.status) dbUpdates.status = updates.status;

@@ -61,6 +61,22 @@ export const useAvisos = () => {
       alert('Erro ao excluir. Verifique sua conexão.');
     }
   };
+  const updateAviso = async (id: string, updates: Partial<Aviso>, userId?: string, userName?: string) => {
+    const originalAvisos = [...avisos];
+    setAvisos(current => current.map(a => a.id === id ? { ...a, ...updates } : a));
 
-  return { avisos, loading, addAviso, deleteAviso, refresh: fetchAvisos };
+    try {
+      if (!navigator.onLine) {
+        offlineService.enqueue('avisos', 'update', { id, ...updates });
+        return;
+      }
+      await avisosService.update(id, updates, userId, userName);
+    } catch (error) {
+      console.error('Error updating aviso:', error);
+      setAvisos(originalAvisos);
+      alert('Erro ao atualizar. Verifique sua conexão.');
+    }
+  };
+
+  return { avisos, loading, addAviso, deleteAviso, updateAviso, refresh: fetchAvisos };
 };

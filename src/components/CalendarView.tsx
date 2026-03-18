@@ -1,22 +1,29 @@
 
 import React, { useState } from 'react';
 import { Agendamento } from '../types';
+import { CalendarRule } from './CalendarRules';
 
 interface CalendarViewProps {
   events: Agendamento[];
+  rules?: CalendarRule[];
   onSelectEvent?: (event: Agendamento) => void;
   onDateClick?: (date: string) => void;
 }
 
 type ViewMode = 'month' | 'week' | 'day';
 
-const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent, onDateClick }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({ events, rules = [], onSelectEvent, onDateClick }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
 
   // Helpers
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
+
+  // Retorna a regra especial de uma data específica (se existir)
+  const getRuleForDate = (dateStr: string): CalendarRule | undefined => {
+    return rules.find(r => r.date === dateStr);
+  };
 
   const navigate = (amount: number) => {
     const next = new Date(currentDate);
@@ -27,6 +34,49 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent, onDa
   };
 
   const resetToToday = () => setCurrentDate(new Date());
+
+  // Retorna as classes de cor para uma célula de dia baseado na regra
+  const getDayCellClass = (dateStr: string, isToday: boolean): string => {
+    const rule = getRuleForDate(dateStr);
+    if (rule?.is_blocked) {
+      return 'bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-800/50 cursor-not-allowed';
+    }
+    if (rule && !rule.is_blocked) {
+      return 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/30 cursor-pointer hover:bg-amber-100/50';
+    }
+    if (isToday) {
+      return 'bg-primary/5 dark:bg-primary/10 border-primary/20 cursor-pointer hover:bg-primary/10';
+    }
+    return 'bg-white dark:bg-[#1d222a] border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50';
+  };
+
+  // Badge de feriado/exceção para exibir dentro da célula
+  const renderRuleBadge = (dateStr: string) => {
+    const rule = getRuleForDate(dateStr);
+    if (!rule) return null;
+
+    if (rule.is_blocked) {
+      return (
+        <div className="mt-0.5 px-1 py-0.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded text-[8px] font-black truncate flex items-center gap-0.5">
+          <span className="material-symbols-outlined" style={{ fontSize: '9px' }}>block</span>
+          {rule.description}
+        </div>
+      );
+    }
+    return (
+      <div className="mt-0.5 px-1 py-0.5 bg-amber-500/10 text-amber-600 border border-amber-500/20 rounded text-[8px] font-black truncate flex items-center gap-0.5">
+        <span className="material-symbols-outlined" style={{ fontSize: '9px' }}>schedule</span>
+        {rule.description}
+      </div>
+    );
+  };
+
+  // Handler de clique que respeita se o dia está bloqueado
+  const handleDateClick = (dateStr: string) => {
+    const rule = getRuleForDate(dateStr);
+    if (rule?.is_blocked) return; // Dia bloqueado — não abre agendamento
+    onDateClick?.(dateStr);
+  };
 
   // Views rendering
   const renderMonthView = () => {
@@ -45,17 +95,23 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent, onDa
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const dayEvents = events.filter(e => e.data === dateStr);
       const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
+      const rule = getRuleForDate(dateStr);
 
       days.push(
         <div
           key={day}
-          onClick={() => onDateClick?.(dateStr)}
-          className="h-24 md:h-32 p-1 md:p-2 bg-white dark:bg-[#1d222a] border border-slate-100 dark:border-slate-800 relative group overflow-hidden cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+          onClick={() => handleDateClick(dateStr)}
+          title={rule?.is_blocked ? `🔴 ${rule.description} — Agendamento bloqueado` : rule ? `⚠️ ${rule.description}` : undefined}
+          className={`h-24 md:h-32 p-1 md:p-2 border relative group overflow-hidden transition-colors ${getDayCellClass(dateStr, isToday)}`}
         >
-          <span className={`text-xs font-bold ${isToday ? 'bg-primary text-white size-6 flex items-center justify-center rounded-full' : 'text-slate-400'}`}>
+          <span className={`text-xs font-bold ${isToday ? 'bg-primary text-white size-6 flex items-center justify-center rounded-full' : rule?.is_blocked ? 'text-red-500' : 'text-slate-400'}`}>
             {day}
           </span>
-          <div className="mt-1 space-y-1 overflow-y-auto h-[calc(100%-24px)] custom-scrollbar">
+          {rule?.is_blocked && (
+            <span className="material-symbols-outlined text-red-400 text-[14px] absolute top-1 right-1">do_not_disturb_on</span>
+          )}
+          <div className="mt-1 space-y-0.5 overflow-y-auto h-[calc(100%-24px)] custom-scrollbar">
+            {renderRuleBadge(dateStr)}
             {dayEvents.map(event => (
               <div
                 key={event.id}
@@ -97,16 +153,23 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent, onDa
       const dateStr = date.toISOString().split('T')[0];
       const dayEvents = events.filter(e => e.data === dateStr);
       const isToday = new Date().toDateString() === date.toDateString();
+      const rule = getRuleForDate(dateStr);
 
       days.push(
         <div
           key={i}
-          onClick={() => onDateClick?.(dateStr)}
-          className="flex-1 min-w-[120px] bg-white dark:bg-[#1d222a] border-r border-slate-200 dark:border-slate-800 min-h-[500px] cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+          onClick={() => handleDateClick(dateStr)}
+          title={rule?.is_blocked ? `🔴 ${rule.description} — Bloqueado` : undefined}
+          className={`flex-1 min-w-[120px] border-r border-slate-200 dark:border-slate-800 min-h-[500px] transition-colors ${rule?.is_blocked ? 'bg-red-50/50 dark:bg-red-950/20 cursor-not-allowed' : 'bg-white dark:bg-[#1d222a] cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50'}`}
         >
-          <div className={`p-4 text-center border-b border-slate-100 dark:border-slate-800 ${isToday ? 'bg-primary/5' : ''}`}>
-            <p className="text-[10px] font-black text-slate-400 uppercase">{date.toLocaleDateString('pt-BR', { weekday: 'short' })}</p>
-            <p className={`text-xl font-black ${isToday ? 'text-primary' : 'text-slate-900 dark:text-white'}`}>{date.getDate()}</p>
+          <div className={`p-4 text-center border-b border-slate-100 dark:border-slate-800 ${isToday ? 'bg-primary/5' : rule?.is_blocked ? 'bg-red-500/10' : ''}`}>
+            <p className={`text-[10px] font-black uppercase ${rule?.is_blocked ? 'text-red-400' : 'text-slate-400'}`}>{date.toLocaleDateString('pt-BR', { weekday: 'short' })}</p>
+            <p className={`text-xl font-black ${isToday ? 'text-primary' : rule?.is_blocked ? 'text-red-500' : 'text-slate-900 dark:text-white'}`}>{date.getDate()}</p>
+            {rule && (
+              <p className={`text-[8px] font-black uppercase truncate mt-0.5 ${rule.is_blocked ? 'text-red-400' : 'text-amber-500'}`}>
+                {rule.is_blocked ? '🔴' : '⚠️'} {rule.description}
+              </p>
+            )}
           </div>
           <div className="p-2 space-y-2">
             {dayEvents.sort((a, b) => a.hora.localeCompare(b.hora)).map(event => (
@@ -138,18 +201,26 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent, onDa
   const renderDayView = () => {
     const dateStr = currentDate.toISOString().split('T')[0];
     const dayEvents = events.filter(e => e.data === dateStr).sort((a, b) => a.hora.localeCompare(b.hora));
+    const rule = getRuleForDate(dateStr);
 
     return (
-      <div className="bg-white dark:bg-[#1d222a] border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden min-h-[500px]">
-        <div className="p-6 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+      <div className={`border rounded-2xl overflow-hidden min-h-[500px] ${rule?.is_blocked ? 'border-red-300 dark:border-red-800/50 bg-red-50/30 dark:bg-red-950/20' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1d222a]'}`}>
+        <div className={`p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center ${rule?.is_blocked ? 'bg-red-500/10' : 'bg-slate-50/50 dark:bg-slate-900/50'}`}>
           <div>
             <h4 className="text-2xl font-black text-slate-900 dark:text-white capitalize">
               {currentDate.toLocaleDateString('pt-BR', { weekday: 'long' })}
             </h4>
             <p className="text-slate-500 font-medium">{currentDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            {rule && (
+              <p className={`text-xs font-black mt-1 flex items-center gap-1 ${rule.is_blocked ? 'text-red-500' : 'text-amber-500'}`}>
+                <span className="material-symbols-outlined text-sm">{rule.is_blocked ? 'do_not_disturb_on' : 'schedule'}</span>
+                {rule.description}
+                {rule.is_blocked ? ' — Agendamento bloqueado' : ` (${rule.allowed_start_time?.slice(0, 5)} - ${rule.allowed_end_time?.slice(0, 5)})`}
+              </p>
+            )}
           </div>
-          <div className="size-12 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-            <span className="material-symbols-outlined text-3xl">event</span>
+          <div className={`size-12 rounded-full flex items-center justify-center ${rule?.is_blocked ? 'bg-red-500/10 text-red-500' : 'bg-primary/10 text-primary'}`}>
+            <span className="material-symbols-outlined text-3xl">{rule?.is_blocked ? 'event_busy' : 'event'}</span>
           </div>
         </div>
         <div className="p-6 space-y-4">
@@ -179,14 +250,19 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent, onDa
             </div>
           )) : (
             <div className="py-20 text-center space-y-3">
-              <span className="material-symbols-outlined text-6xl text-slate-200">event_busy</span>
-              <p className="text-slate-400 font-bold uppercase tracking-widest">Nenhum compromisso para hoje</p>
+              <span className="material-symbols-outlined text-6xl text-slate-200">{rule?.is_blocked ? 'do_not_disturb_on' : 'event_busy'}</span>
+              <p className={`font-bold uppercase tracking-widest ${rule?.is_blocked ? 'text-red-400' : 'text-slate-400'}`}>
+                {rule?.is_blocked ? `Dia bloqueado: ${rule.description}` : 'Nenhum compromisso para hoje'}
+              </p>
             </div>
           )}
         </div>
       </div>
     );
   };
+
+  // Legenda
+  const hasRules = rules.length > 0;
 
   return (
     <div className="space-y-6">
@@ -220,6 +296,20 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent, onDa
             ))}
           </div>
         </div>
+
+        {/* Legenda das regras */}
+        {hasRules && (
+          <div className="flex flex-wrap gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+            <span className="flex items-center gap-1 text-[9px] font-bold text-red-500 uppercase tracking-wider">
+              <span className="size-3 rounded-sm bg-red-100 dark:bg-red-900/30 border border-red-300 inline-block"></span>
+              Dia Bloqueado
+            </span>
+            <span className="flex items-center gap-1 text-[9px] font-bold text-amber-500 uppercase tracking-wider">
+              <span className="size-3 rounded-sm bg-amber-100 dark:bg-amber-900/30 border border-amber-300 inline-block"></span>
+              Horário Especial
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Visualização Selecionada */}

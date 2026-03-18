@@ -3,6 +3,7 @@ import PasswordChecklist from '../components/ui/PasswordChecklist';
 import { supabase } from '../services/supabase';
 import { User } from '../types';
 import { isPasswordValid } from '../utils/validators';
+import { useToast } from '../context/ToastContext';
 
 interface UsuariosProps {
   currentUser: User;
@@ -17,6 +18,33 @@ interface UserForm {
   permissions: Record<string, boolean>;
 }
 
+const DEFAULT_PERMISSIONS: Record<string, Record<string, boolean>> = {
+  admin: {
+    dashboard: true,
+    avisos: true,
+    encomendas: true,
+    vistorias: true,
+    diario: true,
+    documentos: true,
+    salas: true,
+    empresas: true
+  },
+  atendente: {
+    dashboard: true,
+    encomendas: true,
+    diario: true,
+    salas: true,
+    avisos: true,
+    empresas: true
+  },
+  sala: {
+    encomendas: true,
+    avisos: true,
+    documentos: true,
+    empresas: true
+  }
+};
+
 const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,10 +56,9 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
     name: '',
     role: 'sala',
     sala_numero: '0000',
-    permissions: {}
+    permissions: DEFAULT_PERMISSIONS.sala
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
@@ -55,7 +82,7 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
       setUsers(data || []);
     } catch (err: any) {
       console.error('Erro ao carregar usuários:', err);
-      setError('Erro ao carregar usuários');
+      showToast('Erro ao carregar usuários', 'error');
     } finally {
       setLoading(false);
     }
@@ -63,12 +90,10 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
 
     // Validar senha apenas na criação
     if (!editingUser && !isPasswordValid(formData.password)) {
-      setError('A senha não atende aos requisitos de segurança.');
+      showToast('A senha não atende aos requisitos de segurança.', 'error');
       return;
     }
 
@@ -87,7 +112,7 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
           .eq('id', editingUser.id);
 
         if (error) throw error;
-        setSuccess('Usuário atualizado com sucesso!');
+        showToast('Usuário atualizado com sucesso!');
       } else {
         // Cria usuário via Edge Function - functions.invoke() injeta o token automaticamente
         const { data: fnData, error: fnError } = await supabase.functions.invoke('create-user', {
@@ -108,8 +133,7 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
         if (fnData?.error) {
           throw new Error(fnData.error);
         }
-
-        setSuccess('Usuário criado com sucesso! O acesso está disponível imediatamente.');
+        showToast('Usuário criado com sucesso!');
       }
 
       // Resetar formulário e recarregar lista
@@ -119,14 +143,14 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
         name: '',
         role: 'sala',
         sala_numero: '0000',
-        permissions: {}
+        permissions: DEFAULT_PERMISSIONS.sala
       });
       setShowModal(false);
       setEditingUser(null);
       loadUsers();
     } catch (err: any) {
       console.error('Erro ao salvar usuário:', err);
-      setError(err.message || 'Erro ao salvar usuário');
+      showToast(err.message || 'Erro ao salvar usuário', 'error');
     }
   };
 
@@ -157,11 +181,11 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
         .eq('id', user.id);
 
       if (error) throw error;
-      setSuccess(`Usuário ${newStatus === 'Bloqueado' ? 'bloqueado' : 'desbloqueado'} com sucesso!`);
+      showToast(`Usuário ${newStatus === 'Bloqueado' ? 'bloqueado' : 'desbloqueado'} com sucesso!`);
       loadUsers();
     } catch (err: any) {
       console.error('Erro ao alternar status:', err);
-      setError('Erro ao alterar status do usuário');
+      showToast('Erro ao alterar status do usuário', 'error');
     }
   };
 
@@ -176,7 +200,6 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
 
     try {
       setIsDeleting(true);
-      setError('');
 
       // 1. Buscar dados do usuário antes de deletar para log
       const { data: oldUser, error: fetchError } = await supabase
@@ -187,14 +210,13 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
 
       if (fetchError) throw fetchError;
 
-      // 2. Tentar deletar o usuário através de uma Edge Function ou direto (dependendo do RLS)
-      // Como o profiles tem cascade delete no auth.users (geralmente), deletar aqui funciona
-      const { error: deleteError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userToDelete);
+      // 2. Deletar o usuário através da Edge Function (Auth + Database)
+      const { data: fnData, error: fnError } = await supabase.functions.invoke('delete-user', {
+        body: { userId: userToDelete }
+      });
 
-      if (deleteError) throw deleteError;
+      if (fnError) throw new Error(fnError.message || 'Erro ao excluir usuário no servidor');
+      if (fnData?.error) throw new Error(fnData.error);
 
       // 3. Registrar Log de Auditoria
       const { error: logError } = await supabase.from('audit_logs').insert({
@@ -208,14 +230,13 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
       });
 
       if (logError) console.error('Erro ao registrar log de auditoria:', logError);
-
-      setSuccess('Usuário excluído com sucesso e ação registrada em log!');
+      showToast('Usuário excluído com sucesso!');
       setShowDeleteModal(false);
       setUserToDelete(null);
       loadUsers();
     } catch (err: any) {
       console.error('Erro ao excluir usuário:', err);
-      setError(err.message || 'Erro ao excluir usuário');
+      showToast(err.message || 'Erro ao excluir usuário', 'error');
     } finally {
       setIsDeleting(false);
     }
@@ -272,15 +293,13 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
         <button
           onClick={() => {
             setEditingUser(null);
-            setError('');
-            setSuccess('');
             setFormData({
               email: '',
               password: '',
               name: '',
               role: 'sala',
               sala_numero: '0000',
-              permissions: {}
+              permissions: DEFAULT_PERMISSIONS.sala
             });
             setShowModal(true);
           }}
@@ -301,20 +320,6 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
           />
         </div>
       </div>
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 flex items-center gap-2">
-          <span className="material-symbols-outlined">error</span>
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="mb-4 p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-500 flex items-center gap-2">
-          <span className="material-symbols-outlined">check_circle</span>
-          {success}
-        </div>
-      )}
 
       {loading ? (
         <div className="text-center py-12">
@@ -428,7 +433,15 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
                 <label className="block text-xs font-black text-slate-400 uppercase mb-2">Perfil de Acesso</label>
                 <select
                   value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                  onChange={(e) => {
+                    const newRole = e.target.value as any;
+                    setFormData({ 
+                      ...formData, 
+                      role: newRole,
+                      // Só aplica padrões automaticamente na criação de novo usuário
+                      permissions: !editingUser ? DEFAULT_PERMISSIONS[newRole] || {} : formData.permissions
+                    });
+                  }}
                   className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white"
                 >
                   <option value="sala">Unidade Comercial</option>

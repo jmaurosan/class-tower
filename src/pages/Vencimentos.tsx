@@ -1,11 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { useVencimentos } from '../hooks/useVencimentos';
+import { useToast } from '../context/ToastContext';
 import { DocumentoVencimento } from '../types';
 
 interface VencimentosProps {
 }
 
 const Vencimentos: React.FC<VencimentosProps> = () => {
+  const { showToast } = useToast();
   const { documentos, loading, addVencimento, updateVencimentoStatus, deleteVencimento } = useVencimentos();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -38,8 +40,10 @@ const Vencimentos: React.FC<VencimentosProps> = () => {
       });
       setShowForm(false);
       setFormData({ titulo: categorias[0], dataVencimento: '', status: 'Em Andamento' });
-    } catch (err) {
+      showToast('Obrigação registrada com sucesso!');
+    } catch (err: any) {
       console.error('Erro ao salvar:', err);
+      showToast(err.message || 'Erro ao salvar obrigação.', 'error');
     }
   };
 
@@ -84,7 +88,14 @@ const Vencimentos: React.FC<VencimentosProps> = () => {
               <div className="flex justify-between items-start">
                 <span className="text-sm font-bold text-slate-900 dark:text-white">{doc.titulo}</span>
                 <button
-                  onClick={() => deleteVencimento(doc.id)}
+                  onClick={async () => {
+                    try {
+                      await deleteVencimento(doc.id);
+                      showToast('Obrigação excluída com sucesso!');
+                    } catch (err: any) {
+                      showToast('Erro ao excluir obrigação.', 'error');
+                    }
+                  }}
                   className="p-1 text-slate-300 hover:text-red-500 transition-colors"
                 >
                   <span className="material-symbols-outlined text-lg">delete</span>
@@ -108,7 +119,14 @@ const Vencimentos: React.FC<VencimentosProps> = () => {
                 </div>
               </div>
               <button
-                onClick={() => updateVencimentoStatus(doc.id, doc.status === 'Feito' ? 'Em Andamento' : 'Feito', false)}
+                onClick={async () => {
+                  try {
+                    await updateVencimentoStatus(doc.id, doc.status === 'Feito' ? 'Em Andamento' : 'Feito', false);
+                    showToast('Status atualizado!');
+                  } catch (err: any) {
+                    showToast('Erro ao atualizar status.', 'error');
+                  }
+                }}
                 className={`w-full px-3 py-2 rounded-lg text-[10px] font-black uppercase border transition-all active:scale-95 ${getStatusBadgeStyle(doc.status)}`}
               >
                 {doc.status}
@@ -165,7 +183,14 @@ const Vencimentos: React.FC<VencimentosProps> = () => {
                   </td>
                   <td className="px-4 py-4">
                     <button
-                      onClick={() => updateVencimentoStatus(doc.id, doc.status === 'Feito' ? 'Em Andamento' : 'Feito', false)}
+                      onClick={async () => {
+                        try {
+                          await updateVencimentoStatus(doc.id, doc.status === 'Feito' ? 'Em Andamento' : 'Feito', false);
+                          showToast('Status atualizado!');
+                        } catch (err: any) {
+                          showToast('Erro ao atualizar status.', 'error');
+                        }
+                      }}
                       className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase border transition-all hover:scale-105 active:scale-95 ${getStatusBadgeStyle(doc.status)}`}
                     >
                       {doc.status}
@@ -173,7 +198,14 @@ const Vencimentos: React.FC<VencimentosProps> = () => {
                   </td>
                   <td className="px-4 py-4 text-right">
                     <button
-                      onClick={() => deleteVencimento(doc.id)}
+                      onClick={async () => {
+                        try {
+                          await deleteVencimento(doc.id);
+                          showToast('Obrigação excluída com sucesso!');
+                        } catch (err: any) {
+                          showToast('Erro ao excluir obrigação.', 'error');
+                        }
+                      }}
                       className="p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
                     >
                       <span className="material-symbols-outlined text-lg">delete</span>

@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useDocuments } from '../hooks/useDocuments';
+import { useToast } from '../context/ToastContext';
 import { DocumentoAnexo, User } from '../types';
 
 interface DocumentosProps {
@@ -7,6 +8,7 @@ interface DocumentosProps {
 }
 
 const Documentos: React.FC<DocumentosProps> = ({ user }) => {
+  const { showToast } = useToast();
   const [filter, setFilter] = useState<string>('Todos');
   const { documentos, loading, uploadDoc, deleteDoc, refresh } = useDocuments();
 
@@ -40,7 +42,7 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
       }
     } catch (err) {
       console.error("Erro ao acessar a câmera:", err);
-      alert("Não foi possível acessar a câmera. Verifique as permissões.");
+      showToast("Não foi possível acessar a câmera. Verifique as permissões.", "error");
       setIsCameraActive(false);
     }
   };
@@ -113,9 +115,10 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
       setNewDoc({ nome: '', categoria: 'Outros' });
       setSelectedFile(null);
       setCapturedPhoto(null);
-    } catch (err) {
+      showToast('Documento enviado com sucesso!');
+    } catch (err: any) {
       console.error('Erro no upload:', err);
-      alert('Falha ao enviar arquivo.');
+      showToast(err.message || 'Falha ao enviar arquivo.', 'error');
     } finally {
       setIsUploading(false);
     }
@@ -129,9 +132,10 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
       await deleteDoc(doc);
       // Fallback: Atualizar manualmente caso o Realtime falhe ou não esteja ativo
       await refresh();
-    } catch (err) {
+      showToast('Documento excluído com sucesso!');
+    } catch (err: any) {
       console.error('Erro ao deletar documento:', err);
-      alert('Falha ao excluir arquivo do banco de dados ou storage.');
+      showToast(err.message || 'Falha ao excluir arquivo.', 'error');
     }
   };
 
@@ -346,8 +350,8 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
                   </button>
                   <button
                     type="submit"
-                    disabled={!selectedFile || isUploading}
-                    className={`flex-1 py-4 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-xl transition-all ${selectedFile && !isUploading ? 'bg-primary shadow-primary/20 hover:scale-[1.02] active:scale-95' : 'bg-slate-300 cursor-not-allowed'}`}
+                    disabled={(!selectedFile && !capturedPhoto) || isUploading}
+                    className={`flex-1 py-4 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-xl transition-all ${((selectedFile || capturedPhoto) && !isUploading) ? 'bg-primary shadow-primary/20 hover:scale-[1.02] active:scale-95' : 'bg-slate-300 cursor-not-allowed'}`}
                   >
                     {isUploading ? (
                       <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto"></div>

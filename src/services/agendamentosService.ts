@@ -36,6 +36,34 @@ export const agendamentosService = {
     return data;
   },
 
+  async update(id: string, updates: Partial<Agendamento>, userId?: string, userName?: string) {
+    // Get old data for audit log
+    const { data: oldData } = await supabase
+      .from('agendamentos')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    const { error } = await supabase
+      .from('agendamentos')
+      .update(updates)
+      .eq('id', id);
+
+    if (error) throw error;
+
+    if (userId) {
+      await supabase.from('audit_logs').insert([{
+        table_name: 'agendamentos',
+        record_id: id,
+        action: 'UPDATE',
+        executed_by: userId,
+        executed_by_name: userName,
+        old_data: oldData,
+        new_data: updates
+      }]);
+    }
+  },
+
   async updateStatus(id: string, status: Agendamento['status'], userId?: string, userName?: string) {
     // Get old data for audit log
     const { data: oldData } = await supabase

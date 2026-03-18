@@ -89,6 +89,38 @@ export const avisosService = {
     }
   },
 
+  async update(id: string, updates: Partial<Aviso>, userId?: string, userName?: string) {
+    // Get old data for audit log
+    const { data: oldData } = await supabase
+      .from('avisos')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    const { error } = await supabase
+      .from('avisos')
+      .update(updates)
+      .eq('id', id);
+
+    if (error) throw error;
+
+    if (userId) {
+      try {
+        await supabase.from('audit_logs').insert([{
+          table_name: 'avisos',
+          record_id: id,
+          action: 'UPDATE',
+          executed_by: userId,
+          executed_by_name: userName,
+          old_data: oldData,
+          new_data: updates
+        }]);
+      } catch (logErr) {
+        console.warn('Logging failed but data was updated:', logErr);
+      }
+    }
+  },
+
   subscribe(callback: (payload: any) => void) {
     return supabase
       .channel('public:avisos')
