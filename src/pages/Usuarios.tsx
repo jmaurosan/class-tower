@@ -115,9 +115,10 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
         showToast('Usuário atualizado com sucesso!');
       } else {
         // Cria usuário via Edge Function - functions.invoke() injeta o token automaticamente
+        const sanitizedEmail = formData.email.trim().toLowerCase();
         const { data: fnData, error: fnError } = await supabase.functions.invoke('create-user', {
           body: {
-            email: formData.email,
+            email: sanitizedEmail,
             password: formData.password,
             name: formData.name,
             role: formData.role,
@@ -399,33 +400,63 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
                 />
               </div>
 
-              {!editingUser && (
+              {/* Campos de Login (E-mail e Senha) - Escondidos para perfil 'sala' em novo cadastro */}
+              {formData.role === 'sala' && !editingUser ? (
+                <div className="p-4 bg-primary/5 border border-primary/20 rounded-2xl space-y-3">
+                  <div className="flex items-center gap-2 text-primary">
+                    <span className="material-symbols-outlined text-xl">info</span>
+                    <span className="text-sm font-bold">Fluxo de Primeiro Acesso</span>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                    Usuários do tipo <strong>Unidade Comercial</strong> realizam seu próprio cadastro através da tela de <strong>"Primeiro Acesso"</strong> no login.
+                  </p>
+                  <p className="text-[10px] text-slate-500 italic">
+                    * Certifique-se de que a Unidade e os Responsáveis já estejam cadastrados no menu <strong>Salas</strong>.
+                  </p>
+                </div>
+              ) : (
                 <>
-                  <div>
-                    <label className="block text-xs font-black text-slate-400 uppercase mb-2">Email</label>
-                    <input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white"
-                      placeholder="usuario@exemplo.com"
-                    />
-                  </div>
+                  {!editingUser && (
+                    <>
+                      <div>
+                        <label className="block text-xs font-black text-slate-400 uppercase mb-2">Email</label>
+                        <input
+                          type="email"
+                          required
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white"
+                          placeholder="usuario@exemplo.com"
+                        />
+                      </div>
 
-                  <div>
-                    <label className="block text-xs font-black text-slate-400 uppercase mb-2">Senha Inicial</label>
-                    <input
-                      type="password"
-                      required
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white"
-                      placeholder="Mínimo 6 caracteres"
-                      minLength={6}
-                    />
-                    <PasswordChecklist password={formData.password} />
-                  </div>
+                      <div>
+                        <label className="block text-xs font-black text-slate-400 uppercase mb-2">Senha Inicial</label>
+                        <input
+                          type="password"
+                          required
+                          value={formData.password}
+                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white"
+                          placeholder="Mínimo 6 caracteres"
+                          minLength={6}
+                        />
+                        <PasswordChecklist password={formData.password} />
+                      </div>
+                    </>
+                  )}
+                  {editingUser && (
+                    <div>
+                      <label className="block text-xs font-black text-slate-400 uppercase mb-2">Email do Usuário</label>
+                      <input
+                        type="email"
+                        disabled
+                        value={formData.email}
+                        className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-slate-500 cursor-not-allowed"
+                      />
+                      <p className="text-[10px] text-slate-400 mt-1">O e-mail não pode ser alterado após o cadastro.</p>
+                    </div>
+                  )}
                 </>
               )}
 
@@ -510,7 +541,12 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-primary text-white font-bold rounded-xl hover:scale-105 transition-all"
+                  disabled={formData.role === 'sala' && !editingUser}
+                  className={`flex-1 px-4 py-3 font-bold rounded-xl transition-all ${
+                    formData.role === 'sala' && !editingUser 
+                      ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed' 
+                      : 'bg-primary text-white hover:scale-105'
+                  }`}
                 >
                   {editingUser ? 'Atualizar' : 'Criar Usuário'}
                 </button>

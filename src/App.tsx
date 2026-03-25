@@ -18,7 +18,7 @@ import PrestadoresServico from './pages/Empresas';
 import Encomendas from './pages/Encomendas';
 import ForgotPassword from './pages/ForgotPassword';
 import Login from './pages/Login';
-import ResetPassword from './pages/ResetPassword';
+import UpdatePassword from './pages/UpdatePassword';
 import Salas from './pages/Salas';
 import Settings from './pages/Settings';
 import SignUp from './pages/SignUp';
@@ -172,10 +172,10 @@ const App: React.FC = () => {
   }
 
   // Roteamento Público (Sem Autenticação)
-  const isPublicPath = ['/signup', '/forgot-password', '/reset-password'].includes(window.location.pathname);
+  const isPublicPath = ['/signup', '/forgot-password', '/atualizar-senha'].includes(window.location.pathname);
 
-  if (window.location.pathname === '/reset-password') {
-    return <ResetPassword />;
+  if (window.location.pathname === '/atualizar-senha') {
+    return <UpdatePassword />;
   }
 
   if (window.location.pathname === '/signup') {

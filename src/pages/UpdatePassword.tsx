@@ -4,7 +4,7 @@ import PasswordChecklist from '../components/ui/PasswordChecklist';
 import { supabase } from '../services/supabase';
 import { isPasswordValid } from '../utils/validators';
 
-const ResetPassword: React.FC = () => {
+const UpdatePassword: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -136,4 +136,4 @@ const ResetPassword: React.FC = () => {
   );
 };
 
-export default ResetPassword;
+export default UpdatePassword;

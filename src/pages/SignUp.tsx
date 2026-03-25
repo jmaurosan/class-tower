@@ -92,14 +92,18 @@ const SignUp: React.FC<SignUpProps> = ({ isDarkMode, toggleDarkMode }) => {
       }
 
       // 4. Criar usuário no Supabase Auth
+      const sanitizedEmail = formData.email.trim().toLowerCase();
+      console.log('[SIGNUP] Tentando criar usuário:', { email: sanitizedEmail });
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
+        email: sanitizedEmail,
         password: formData.senha,
         options: {
           data: {
             full_name: formData.nomeCompleto,
             role: 'sala',
-            sala_numero: formData.salaNumero
+            sala_numero: formData.salaNumero,
+            permissions: ['encomendas', 'agendamentos', 'documentos', 'empresas', 'support', 'avisos']
           }
         }
       });

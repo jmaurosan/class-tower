@@ -19,8 +19,9 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ isDarkMode, toggleDarkM
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/reset-password`
+      const sanitizedEmail = email.trim().toLowerCase();
+      const { error } = await supabase.auth.resetPasswordForEmail(sanitizedEmail, {
+        redirectTo: `${window.location.origin}/atualizar-senha`
       });
 
       if (error) throw error;

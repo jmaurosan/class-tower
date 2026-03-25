@@ -23,7 +23,8 @@ const Login: React.FC<LoginProps> = ({ signIn, isDarkMode, toggleDarkMode }) => 
     setError('');
 
     try {
-      await signIn(email, password);
+      const sanitizedEmail = email.trim().toLowerCase();
+      await signIn(sanitizedEmail, password);
       // Login bem-sucedido! O estado global (useAuth) vai atualizar e redirecionar automaticamente.
     } catch (err: any) {
       console.error('Login error:', err);
@@ -45,8 +46,9 @@ const Login: React.FC<LoginProps> = ({ signIn, isDarkMode, toggleDarkMode }) => 
     setSuccess('');
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      const sanitizedEmail = email.trim().toLowerCase();
+      const { error } = await supabase.auth.resetPasswordForEmail(sanitizedEmail, {
+        redirectTo: `${window.location.origin}/atualizar-senha`,
       });
 
       if (error) throw error;

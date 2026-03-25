@@ -38,8 +38,9 @@ export const useAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async (id: string) => {
-    console.log('👤 [PROFILE] Buscando perfil...', { id });
+  const fetchProfile = async (id: string, retryCount = 0) => {
+    console.log(`👤 [PROFILE] Buscando perfil... (tentativa ${retryCount + 1})`, { id });
+    const MAX_RETRIES = 3;
 
     try {
       const { data, error } = await supabase
@@ -49,6 +50,14 @@ export const useAuth = () => {
         .single();
 
       if (error) {
+        if (error.code === 'PGRST116' && retryCount < MAX_RETRIES) {
+          // PGRST116 = JSON object not found (no result). 
+          // Pode haver um pequeno atraso do trigger do banco. Vamos tentar de novo em 500ms.
+          console.warn(`⚠️ [PROFILE] Perfil ainda não encontrado. Re-tentando em 500ms... (${retryCount + 1}/${MAX_RETRIES})`);
+          await new Promise(resolve => setTimeout(resolve, 500));
+          return fetchProfile(id, retryCount + 1);
+        }
+
         if (error.name === 'AbortError' || error.message?.includes('aborted')) {
           console.warn('⚠️ [PROFILE] Busca de perfil cancelada (normal no recarregamento)');
           return;
