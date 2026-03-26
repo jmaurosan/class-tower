@@ -302,7 +302,10 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
             {(['Todos', 'Pendente', 'Retirado', 'Cancelado'] as const).map(f => (
               <button
                 key={f}
-                onClick={() => setFilter(f)}
+                onClick={() => {
+                  setFilter(f);
+                  setShowTodayOnly(false);
+                }}
                 className={`flex-1 min-w-[80px] px-3 py-2 rounded-lg text-xs font-bold transition-all border ${filter === f
                   ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
                   : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-800 hover:border-primary/50'}`}

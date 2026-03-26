@@ -271,7 +271,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, rules = [], onSelec
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             <button onClick={() => navigate(-1)} className="p-1.5 md:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0">
-              <span className="material-symbols-outlined text-xl md:text-2xl">chevron_left</span>
+              <span className="material-symbols-outlined text-xl md:text-2xl text-slate-600 dark:text-slate-300">chevron_left</span>
             </button>
             <h3 className="text-sm md:text-lg font-black text-slate-900 dark:text-white text-center capitalize whitespace-nowrap">
               {viewMode === 'day'
@@ -279,7 +279,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, rules = [], onSelec
                 : currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
             </h3>
             <button onClick={() => navigate(1)} className="p-1.5 md:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0">
-              <span className="material-symbols-outlined text-xl md:text-2xl">chevron_right</span>
+              <span className="material-symbols-outlined text-xl md:text-2xl text-slate-600 dark:text-slate-300">chevron_right</span>
             </button>
           </div>
 

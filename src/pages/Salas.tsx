@@ -15,6 +15,7 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
   const [editingSala, setEditingSala] = useState<Sala | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const fetchSalas = async () => {
     try {
@@ -168,6 +169,68 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
     }
   };
 
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+  
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsSubmitting(true);
+    try {
+      const text = await file.text();
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(text, 'text/xml');
+      const unidades = xmlDoc.getElementsByTagName('Unidade');
+      
+      const newSalas: any[] = [];
+      for (let i = 0; i < unidades.length; i++) {
+        const u = unidades[i];
+        const numero = u.getElementsByTagName('Numero')[0]?.textContent || '';
+        if (!numero) continue;
+        
+        const andar = parseInt(numero.substring(0, numero.length - 2)) || 0;
+        
+        newSalas.push({
+          id: numero,
+          numero: numero,
+          andar: andar,
+          nome: u.getElementsByTagName('Nome')[0]?.textContent || '',
+          responsavel1: u.getElementsByTagName('Responsavel1')[0]?.textContent || '',
+          telefone1: u.getElementsByTagName('Telefone1')[0]?.textContent || '',
+          responsavel2: u.getElementsByTagName('Responsavel2')[0]?.textContent || '',
+          telefone2: u.getElementsByTagName('Telefone2')[0]?.textContent || ''
+        });
+      }
+      
+      if (newSalas.length === 0) throw new Error('Nenhuma unidade válida encontrada no XML.');
+      
+      const { error } = await supabase.from('salas').upsert(newSalas);
+      if (error) throw error;
+      
+      showToast(`${newSalas.length} unidades importadas com sucesso!`, 'success');
+      fetchSalas();
+      
+      // Auditoria em massa
+      await supabase.from('audit_logs').insert([{
+        table_name: 'salas',
+        record_id: 'BULK_IMPORT',
+        action: 'INSERT',
+        executed_by: user.id,
+        executed_by_name: user.name,
+        new_data: { count: newSalas.length, source: 'XML' }
+      }]);
+      
+    } catch (err: any) {
+      console.error('Erro na importação:', err);
+      showToast(err.message || 'Erro ao importar arquivo', 'error');
+    } finally {
+      setIsSubmitting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   const handleDeleteSala = async (numero: string) => {
     try {
       setIsDeleting(true);
@@ -223,20 +286,39 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
         </div>
 
         {/* Campo de Pesquisa */}
-        <div className="w-full md:w-80 bg-white dark:bg-[#1d222a] p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
-          <span className="material-symbols-outlined text-slate-400">search</span>
+        <div className="flex-1 flex flex-col md:flex-row gap-4">
+          <div className="flex-1 bg-white dark:bg-[#1d222a] p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
+            <span className="material-symbols-outlined text-slate-400">search</span>
+            <input
+              type="text"
+              placeholder="Pesquisar sala, empresa..."
+              className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="text-slate-400 hover:text-slate-600">
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            )}
+          </div>
+
+          <button
+            onClick={handleImportClick}
+            disabled={isSubmitting}
+            className="px-6 py-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl border border-slate-200 dark:border-slate-700 font-bold text-xs uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
+          >
+            <span className="material-symbols-outlined text-xl">upload_file</span>
+            {isSubmitting ? 'Importando...' : 'Importar XML'}
+          </button>
+          
           <input
-            type="text"
-            placeholder="Pesquisar sala, empresa..."
-            className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept=".xml"
+            onChange={handleImportFile}
           />
-          {searchTerm && (
-            <button onClick={() => setSearchTerm('')} className="text-slate-400 hover:text-slate-600">
-              <span className="material-symbols-outlined text-lg">close</span>
-            </button>
-          )}
         </div>
       </div>
 
