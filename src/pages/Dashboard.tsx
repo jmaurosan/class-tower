@@ -12,7 +12,7 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
   const { documentos, updateVencimentoStatus } = useVencimentos();
-  const [stats, setStats] = useState({ ocupacao: '0%', vistorias: '0', agendamentos: '0' });
+  const [stats, setStats] = useState({ ocupacao: '0%', vistorias: '0', agendamentos: '0', dbSize: '...', salas: '0' });
 
   const fetchStats = async () => {
     try {
@@ -31,6 +31,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
 
       const { count: vistoriasCount } = await supabase.from('vistorias').select('*', { count: 'exact', head: true }).neq('status', 'Concluído');
       if (vistoriasCount !== null) setStats(prev => ({ ...prev, vistorias: vistoriasCount.toString() }));
+
+      // Buscar tamanho do banco (apenas admin)
+      if (user.role === 'admin') {
+        const { data: dbSize, error: dbError } = await supabase.rpc('get_database_size');
+        if (!dbError && dbSize) {
+          setStats(prev => ({ ...prev, dbSize }));
+        }
+      }
     } catch (err) {
       console.error('Erro ao buscar estatísticas:', err);
     }
@@ -184,11 +192,21 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
 
           {/* Mini card de status do sistema */}
           <div className="bg-emerald-500/10 dark:bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Sistema Online</span>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Sistema Online</span>
+              </div>
+              {user.role === 'admin' && (
+                <span className="text-[10px] font-bold text-slate-400 uppercase bg-white/10 dark:bg-slate-800 px-2 py-0.5 rounded">
+                  DB: {stats.dbSize}
+                </span>
+              )}
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Todos os serviços operando normalmente.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              Todos os serviços operando normalmente. 
+              {user.role === 'admin' && ` Seu banco de dados Supabase está consumindo ${stats.dbSize} de armazenamento.`}
+            </p>
           </div>
         </div>
       </div>
