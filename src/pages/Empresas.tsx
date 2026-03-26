@@ -16,6 +16,7 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
   const [tipoPessoa, setTipoPessoa] = useState<'PJ' | 'PF'>('PJ');
   const [novoSetorInput, setNovoSetorInput] = useState('');
   const [isAddingNewSetor, setIsAddingNewSetor] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [setores, setSetores] = useState<string[]>(['Limpeza', 'Elétrica', 'Hidráulica', 'Segurança', 'Elevadores', 'Outros']);
 
@@ -131,25 +132,55 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
     }
 
     try {
-      const { error } = await supabase
-        .from('empresas')
-        .insert([{
-          ...formData,
-          cnpj: tipoPessoa === 'PJ' ? formData.cnpj : null,
-          setor: finalSetor,
-          status: 'Em Revisão',
-          rating: 0,
-          sala_id: user.sala_numero
-        }]);
+      if (editingId) {
+        const { error } = await supabase
+          .from('empresas')
+          .update({
+            ...formData,
+            cnpj: tipoPessoa === 'PJ' ? formData.cnpj : null,
+            setor: finalSetor
+          })
+          .eq('id', editingId);
 
-      if (error) throw error;
+        if (error) throw error;
+        showToast('Prestador atualizado com sucesso!');
+      } else {
+        const { error } = await supabase
+          .from('empresas')
+          .insert([{
+            ...formData,
+            cnpj: tipoPessoa === 'PJ' ? formData.cnpj : null,
+            setor: finalSetor,
+            status: 'Em Revisão',
+            rating: 0,
+            sala_id: user.sala_numero
+          }]);
+
+        if (error) throw error;
+        showToast('Prestador cadastrado com sucesso!');
+      }
+
       setShowForm(false);
       resetForm();
-      showToast('Prestador cadastrado com sucesso!');
     } catch (err: any) {
       console.error('Erro ao salvar prestador:', err);
       showToast(err.message || 'Erro ao salvar no banco de dados.', 'error');
     }
+  };
+
+  const handleEdit = (empresa: Empresa) => {
+    setEditingId(empresa.id);
+    setFormData({
+      nome: empresa.nome,
+      cnpj: empresa.cnpj || '',
+      setor: empresa.setor,
+      contato: empresa.contato,
+      telefone: empresa.telefone,
+      email: empresa.email
+    });
+    setTipoPessoa(empresa.cnpj ? 'PJ' : 'PF');
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id: string) => {
@@ -179,6 +210,7 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
     setNovoSetorInput('');
     setIsAddingNewSetor(false);
     setTipoPessoa('PJ');
+    setEditingId(null);
   };
 
   const isAdmin = user.role === 'admin';
@@ -189,7 +221,10 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
     <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
       {canManage && (
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            if (showForm) resetForm();
+            setShowForm(!showForm);
+          }}
           className={`w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-all text-sm ${showForm ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-white' : 'bg-primary text-white shadow-primary/20'
             }`}
         >
@@ -270,7 +305,7 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
             </div>
             <div className="pt-2">
               <button type="submit" className="w-full md:w-auto px-6 py-2 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-sm">
-                Salvar Cadastro de Prestador
+                {editingId ? 'Salvar Alterações' : 'Salvar Cadastro de Prestador'}
               </button>
             </div>
           </form>
@@ -306,13 +341,22 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
                   {empresa.status}
                 </span>
                 {canManage && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(empresa.id); }}
-                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-all"
-                    title="Excluir"
-                  >
-                    <span className="material-symbols-outlined text-base">delete</span>
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleEdit(empresa); }}
+                      className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                      title="Editar"
+                    >
+                      <span className="material-symbols-outlined text-base">edit</span>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDelete(empresa.id); }}
+                      className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-all"
+                      title="Excluir"
+                    >
+                      <span className="material-symbols-outlined text-base">delete</span>
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
