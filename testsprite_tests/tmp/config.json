@@ -2,19 +2,19 @@
   "status": "commited",
   "type": "frontend",
   "scope": "codebase",
-  "localEndpoint": "http://localhost:3002",
+  "localEndpoint": "http://localhost:4173",
   "loginUser": "admin@classtower.com.br",
   "loginPassword": "Admin@2026",
   "executionArgs": {
-    "projectName": "ClassTower-UI-Test-with-Data-Creation",
+    "projectName": "ClassTower",
     "projectPath": "c:\\Users\\Mauro\\PROJETOS\\ClassTower",
     "testIds": [],
-    "additionalInstruction": "POR FAVOR: Primeiro crie dados de teste! Vá em Vistorias e crie uma nova vistoria. Vá em Avisos e crie um aviso. Vá em Encomendas e registre uma encomenda. SOMENTE APÓS CRIAR ESTES DADOS, realize os testes de edição e exclusão. Teste se os modais de exclusão exigem motivo e se os audit logs funcionam corretamente. Use o login admin@classtower.com.br / Admin@2026.",
-    "serverMode": "development",
+    "additionalInstruction": "Validar os fluxos de: 1. Edição de Prestadores (Empresas.tsx) - clicar no lápis, editar e salvar; 2. Importação de Salas (Salas.tsx) - fluxo de upload; 3. Filtros de Encomendas (Encomendas.tsx) - comportamento do filtro 'Hoje' ao trocar status. Usar credenciais de admin se necessário.",
+    "serverMode": "production",
     "envs": {
-      "API_KEY": "sk-user-O8P5qT_lRfY5MjavyWa-QDD6Oozl6N55_2VTJxp6XWdMEPFW-8a7GKSGcBnk_jJuZdRdvejvwdtGWZf0PDU79oUoYGZ-Z6LjCTh4ycqVhQTNsvv24CL8YACqwsbwhVZuCSc"
+      "API_KEY": "sk-user-i9FUOMNNCDC7NrymGwhvxLBP1bxIrQHtKGJ7aOQDcYUoL2UEXvJsi3gKh9S7qj8FEsuEYW8D2PzEswWysqn8Caz7MMHZY9nKfaTct3mXSBknKdtj0rDUaAYeOwWprM-W0vE"
     }
   },
-  "serverPort": 61047,
-  "proxy": "http://44e828bc-5f76-46da-9c14-f93486983529:gdBMJjHdpDmaflJVrj7uDJsPMi20Ii9X@tun.testsprite.com:8080"
+  "serverPort": 65459,
+  "proxy": "http://028df1e5-2704-4e16-8ee8-53a253ec9434:HwzYlV5gzEhH9yK3zgRDUiZIf4QzJfq4@tun.testsprite.com:8080"
 }

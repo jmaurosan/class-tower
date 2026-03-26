@@ -1,54 +1,76 @@
 version: "2"
 type: frontend
 tech_stack:
-  - TypeScript
-  - React
-  - Tailwind CSS
-  - Supabase (Backend as a Service)
-  - Vite
-  - Material Symbols
+  - language: TypeScript
+  - framework: React (Vite)
+  - ui_library: Vanilla CSS + Custom Components
+  - other: Supabase (Backend-as-a-Service), React Router, Recharts
 routes:
   - path: /
     file: src/pages/Login.tsx
     auth_required: false
-    description: Login page
+    description: Tela de login inicial
+  - path: /signup
+    file: src/pages/SignUp.tsx
+    auth_required: false
+    description: Tela de primeiro acesso / cadastro
+  - path: /forgot-password
+    file: src/pages/ForgotPassword.tsx
+    auth_required: false
+    description: Recuperação de senha
   - path: /dashboard
     file: src/pages/Dashboard.tsx
     auth_required: true
-    description: Operational overview
-  - path: /usuarios
-    file: src/pages/Usuarios.tsx
+    description: Painel principal com métricas e status
+  - path: /agendamentos
+    file: src/pages/Agendamentos.tsx
     auth_required: true
-    description: User management and role configuration
+    description: Gestão de reservas e calendários
+  - path: /salas
+    file: src/pages/Salas.tsx
+    auth_required: true
+    description: Gerenciamento de unidades e importação XML
   - path: /encomendas
     file: src/pages/Encomendas.tsx
     auth_required: true
-    description: Parcel management and delivery tracking
+    description: Controle de recebimento de pacotes
   - path: /vistorias
     file: src/pages/Vistorias.tsx
     auth_required: true
-    description: Technical inspection reports and management
-  - path: /diario
-    file: src/pages/DiarioBordo.tsx
+    description: Registro de inspeções prediais
+  - path: /empresas
+    file: src/pages/Empresas.tsx
     auth_required: true
-    description: Daily occurrence logging
-  - path: /audit-logs
-    file: src/pages/AuditLogs.tsx
-    auth_required: true
-    description: System-wide audit trail
+    description: Cadastro e edição de prestadores de serviços
 features:
-  - name: User Management
-    description: CRUD for users.
-    files: [src/pages/Usuarios.tsx]
-    entry_route: /usuarios
-    user_interactions: [Create user, Delete user with reason]
-    api_calls: [{method: UPDATE, endpoint: profiles}]
+  - name: Gestão de Encomendas
+    description: Controle de entrada e saída de pacotes com filtros por data e status.
+    files:
+      - src/pages/Encomendas.tsx
+    entry_route: /encomendas
+    user_interactions:
+      - Filtrar por hoje ou todos
+      - Alterar status de pendente para retirado
+      - Adicionar nova encomenda
     auth_required: true
-  - name: Inspection Management (Vistorias)
-    description: CRUD for vistorias.
-    files: [src/pages/Vistorias.tsx]
-    entry_route: /vistorias
-    user_interactions: [Create vistoria, Delete vistoria with reason, Mark as completed]
-    api_calls: [{method: INSERT, endpoint: vistorias}]
+  - name: Importação de Unidades
+    description: Cadastro em massa de salas através de arquivos XML.
+    files:
+      - src/pages/Salas.tsx
+    entry_route: /salas
+    user_interactions:
+      - Clicar em Importar XML
+      - Selecionar arquivo do dispositivo
+      - Validar lista importada
+    auth_required: true
+  - name: Edição de Prestadores
+    description: Atualização de dados cadastrais de empresas parceiras.
+    files:
+      - src/pages/Empresas.tsx
+    entry_route: /empresas
+    user_interactions:
+      - Clicar no ícone de editar em um card
+      - Alterar campos no formulário
+      - Salvar alterações
     auth_required: true
 known_limitations: []

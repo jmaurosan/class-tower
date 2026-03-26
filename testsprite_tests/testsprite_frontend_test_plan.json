@@ -1,9 +1,9 @@
 [
   {
     "id": "TC001",
-    "title": "Edit an existing user's role and verify the updated role appears in the list",
-    "description": "Verifies an admin can search for a user, edit the role, save, and see the updated role reflected in the user list.",
-    "category": "User Management",
+    "title": "Login com credenciais válidas redireciona para o dashboard",
+    "description": "Garante que um usuário consegue autenticar e acessar o painel principal.",
+    "category": "Autenticação (Login / Signup / Recuperação)",
     "priority": "High",
     "steps": [
       {
@@ -12,63 +12,27 @@
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill {{LOGIN_USER}} into the email field"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
       },
       {
         "type": "action",
-        "description": "Click on the \"Login\" button"
+        "description": "Submit the login form"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Usuários\" in the main navigation menu"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/usuarios\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"User list\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Type \"Apto\" into the user search field"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first user row in the results list"
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Edit\" button"
-      },
-      {
-        "type": "action",
-        "description": "Select \"Admin\" from the role dropdown"
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Save\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Admin\" is visible"
+        "description": "Verify the user lands on the dashboard"
       }
     ]
   },
   {
     "id": "TC002",
-    "title": "Create a new user with a specific role and verify it appears in the list",
-    "description": "Verifies a user can be created from the user management page with required fields and role, then is visible in the list.",
-    "category": "User Management",
+    "title": "Login com senha incorreta exibe erro e permanece no login",
+    "description": "Garante que credenciais inválidas não autenticam e retornam erro de autenticação.",
+    "category": "Autenticação (Login / Signup / Recuperação)",
     "priority": "High",
     "steps": [
       {
@@ -77,484 +41,344 @@
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill fake.user@example.com into the email field"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+        "description": "Fill wrong-password into the password field"
       },
       {
         "type": "action",
-        "description": "Click on the \"Login\" button"
+        "description": "Submit the login form"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Usuários\" in the main navigation menu"
+        "description": "Verify an inline authentication error is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/usuarios\""
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Create New User\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"New user form\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Type \"E2E Test User\" into the name field"
-      },
-      {
-        "type": "action",
-        "description": "Type \"e2e.user+usuarios@example.com\" into the email field"
-      },
-      {
-        "type": "action",
-        "description": "Type \"101\" into the unit/apartment field"
-      },
-      {
-        "type": "action",
-        "description": "Select \"Resident\" from the role dropdown"
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Save\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"E2E Test User\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Resident\" is visible"
+        "description": "Verify the user remains on the login page"
       }
     ]
   },
   {
     "id": "TC003",
-    "title": "Block a user and verify the status shows Blocked",
-    "description": "Verifies an admin can block a selected user and the UI reflects the blocked status.",
-    "category": "User Management",
+    "title": "Cadastro cria conta e redireciona para o dashboard",
+    "description": "Garante que o fluxo de cadastro conclui com sucesso e autentica o usuário.",
+    "category": "Autenticação (Login / Signup / Recuperação)",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to /signup"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill a new email address into the email field"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+        "description": "Fill a valid password into the password field"
       },
       {
         "type": "action",
-        "description": "Click on the \"Login\" button"
+        "description": "Fill the remaining required registration fields with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign up form"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Usuários\" in the main navigation menu"
+        "description": "Verify a success confirmation is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/usuarios\""
-      },
-      {
-        "type": "action",
-        "description": "Type \"\" into the user search field"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first user row in the results list"
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Block user\" button"
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Confirm\" button in the block confirmation dialog"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Blocked\" is visible"
+        "description": "Verify the user lands on the dashboard"
       }
     ]
   },
   {
     "id": "TC004",
-    "title": "Non-admin user sees insufficient permissions on User Management page",
-    "description": "Verifies a non-admin account cannot access user management and sees an access denied/insufficient permissions message.",
-    "category": "User Management",
-    "priority": "High",
+    "title": "Cadastro com email já utilizado exibe validação e não avança",
+    "description": "Garante que o sistema bloqueia cadastro duplicado e mostra erro apropriado.",
+    "category": "Autenticação (Login / Signup / Recuperação)",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to /signup"
       },
       {
         "type": "action",
-        "description": "Type \"nonadmin.user@example.com\" into the email/username field"
+        "description": "Fill {{LOGIN_USER}} into the email field"
       },
       {
         "type": "action",
-        "description": "Type \"WrongOrNonAdminPassword123!\" into the password field"
+        "description": "Fill a valid password into the password field"
       },
       {
         "type": "action",
-        "description": "Click on the \"Login\" button"
+        "description": "Fill the remaining required registration fields with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign up form"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Usuários\" in the main navigation menu"
+        "description": "Verify a validation error indicating the email is already in use is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/usuarios\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Access denied\" is visible"
+        "description": "Verify the user remains on the sign up page"
       }
     ]
   },
   {
     "id": "TC005",
-    "title": "Delete user validation: reason is required",
-    "description": "Verifies delete action enforces a mandatory reason and shows validation when the reason field is empty.",
-    "category": "User Management",
-    "priority": "High",
+    "title": "Recuperação de senha envia link com email válido",
+    "description": "Garante que o fluxo de recuperação confirma o envio do email de reset.",
+    "category": "Autenticação (Login / Signup / Recuperação)",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to /forgot-password"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill {{LOGIN_USER}} into the email field"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Login\" button"
+        "description": "Submit the password reset request"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Usuários\" in the main navigation menu"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/usuarios\""
-      },
-      {
-        "type": "action",
-        "description": "Click on the first user row in the results list"
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Delete\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Delete confirmation dialog\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Confirm Delete\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Reason is required\" is visible"
+        "description": "Verify a success message indicating the reset email was sent is visible"
       }
     ]
   },
   {
     "id": "TC006",
-    "title": "Search users by unit and verify results reflect the filter",
-    "description": "Verifies searching by unit filters the visible user list to matching entries.",
-    "category": "User Management",
+    "title": "Recuperação de senha com email inválido mostra erro e permanece na página",
+    "description": "Garante validação de formato de email no fluxo de recuperação.",
+    "category": "Autenticação (Login / Signup / Recuperação)",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to /forgot-password"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill invalid-email-format into the email field"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Login\" button"
+        "description": "Submit the password reset request"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Usuários\" in the main navigation menu"
+        "description": "Verify an email validation error is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/usuarios\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"User list\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Type \"101\" into the user search field"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"101\" is visible"
+        "description": "Verify the user remains on the forgot password page"
       }
     ]
   },
   {
     "id": "TC007",
-    "title": "Create a new inspection and verify it appears in the inspections list",
-    "description": "Verifies an authenticated user can register a new inspection and see it listed after saving.",
-    "category": "Inspection Management (Vistorias)",
+    "title": "Dashboard carrega KPIs e gráficos para usuário autenticado",
+    "description": "Garante que o painel exibe os principais indicadores e visualizações ao acessar autenticado.",
+    "category": "Dashboard (Métricas e Status)",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /login"
+        "description": "Navigate to /"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill {{LOGIN_USER}} into the email field"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
       },
       {
         "type": "action",
-        "description": "Click on the \"Sign in\" button"
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to open the dashboard"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Vistorias\" option in the main navigation/menu"
+        "description": "Verify KPI cards are displayed"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/vistorias\""
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Register New Inspection\""
+        "description": "Verify charts are rendered"
       }
     ]
   },
   {
     "id": "TC008",
-    "title": "Edit an existing inspection and verify updated details are shown",
-    "description": "Verifies an authenticated user can edit an inspection, save changes, and see updated information displayed.",
-    "category": "Inspection Management (Vistorias)",
+    "title": "Acesso ao dashboard sem autenticação redireciona para login",
+    "description": "Garante que rota protegida não é acessível sem sessão autenticada.",
+    "category": "Dashboard (Métricas e Status)",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /login"
-      },
-      {
-        "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
-      },
-      {
-        "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Sign in\" button"
+        "description": "Navigate to /dashboard"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Vistorias\" option in the main navigation/menu"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Vistorias\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on an existing inspection from the list"
+        "description": "Verify the user lands on the login page"
       }
     ]
   },
   {
     "id": "TC009",
-    "title": "Edit an inspection and verify an audit log entry is visible",
-    "description": "Verifies that editing an inspection results in a visible audit entry being recorded for traceability.",
-    "category": "Inspection Management (Vistorias)",
-    "priority": "Medium",
+    "title": "Encomendas: filtrar por hoje exibe lista filtrada",
+    "description": "Garante que o filtro de encomendas por data funciona e atualiza a listagem.",
+    "category": "Gestão de Encomendas",
+    "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /login"
+        "description": "Navigate to /"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill {{LOGIN_USER}} into the email field"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
       },
       {
         "type": "action",
-        "description": "Click on the \"Sign in\" button"
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to open package management"
+      },
+      {
+        "type": "action",
+        "description": "Apply the filter for today's packages"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Vistorias\" option in the main navigation/menu"
-      },
-      {
-        "type": "action",
-        "description": "Click on an existing inspection from the list"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Edit\""
+        "description": "Verify the package list is filtered to today's entries"
       }
     ]
   },
   {
     "id": "TC010",
-    "title": "Mark an inspection as completed and verify status changes to Completed",
-    "description": "Verifies an authenticated user can mark an inspection as completed and the UI shows the Completed status.",
-    "category": "Inspection Management (Vistorias)",
+    "title": "Encomendas: alterar status de pendente para retirado atualiza o card",
+    "description": "Garante que a mudança de status é aplicada e refletida na interface.",
+    "category": "Gestão de Encomendas",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /login"
+        "description": "Navigate to /"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill {{LOGIN_USER}} into the email field"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
       },
       {
         "type": "action",
-        "description": "Click on the \"Sign in\" button"
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to open package management"
+      },
+      {
+        "type": "action",
+        "description": "Open the details for a package from the list"
+      },
+      {
+        "type": "action",
+        "description": "Initiate changing the package status from pending to picked up"
+      },
+      {
+        "type": "action",
+        "description": "Confirm the status change"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Vistorias\" option in the main navigation/menu"
-      },
-      {
-        "type": "action",
-        "description": "Click on an existing inspection from the list"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Mark as Completed\""
+        "description": "Verify the package status is shown as picked up on the package card"
       }
     ]
   },
   {
     "id": "TC011",
-    "title": "Confirm completion and verify Completed status persists on inspection view",
-    "description": "Verifies the completion confirmation flow and that the inspection view reflects Completed after confirming.",
-    "category": "Inspection Management (Vistorias)",
+    "title": "Encomendas: validação impede salvar nova encomenda com campo obrigatório vazio",
+    "description": "Garante que o formulário valida campos obrigatórios e impede envio incompleto.",
+    "category": "Gestão de Encomendas",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /login"
+        "description": "Navigate to /"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill {{LOGIN_USER}} into the email field"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
       },
       {
         "type": "action",
-        "description": "Click on the \"Sign in\" button"
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to open package management"
+      },
+      {
+        "type": "action",
+        "description": "Start adding a new package"
+      },
+      {
+        "type": "action",
+        "description": "Fill only some optional fields and leave at least one required field empty"
+      },
+      {
+        "type": "action",
+        "description": "Submit the new package form"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
+        "description": "Verify a validation error is visible"
       },
       {
-        "type": "action",
-        "description": "Click on the \"Vistorias\" option in the main navigation/menu"
-      },
-      {
-        "type": "action",
-        "description": "Click on an existing inspection from the list"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Mark as Completed\""
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Confirm\""
+        "type": "assertion",
+        "description": "Verify the new package was not added to the list"
       }
     ]
   },
   {
     "id": "TC012",
-    "title": "Attempt to delete an inspection without a deletion reason and verify validation error",
-    "description": "Verifies deletion is blocked when the mandatory deletion reason is empty and the correct validation message is shown.",
-    "category": "Inspection Management (Vistorias)",
+    "title": "Pré-visualizar unidades parseadas ao importar XML",
+    "description": "Garante que a seleção de um XML exibe uma prévia da lista de unidades antes de cadastrar.",
+    "category": "Importação de Unidades (Salas) via XML",
     "priority": "High",
     "steps": [
       {
@@ -563,39 +387,39 @@
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill {{LOGIN_USER}} into the email field"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
       },
       {
         "type": "action",
-        "description": "Click on the \"Sign in\" button"
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to manage units"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to import units via XML"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid XML file from the device"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Vistorias\" option in the main navigation/menu"
-      },
-      {
-        "type": "action",
-        "description": "Click on an existing inspection from the list"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Delete\""
+        "description": "Verify a parsed list preview of units is displayed"
       }
     ]
   },
   {
     "id": "TC013",
-    "title": "Submit new inspection with missing mandatory field and verify field-level validation prevents save",
-    "description": "Verifies required fields are enforced on new inspection creation and saving is prevented when mandatory data is missing.",
-    "category": "Inspection Management (Vistorias)",
+    "title": "Validar e confirmar importação de XML com sucesso",
+    "description": "Garante que um XML válido pode ser validado e importado, e que as novas unidades aparecem na lista.",
+    "category": "Importação de Unidades (Salas) via XML",
     "priority": "High",
     "steps": [
       {
@@ -604,1001 +428,737 @@
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill {{LOGIN_USER}} into the email field"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
       },
       {
         "type": "action",
-        "description": "Click on the \"Sign in\" button"
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to manage units"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to import units via XML"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid XML file from the device"
+      },
+      {
+        "type": "action",
+        "description": "Click the action to validate the imported list"
+      },
+      {
+        "type": "action",
+        "description": "Confirm the import"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
+        "description": "Verify a success confirmation is visible"
       },
       {
-        "type": "action",
-        "description": "Click on the \"Vistorias\" option in the main navigation/menu"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Register New Inspection\""
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Save\""
+        "type": "assertion",
+        "description": "Verify the newly imported units appear in the units list"
       }
     ]
   },
   {
     "id": "TC014",
-    "title": "Request password reset with a registered email shows confirmation message",
-    "description": "Verifies that submitting a valid email on Forgot Password displays a visible success/confirmation message.",
-    "category": "Password Recovery",
+    "title": "Bloquear importação ao selecionar XML malformado",
+    "description": "Garante que erros de parse/validação são exibidos e a importação é impedida para XML inválido.",
+    "category": "Importação de Unidades (Salas) via XML",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /forgot-password"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify page title contains \"Forgot\""
+        "description": "Navigate to /login"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+        "description": "Fill {{LOGIN_USER}} into the email field"
       },
       {
         "type": "action",
-        "description": "Click on \"Request Reset\""
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to manage units"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to import units via XML"
+      },
+      {
+        "type": "action",
+        "description": "Select a malformed XML file from the device"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Reset email sent\" is visible"
+        "description": "Verify parse or validation errors are listed"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Request Reset\" is visible"
+        "description": "Verify the import confirmation action is not available"
       }
     ]
   },
   {
     "id": "TC015",
-    "title": "Forgot Password requires an email before requesting reset",
-    "description": "Verifies that the reset request cannot be submitted without an email and an inline validation message is shown.",
-    "category": "Password Recovery",
+    "title": "Cancelar importação após visualizar prévia",
+    "description": "Garante que o usuário consegue sair do fluxo de importação após ver a prévia sem cadastrar unidades.",
+    "category": "Importação de Unidades (Salas) via XML",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /forgot-password"
+        "description": "Navigate to /login"
       },
       {
         "type": "action",
-        "description": "Click on \"Request Reset\""
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to manage units"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to import units via XML"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid XML file from the device"
+      },
+      {
+        "type": "action",
+        "description": "Click the cancel action for the import flow"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Email\" is visible"
+        "description": "Verify the units list view is displayed"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"required\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Request Reset\" is visible"
+        "description": "Verify no new units from the imported file are added to the list"
       }
     ]
   },
   {
     "id": "TC016",
-    "title": "Unknown email request shows generic confirmation (no account enumeration)",
-    "description": "Verifies that using an unrecognized email still shows a generic confirmation message that does not reveal account existence.",
-    "category": "Password Recovery",
-    "priority": "High",
+    "title": "Exigir seleção de arquivo antes de validar importação",
+    "description": "Garante que não é possível validar a lista importada sem antes selecionar um arquivo XML.",
+    "category": "Importação de Unidades (Salas) via XML",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /forgot-password"
+        "description": "Navigate to /login"
       },
       {
         "type": "action",
-        "description": "Type \"no.such.user.987654@example.com\" into the email field"
+        "description": "Fill {{LOGIN_USER}} into the email field"
       },
       {
         "type": "action",
-        "description": "Click on \"Request Reset\""
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to manage units"
+      },
+      {
+        "type": "action",
+        "description": "Click the option to import units via XML"
+      },
+      {
+        "type": "action",
+        "description": "Click the action to validate the imported list"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Reset email sent\" is visible"
+        "description": "Verify a file selection requirement error is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"not found\" is not visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"does not exist\" is not visible"
+        "description": "Verify the import confirmation action is not available"
       }
     ]
   },
   {
     "id": "TC017",
-    "title": "Forgot Password blocks clearly invalid email format",
-    "description": "Verifies that an invalid email format is rejected with a visible validation message.",
-    "category": "Password Recovery",
-    "priority": "Medium",
+    "title": "Abrir formulário de edição de empresa a partir de um card",
+    "description": "Garante que ao clicar em editar em um card, o formulário de edição abre preenchido com os dados da empresa.",
+    "category": "Edição de Prestadores (Empresas)",
+    "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /forgot-password"
+        "description": "Navigate to /login"
       },
       {
         "type": "action",
-        "description": "Type \"invalid-email\" into the email field"
+        "description": "Fill {{LOGIN_USER}} into the email field"
       },
       {
         "type": "action",
-        "description": "Click on \"Request Reset\""
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to manage providers"
+      },
+      {
+        "type": "action",
+        "description": "Find a provider card in the list"
+      },
+      {
+        "type": "action",
+        "description": "Click the edit icon on the provider card"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"invalid\" is visible"
+        "description": "Verify the provider edit form is displayed"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"email\" is visible"
+        "description": "Verify the edit form fields are populated with the selected provider data"
       }
     ]
   },
   {
     "id": "TC018",
-    "title": "Reset Password with mismatched confirmation shows error and does not succeed",
-    "description": "Verifies that the Reset Password form rejects mismatched passwords with a visible error message.",
-    "category": "Password Recovery",
+    "title": "Salvar alterações válidas e refletir no card da empresa",
+    "description": "Garante que a edição de dados válidos é salva e que o card da empresa reflete as mudanças.",
+    "category": "Edição de Prestadores (Empresas)",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /reset-password"
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to manage providers"
+      },
+      {
+        "type": "action",
+        "description": "Click the edit icon on a provider card"
+      },
+      {
+        "type": "action",
+        "description": "Fill CT Provider Updated into the company name field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the save action for the provider form"
       },
       {
         "type": "assertion",
-        "description": "Verify page title contains \"Reset\""
-      },
-      {
-        "type": "action",
-        "description": "Type \"NewPass123!\" into the new password field"
-      },
-      {
-        "type": "action",
-        "description": "Type \"DifferentPass123!\" into the confirm password field"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Reset Password\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"do not match\" is visible"
+        "description": "Verify the provider list shows a card with the updated company name CT Provider Updated"
       }
     ]
   },
   {
     "id": "TC019",
-    "title": "Reset Password rejects short/weak password with validation message",
-    "description": "Verifies that a weak password is rejected with a visible validation message.",
-    "category": "Password Recovery",
-    "priority": "Medium",
+    "title": "Impedir salvamento com dados inválidos no formulário de empresa",
+    "description": "Garante que o formulário apresenta validações e não permite salvar quando há dados inválidos.",
+    "category": "Edição de Prestadores (Empresas)",
+    "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /reset-password"
+        "description": "Navigate to /login"
       },
       {
         "type": "action",
-        "description": "Type \"123\" into the new password field"
+        "description": "Fill {{LOGIN_USER}} into the email field"
       },
       {
         "type": "action",
-        "description": "Type \"123\" into the confirm password field"
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
       },
       {
         "type": "action",
-        "description": "Click on \"Reset Password\""
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to manage providers"
+      },
+      {
+        "type": "action",
+        "description": "Click the edit icon on a provider card"
+      },
+      {
+        "type": "action",
+        "description": "Fill invalid into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the save action for the provider form"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"password\" is visible"
+        "description": "Verify validation errors are visible"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"too\" is visible"
+        "description": "Verify the user remains on the edit form"
       }
     ]
   },
   {
     "id": "TC020",
-    "title": "Reset Password with expired/invalid token shows token error and prompts next step",
-    "description": "Verifies that an invalid or expired token results in a visible error message and guidance to request a new link.",
-    "category": "Password Recovery",
-    "priority": "High",
+    "title": "Persistir alterações após recarregar a lista de empresas",
+    "description": "Garante que mudanças salvas permanecem visíveis após sair do formulário e voltar à lista.",
+    "category": "Edição de Prestadores (Empresas)",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /reset-password?token=expired_or_invalid"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Reset\" is visible"
+        "description": "Navigate to /login"
       },
       {
         "type": "action",
-        "description": "Type \"NewPass123!\" into the new password field"
+        "description": "Fill {{LOGIN_USER}} into the email field"
       },
       {
         "type": "action",
-        "description": "Type \"NewPass123!\" into the confirm password field"
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
       },
       {
         "type": "action",
-        "description": "Click on \"Reset Password\""
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to manage providers"
+      },
+      {
+        "type": "action",
+        "description": "Click the edit icon on a provider card"
+      },
+      {
+        "type": "action",
+        "description": "Fill CT Provider Persist into the company name field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the save action for the provider form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to go to the dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to manage providers"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Token invalid or expired\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"request\" is visible"
+        "description": "Verify the provider list shows a card with the company name CT Provider Persist"
       }
     ]
   },
   {
     "id": "TC021",
-    "title": "Complete package registration details including recipient and save successfully",
-    "description": "Verifies the package registration form accepts recipient and package details and can be saved successfully after providing required fields.",
-    "category": "Parcel Management (Encomendas)",
+    "title": "Validar carregamento da página de vistorias e acesso ao histórico",
+    "description": "Garante que a página de vistorias carrega e exibe a lista/histórico de inspeções.",
+    "category": "Vistorias Técnicas",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to /login"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill {{LOGIN_USER}} into the email field"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
       },
       {
         "type": "action",
-        "description": "Click the \"Login\" button"
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to view inspections"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Encomendas\" in the main navigation/menu"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Register Package\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Register Package\" is visible"
+        "description": "Verify the inspections list or history is displayed"
       }
     ]
   },
   {
     "id": "TC022",
-    "title": "Validation: attempt to save package registration without photo shows 'Photo required'",
-    "description": "Verifies the system prevents submission when photo evidence is missing and shows the 'Photo required' validation message.",
-    "category": "Parcel Management (Encomendas)",
+    "title": "Create a new booking and see it on the calendar",
+    "description": "Verifies a user can create a booking and it appears in the calendar view.",
+    "category": "Agendamentos e Calendário",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to /login"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill in the email field with {{LOGIN_USER}}"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
       },
       {
         "type": "action",
-        "description": "Click the \"Login\" button"
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to open agendamentos"
+      },
+      {
+        "type": "action",
+        "description": "Click the action to create a new booking"
+      },
+      {
+        "type": "action",
+        "description": "Fill the booking date field with a valid future date"
+      },
+      {
+        "type": "action",
+        "description": "Fill the booking time field with a valid available time"
+      },
+      {
+        "type": "action",
+        "description": "Fill the booking details field with TC001 Booking"
+      },
+      {
+        "type": "action",
+        "description": "Save the booking"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Encomendas\" in the main navigation/menu"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Register Package\" button"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Save\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Photo required\" is visible"
+        "description": "Verify the new booking with details TC001 Booking is displayed on the calendar"
       }
     ]
   },
   {
     "id": "TC023",
-    "title": "Create a new daily occurrence and verify it appears at the top of the timeline",
-    "description": "Verifies an authenticated user can create a new occurrence with a category and description and sees it added to the timeline with author and timestamp.",
-    "category": "Daily Occurrences (Diário de Bordo)",
+    "title": "Prevent creating a booking in an already booked time slot",
+    "description": "Verifies the UI blocks saving a booking when the selected time slot conflicts with an existing booking.",
+    "category": "Agendamentos e Calendário",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to /login"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill in the email field with {{LOGIN_USER}}"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
       },
       {
         "type": "action",
-        "description": "Click the \"Login\" button"
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to open agendamentos"
+      },
+      {
+        "type": "action",
+        "description": "Click the action to create a new booking"
+      },
+      {
+        "type": "action",
+        "description": "Fill the booking date field with a valid future date"
+      },
+      {
+        "type": "action",
+        "description": "Fill the booking time field with a valid available time"
+      },
+      {
+        "type": "action",
+        "description": "Fill the booking details field with TC002 Seed Booking"
+      },
+      {
+        "type": "action",
+        "description": "Save the booking"
+      },
+      {
+        "type": "action",
+        "description": "Click the action to create a new booking"
+      },
+      {
+        "type": "action",
+        "description": "Fill the booking date field with the same date used for TC002 Seed Booking"
+      },
+      {
+        "type": "action",
+        "description": "Select the same time slot used for TC002 Seed Booking"
+      },
+      {
+        "type": "action",
+        "description": "Fill the booking details field with TC002 Conflicting Booking"
+      },
+      {
+        "type": "action",
+        "description": "Save the booking"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click \"Diário\" (Daily Occurrences) in the main navigation/menu"
+        "description": "Verify a scheduling conflict warning is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/diario\""
-      },
-      {
-        "type": "action",
-        "description": "Click the \"New Occurrence\" button"
-      },
-      {
-        "type": "action",
-        "description": "Select a category option from the category dropdown"
-      },
-      {
-        "type": "action",
-        "description": "Type \"Test occurrence created by automated UI test\" into the description field"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Save\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Test occurrence created by automated UI test\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify an element containing the author name (current user) is visible on the newest occurrence card/row"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify an element containing a timestamp/date is visible on the newest occurrence card/row"
+        "description": "Verify the conflicting booking with details TC002 Conflicting Booking is not added to the calendar"
       }
     ]
   },
   {
     "id": "TC024",
-    "title": "Filter occurrences by date and verify timeline updates accordingly",
-    "description": "Verifies the date filter limits the displayed timeline entries to the selected date range.",
-    "category": "Daily Occurrences (Diário de Bordo)",
+    "title": "Change an existing booking status to confirmed and see it updated",
+    "description": "Verifies a user can update a booking status to confirmed and the calendar reflects the change.",
+    "category": "Agendamentos e Calendário",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to /login"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill in the email field with {{LOGIN_USER}}"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
       },
       {
         "type": "action",
-        "description": "Click the \"Login\" button"
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to open agendamentos"
+      },
+      {
+        "type": "action",
+        "description": "Click the action to create a new booking"
+      },
+      {
+        "type": "action",
+        "description": "Fill the booking date field with a valid future date"
+      },
+      {
+        "type": "action",
+        "description": "Fill the booking time field with a valid available time"
+      },
+      {
+        "type": "action",
+        "description": "Fill the booking details field with TC003 Booking"
+      },
+      {
+        "type": "action",
+        "description": "Save the booking"
+      },
+      {
+        "type": "action",
+        "description": "Click the booking with details TC003 Booking on the calendar"
+      },
+      {
+        "type": "action",
+        "description": "Change the booking status to confirmed"
+      },
+      {
+        "type": "action",
+        "description": "Save the booking changes"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click \"Diário\" (Daily Occurrences) in the main navigation/menu"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/diario\""
-      },
-      {
-        "type": "action",
-        "description": "Click the date filter control (date range or date picker)"
-      },
-      {
-        "type": "action",
-        "description": "Select a date (or start date) in the date picker"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Apply\" button for the date filter"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the timeline/list area is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify at least one occurrence entry is visible in the filtered timeline"
+        "description": "Verify the booking TC003 Booking shows status confirmed on the calendar"
       }
     ]
   },
   {
     "id": "TC025",
-    "title": "Attempt to save a new occurrence with empty description and verify validation error",
-    "description": "Verifies the form prevents submission when description is missing and shows the expected validation message.",
-    "category": "Daily Occurrences (Diário de Bordo)",
+    "title": "Agendamentos page loads and shows primary calendar content",
+    "description": "Verifies the scheduling page loads and displays the main calendar/booking list content.",
+    "category": "Agendamentos e Calendário",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to /login"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill in the email field with {{LOGIN_USER}}"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
       },
       {
         "type": "action",
-        "description": "Click the \"Login\" button"
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to open agendamentos"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click \"Diário\" (Daily Occurrences) in the main navigation/menu"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/diario\""
-      },
-      {
-        "type": "action",
-        "description": "Click the \"New Occurrence\" button"
-      },
-      {
-        "type": "action",
-        "description": "Select a category option from the category dropdown"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Save\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Description is required\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the new occurrence form/modal is still visible"
+        "description": "Verify the calendar or booking schedule view is displayed"
       }
     ]
   },
   {
     "id": "TC026",
-    "title": "Cancel out of New Occurrence creation without saving",
-    "description": "Verifies the user can exit the New Occurrence form without creating a timeline entry.",
-    "category": "Daily Occurrences (Diário de Bordo)",
+    "title": "Require mandatory fields before saving a new booking",
+    "description": "Verifies the booking form enforces required fields and does not save when information is missing.",
+    "category": "Agendamentos e Calendário",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to /login"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill in the email field with {{LOGIN_USER}}"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
       },
       {
         "type": "action",
-        "description": "Click the \"Login\" button"
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to open agendamentos"
+      },
+      {
+        "type": "action",
+        "description": "Click the action to create a new booking"
+      },
+      {
+        "type": "action",
+        "description": "Fill the booking details field with TC005 Missing Fields"
+      },
+      {
+        "type": "action",
+        "description": "Save the booking"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click \"Diário\" (Daily Occurrences) in the main navigation/menu"
+        "description": "Verify a form validation error is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/diario\""
-      },
-      {
-        "type": "action",
-        "description": "Click the \"New Occurrence\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"New Occurrence\" (form title/header) is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Cancel\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the timeline/list area is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"New Occurrence\" (form title/header) is not visible"
+        "description": "Verify no booking with details TC005 Missing Fields is added to the calendar"
       }
     ]
   },
   {
     "id": "TC027",
-    "title": "Apply a date filter that results in no entries and verify empty state",
-    "description": "Verifies the UI handles a date range with no matching occurrences by showing an empty state message or no results indicator.",
-    "category": "Daily Occurrences (Diário de Bordo)",
-    "priority": "Low",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
-      },
-      {
-        "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Login\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click \"Diário\" (Daily Occurrences) in the main navigation/menu"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/diario\""
-      },
-      {
-        "type": "action",
-        "description": "Click the date filter control (date range or date picker)"
-      },
-      {
-        "type": "action",
-        "description": "Select a date range far in the past (or otherwise unlikely to contain entries)"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Apply\" button for the date filter"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"No occurrences\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC028",
-    "title": "Verify new occurrence form requires a category selection if category is mandatory",
-    "description": "Verifies the form blocks submission and shows a validation message when category is not selected (if enforced by the UI).",
-    "category": "Daily Occurrences (Diário de Bordo)",
-    "priority": "Low",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
-      },
-      {
-        "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Login\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click \"Diário\" (Daily Occurrences) in the main navigation/menu"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/diario\""
-      },
-      {
-        "type": "action",
-        "description": "Click the \"New Occurrence\" button"
-      },
-      {
-        "type": "action",
-        "description": "Type \"Missing category validation check\" into the description field"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Save\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify a validation error message related to category selection is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the new occurrence form/modal is still visible"
-      }
-    ]
-  },
-  {
-    "id": "TC029",
-    "title": "Admin can open Audit Logs and view entry details (before/after + actor)",
-    "description": "Verifies an admin can load the audit log list and open a single entry to view full details including before/after values and the user who performed the action.",
-    "category": "Audit Logs",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
-      },
-      {
-        "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Sign in\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Audit Logs\" item in the main navigation/menu"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/audit-logs\""
-      },
-      {
-        "type": "action",
-        "description": "Click the first visible audit log entry in the list"
-      }
-    ]
-  },
-  {
-    "id": "TC030",
-    "title": "Admin sees audit log entry detail fields after opening an entry",
-    "description": "Verifies the audit log entry detail view shows the affected table, record ID, action, actor, and before/after data sections.",
-    "category": "Audit Logs",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
-      },
-      {
-        "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Sign in\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Audit Logs\" item in the main navigation/menu"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/audit-logs\""
-      },
-      {
-        "type": "action",
-        "description": "Click the first visible audit log entry in the list"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Before\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC031",
-    "title": "Admin can filter Audit Logs by table",
-    "description": "Verifies filtering by table limits the visible results to entries matching the selected table.",
-    "category": "Audit Logs",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
-      },
-      {
-        "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Sign in\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Audit Logs\" item in the main navigation/menu"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/audit-logs\""
-      },
-      {
-        "type": "action",
-        "description": "Select a specific option from the \"Table\" filter dropdown"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Table:\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC032",
-    "title": "Admin can filter Audit Logs by action type (UPDATE/DELETE)",
-    "description": "Verifies filtering by action type updates the list to only show entries matching the selected action.",
-    "category": "Audit Logs",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
-      },
-      {
-        "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Sign in\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Audit Logs\" item in the main navigation/menu"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/audit-logs\""
-      },
-      {
-        "type": "action",
-        "description": "Select \"UPDATE\" from the \"Action\" filter dropdown"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"UPDATE\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC033",
-    "title": "Admin can filter Audit Logs by date range",
-    "description": "Verifies setting a start and end date refreshes results and keeps the selected date range visible on the page.",
-    "category": "Audit Logs",
+    "title": "Cancel creating a booking and ensure nothing is added",
+    "description": "Verifies canceling out of the new booking flow does not create an entry on the calendar.",
+    "category": "Agendamentos e Calendário",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to /login"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+        "description": "Fill in the email field with {{LOGIN_USER}}"
       },
       {
         "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
       },
       {
         "type": "action",
-        "description": "Click the \"Sign in\" button"
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation option to open agendamentos"
+      },
+      {
+        "type": "action",
+        "description": "Click the action to create a new booking"
+      },
+      {
+        "type": "action",
+        "description": "Fill the booking date field with a valid future date"
+      },
+      {
+        "type": "action",
+        "description": "Fill the booking time field with a valid available time"
+      },
+      {
+        "type": "action",
+        "description": "Fill the booking details field with TC006 Canceled Booking"
+      },
+      {
+        "type": "action",
+        "description": "Cancel the booking creation"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Audit Logs\" item in the main navigation/menu"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/audit-logs\""
-      },
-      {
-        "type": "action",
-        "description": "Type \"2026-01-01\" into the \"Start date\" field"
-      },
-      {
-        "type": "action",
-        "description": "Type \"2026-12-31\" into the \"End date\" field"
-      }
-    ]
-  },
-  {
-    "id": "TC034",
-    "title": "Admin can combine filters (table + action) and still open an entry",
-    "description": "Verifies multiple filters can be applied together and an entry from the filtered list can be opened.",
-    "category": "Audit Logs",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
-      },
-      {
-        "type": "action",
-        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Sign in\" button"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/dashboard\""
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Audit Logs\" item in the main navigation/menu"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/audit-logs\""
-      },
-      {
-        "type": "action",
-        "description": "Select a specific option from the \"Table\" filter dropdown"
-      },
-      {
-        "type": "action",
-        "description": "Select \"DELETE\" from the \"Action\" filter dropdown"
-      },
-      {
-        "type": "action",
-        "description": "Click the first visible audit log entry in the list"
-      }
-    ]
-  },
-  {
-    "id": "TC035",
-    "title": "Non-admin user is blocked from Audit Logs (access denied or no data message)",
-    "description": "Verifies a non-admin cannot view audit logs and sees an access denied or no data available message.",
-    "category": "Audit Logs",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Type \"nonadmin@example.invalid\" into the email/username field"
-      },
-      {
-        "type": "action",
-        "description": "Type \"WrongPassword123!\" into the password field"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Sign in\" button"
-      },
-      {
-        "type": "action",
-        "description": "Wait for the page to load"
-      },
-      {
-        "type": "action",
-        "description": "Click the \"Audit Logs\" item in the main navigation/menu"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/audit-logs\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Access denied\" is visible"
+        "description": "Verify no booking with details TC006 Canceled Booking is displayed on the calendar"
       }
     ]
   }
