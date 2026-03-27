@@ -12,13 +12,14 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [filterSetor, setFilterSetor] = useState<string>('Todos');
+  const [searchTerm, setSearchTerm] = useState('');
   const [tipoPessoa, setTipoPessoa] = useState<'PJ' | 'PF'>('PJ');
   const [novoSetorInput, setNovoSetorInput] = useState('');
   const [isAddingNewSetor, setIsAddingNewSetor] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const [setores, setSetores] = useState<string[]>(['Limpeza', 'Elétrica', 'Hidráulica', 'Segurança', 'Elevadores', 'Outros']);
+  const SETORES_PADRAO = ['Limpeza', 'Elétrica', 'Hidráulica', 'Segurança', 'Elevadores'];
+  const [setores, setSetores] = useState<string[]>([...SETORES_PADRAO]);
 
   // Rating States
   const [ratingModalOpen, setRatingModalOpen] = useState(false);
@@ -57,7 +58,7 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
   const [formData, setFormData] = useState({
     nome: '',
     cnpj: '',
-    setor: 'Outros' as Empresa['setor'],
+    setor: 'Limpeza',
     contato: '',
     telefone: '',
     email: ''
@@ -72,7 +73,13 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
         .order('nome', { ascending: true });
 
       if (error) throw error;
-      if (data) setEmpresas(data);
+      if (data) {
+        setEmpresas(data);
+        // Extrair setores personalizados dos dados existentes
+        const setoresExistentes = new Set(data.map((e: Empresa) => e.setor).filter(Boolean));
+        const todosSetores = new Set([...SETORES_PADRAO, ...setoresExistentes]);
+        setSetores(Array.from(todosSetores).sort());
+      }
     } catch (err) {
       console.error('Erro ao buscar empresas:', err);
     } finally {
@@ -95,9 +102,18 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
     };
   }, []);
 
-  const filteredEmpresas = filterSetor === 'Todos'
-    ? empresas
-    : empresas.filter(e => e.setor === filterSetor);
+  const filteredEmpresas = React.useMemo(() => {
+    if (!searchTerm.trim()) return empresas;
+    const term = searchTerm.toLowerCase();
+    return empresas.filter(e =>
+      e.nome?.toLowerCase().includes(term) ||
+      e.setor?.toLowerCase().includes(term) ||
+      e.contato?.toLowerCase().includes(term) ||
+      e.email?.toLowerCase().includes(term) ||
+      e.cnpj?.toLowerCase().includes(term) ||
+      e.telefone?.includes(term)
+    );
+  }, [empresas, searchTerm]);
 
   const getStatusColor = (status: Empresa['status']) => {
     switch (status) {
@@ -128,7 +144,7 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
 
     let finalSetor = formData.setor;
     if (isAddingNewSetor && novoSetorInput.trim()) {
-      finalSetor = novoSetorInput.trim() as any;
+      finalSetor = novoSetorInput.trim();
     }
 
     try {
@@ -170,14 +186,28 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
 
   const handleEdit = (empresa: Empresa) => {
     setEditingId(empresa.id);
+
+    // Verificar se o setor atual é um setor personalizado (não está na lista padrão)
+    const setorAtual = empresa.setor || '';
+    const isCustomSetor = setorAtual && !SETORES_PADRAO.includes(setorAtual) && !setores.includes(setorAtual);
+
     setFormData({
       nome: empresa.nome,
       cnpj: empresa.cnpj || '',
-      setor: empresa.setor,
+      setor: isCustomSetor ? SETORES_PADRAO[0] : setorAtual,
       contato: empresa.contato,
       telefone: empresa.telefone,
       email: empresa.email
     });
+
+    if (isCustomSetor) {
+      setIsAddingNewSetor(true);
+      setNovoSetorInput(setorAtual);
+    } else {
+      setIsAddingNewSetor(false);
+      setNovoSetorInput('');
+    }
+
     setTipoPessoa(empresa.cnpj ? 'PJ' : 'PF');
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -202,7 +232,7 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
     setFormData({
       nome: '',
       cnpj: '',
-      setor: 'Outros',
+      setor: SETORES_PADRAO[0],
       contato: '',
       telefone: '',
       email: ''
@@ -313,20 +343,29 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
       )}
 
       <div className="bg-white dark:bg-[#1d222a] p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
-          {['Todos', ...setores].map(setor => (
+        <div className="relative">
+          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+          <input
+            type="text"
+            placeholder="Pesquisar por nome, setor, contato, telefone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+          />
+          {searchTerm && (
             <button
-              key={setor}
-              onClick={() => setFilterSetor(setor)}
-              className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all border text-center ${filterSetor === setor
-                ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
-                : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-primary/50'
-                }`}
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
             >
-              {setor}
+              <span className="material-symbols-outlined text-lg">close</span>
             </button>
-          ))}
+          )}
         </div>
+        {searchTerm && (
+          <p className="mt-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            {filteredEmpresas.length} {filteredEmpresas.length === 1 ? 'resultado' : 'resultados'}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -367,6 +406,13 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
                 {empresa.cnpj && (
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{empresa.cnpj}</p>
                 )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className={"material-symbols-outlined text-base text-primary"}>{getIconSetor(empresa.setor)}</span>
+                <span className="px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                  {empresa.setor || 'Sem setor'}
+                </span>
               </div>
 
               <div

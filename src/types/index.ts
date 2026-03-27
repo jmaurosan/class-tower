@@ -128,7 +128,7 @@ export interface Empresa {
   id: string;
   nome: string;
   cnpj: string;
-  setor: 'Elétrica' | 'Hidráulica' | 'Limpeza' | 'Segurança' | 'Elevadores' | 'Outros';
+  setor: string;
   contato: string;
   telefone: string;
   email: string;

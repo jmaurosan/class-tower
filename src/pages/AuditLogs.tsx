@@ -6,6 +6,49 @@ import { AuditLog } from '../types';
 const AuditLogs: React.FC = () => {
   const { logs, loading } = useAuditLogs();
   const [selectedLog, setSelectedLog] = React.useState<AuditLog | null>(null);
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [filterAction, setFilterAction] = React.useState<string>('');
+  const [filterModule, setFilterModule] = React.useState<string>('');
+
+  // Módulos únicos extraídos dos logs para o filtro
+  const uniqueModules = React.useMemo(() => {
+    const modules = new Set(logs.map(l => l.table_name));
+    return Array.from(modules).sort();
+  }, [logs]);
+
+  // Filtragem dos logs
+  const filteredLogs = React.useMemo(() => {
+    return logs.filter(log => {
+      // Filtro por ação
+      if (filterAction && log.action !== filterAction) return false;
+
+      // Filtro por módulo
+      if (filterModule && log.table_name !== filterModule) return false;
+
+      // Busca textual
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        const matchName = log.executed_by_name?.toLowerCase().includes(term);
+        const matchTable = formatTableName(log.table_name).toLowerCase().includes(term);
+        const matchAction = log.action.toLowerCase().includes(term);
+        const matchDate = new Date(log.created_at).toLocaleDateString('pt-BR').includes(term);
+        const matchOldData = log.old_data ? JSON.stringify(log.old_data).toLowerCase().includes(term) : false;
+        const matchNewData = log.new_data ? JSON.stringify(log.new_data).toLowerCase().includes(term) : false;
+
+        if (!matchName && !matchTable && !matchAction && !matchDate && !matchOldData && !matchNewData) return false;
+      }
+
+      return true;
+    });
+  }, [logs, searchTerm, filterAction, filterModule]);
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterAction('');
+    setFilterModule('');
+  };
+
+  const hasActiveFilters = searchTerm || filterAction || filterModule;
 
   const getActionColor = (action: string) => {
     switch (action) {
@@ -115,6 +158,66 @@ const AuditLogs: React.FC = () => {
         </div>
       </div>
 
+      {/* BARRA DE BUSCA E FILTROS */}
+      <div className="bg-white dark:bg-[#1d222a] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-5">
+        <div className="flex flex-col lg:flex-row gap-3">
+          {/* Campo de busca textual */}
+          <div className="relative flex-1">
+            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+            <input
+              type="text"
+              placeholder="Buscar por nome, módulo, data ou conteúdo..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+            />
+          </div>
+
+          {/* Filtro por Ação */}
+          <select
+            value={filterAction}
+            onChange={(e) => setFilterAction(e.target.value)}
+            className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all cursor-pointer min-w-[150px]"
+          >
+            <option value="">Todas as Ações</option>
+            <option value="INSERT">Inserção</option>
+            <option value="UPDATE">Alteração</option>
+            <option value="DELETE">Exclusão</option>
+          </select>
+
+          {/* Filtro por Módulo */}
+          <select
+            value={filterModule}
+            onChange={(e) => setFilterModule(e.target.value)}
+            className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all cursor-pointer min-w-[150px]"
+          >
+            <option value="">Todos os Módulos</option>
+            {uniqueModules.map(mod => (
+              <option key={mod} value={mod}>{formatTableName(mod)}</option>
+            ))}
+          </select>
+
+          {/* Botão Limpar Filtros */}
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="flex items-center gap-2 px-4 py-3 bg-red-500/10 text-red-500 border border-red-500/20 rounded-2xl text-sm font-bold hover:bg-red-500/20 transition-all whitespace-nowrap"
+            >
+              <span className="material-symbols-outlined text-lg">filter_alt_off</span>
+              Limpar
+            </button>
+          )}
+        </div>
+
+        {/* Contador de resultados */}
+        {hasActiveFilters && (
+          <div className="mt-3 flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+            <span className="material-symbols-outlined text-sm">filter_list</span>
+            {filteredLogs.length} {filteredLogs.length === 1 ? 'resultado' : 'resultados'} encontrado{filteredLogs.length !== 1 ? 's' : ''}
+          </div>
+        )}
+      </div>
+
       <div className="bg-white dark:bg-[#1d222a] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -128,7 +231,7 @@ const AuditLogs: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {logs.map((log) => (
+              {filteredLogs.map((log) => (
                 <tr key={log.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                   <td className="px-6 py-5 whitespace-nowrap">
                     <div className="flex flex-col">
@@ -168,10 +271,15 @@ const AuditLogs: React.FC = () => {
               ))}
             </tbody>
           </table>
-          {logs.length === 0 && (
+          {filteredLogs.length === 0 && (
             <div className="p-20 text-center flex flex-col items-center gap-4">
-              <span className="material-symbols-outlined text-4xl text-slate-300">history</span>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nenhum log registrado ainda</p>
+              <span className="material-symbols-outlined text-4xl text-slate-300">{hasActiveFilters ? 'search_off' : 'history'}</span>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                {hasActiveFilters ? 'Nenhum resultado para os filtros aplicados' : 'Nenhum log registrado ainda'}
+              </p>
+              {hasActiveFilters && (
+                <button onClick={clearFilters} className="text-xs font-bold text-primary hover:underline mt-1">Limpar filtros</button>
+              )}
             </div>
           )}
         </div>
