@@ -356,7 +356,11 @@ const Salas: React.FC<SalasProps> = ({ user }) => {
                 </div>
               )}
               <div className="flex justify-between items-start mb-6">
-                <div className="size-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-primary border border-slate-100 dark:border-slate-700 shadow-sm">
+                <div className={`size-12 rounded-2xl flex items-center justify-center border shadow-sm transition-colors ${
+                  sala.nome 
+                    ? 'bg-emerald-500 text-white border-emerald-400' 
+                    : 'bg-slate-50 dark:bg-slate-800 text-primary border-slate-100 dark:border-slate-700'
+                }`}>
                   <span className="text-lg font-black">{sala.numero}</span>
                 </div>
                 <div className="flex items-center gap-1">
