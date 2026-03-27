@@ -235,36 +235,43 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Formulário Coluna Esquerda */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Formulário Coluna Esquerda - Agora ocupa 7/12 colunas em desktop */}
         {showForm ? (
-          <div className="lg:col-span-1 animate-in slide-in-from-left duration-300 h-fit sticky top-8">
-            <div className="bg-white dark:bg-[#1d222a] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 ring-1 ring-primary/5">
-              <div className="flex justify-between items-center">
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">
-                  {editingId ? 'Editar Registro' : 'Informar Ocorrência'}
-                </h4>
-                <button onClick={handleCancel} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                  <span className="material-symbols-outlined text-xl">close</span>
+          <div className="lg:col-span-7 animate-in slide-in-from-left duration-300 h-fit sticky top-8">
+            <div className="bg-white dark:bg-[#1d222a] p-8 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6 ring-1 ring-primary/5">
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                    <span className="material-symbols-outlined">{editingId ? 'edit_square' : 'add_notes'}</span>
+                  </div>
+                  <h4 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    {editingId ? 'Editar Registro' : 'Informar Ocorrência'}
+                  </h4>
+                </div>
+                <button onClick={handleCancel} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
+                  <span className="material-symbols-outlined text-2xl">close</span>
                 </button>
               </div>
-              <form onSubmit={handleAddEntry} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Título</label>
-                  <input
-                    required
-                    type="text"
-                    placeholder="Ex: Vazamento no subsolo"
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all"
-                    value={newEntry.titulo}
-                    onChange={e => setNewEntry({ ...newEntry, titulo: e.target.value })}
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Categoria</label>
+
+              <form onSubmit={handleAddEntry} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="md:col-span-2 space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Título do Registro</label>
+                    <input
+                      required
+                      type="text"
+                      placeholder="Ex: Vazamento no subsolo"
+                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-base font-bold transition-all"
+                      value={newEntry.titulo}
+                      onChange={e => setNewEntry({ ...newEntry, titulo: e.target.value })}
+                    />
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Categoria</label>
                     <select
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all text-sm"
+                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all text-sm font-bold appearance-none cursor-pointer"
                       value={isNovaCategoria ? 'Nova' : newEntry.categoria}
                       onChange={e => {
                         const val = e.target.value;
@@ -283,70 +290,82 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
                       <option>Reclamação</option>
                       <option>Aviso</option>
                       <option>Outros</option>
-                      <option value="Nova">+ Criar Nova Categoria</option>
+                      <option value="Nova">+ Criar Nova...</option>
                     </select>
                   </div>
-                  {isNovaCategoria && (
-                    <div className="space-y-1 animate-in slide-in-from-left duration-200">
-                      <label className="text-[10px] font-bold text-primary uppercase ml-1">Nome da Nova Categoria</label>
-                      <input
-                        required
-                        type="text"
-                        placeholder="Ex: Elétrica"
-                        className="w-full px-4 py-3 bg-primary/5 border border-primary/20 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all text-sm"
-                        value={newEntry.novaCategoria}
-                        onChange={e => setNewEntry({ ...newEntry, novaCategoria: e.target.value })}
-                      />
-                    </div>
-                  )}
-                  {editingId && (
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Status</label>
-                      <select
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all text-sm"
-                        value={newEntry.status}
-                        onChange={e => setNewEntry({ ...newEntry, status: e.target.value as any })}
-                      >
-                        <option value="Pendente">Pendente</option>
-                        <option value="Resolvido">Resolvido</option>
-                      </select>
-                    </div>
-                  )}
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Descrição</label>
+
+                {isNovaCategoria && (
+                  <div className="space-y-1.5 animate-in slide-in-from-top-2 duration-200">
+                    <label className="text-[10px] font-black text-primary uppercase tracking-widest ml-1">Nome da Nova Categoria</label>
+                    <input
+                      required
+                      type="text"
+                      placeholder="Ex: Elétrica"
+                      className="w-full px-5 py-4 bg-primary/5 border border-primary/20 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all text-sm font-bold"
+                      value={newEntry.novaCategoria}
+                      onChange={e => setNewEntry({ ...newEntry, novaCategoria: e.target.value })}
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Descrição Detalhada</label>
                   <textarea
                     required
-                    rows={4}
-                    placeholder="Descreva o ocorrido com detalhes..."
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white resize-none transition-all"
+                    rows={8}
+                    placeholder="Descreva o ocorrido com o máximo de detalhes para facilitar o acompanhamento..."
+                    className="w-full px-6 py-5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[24px] outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-base leading-relaxed resize-none transition-all"
                     value={newEntry.descricao}
                     onChange={e => setNewEntry({ ...newEntry, descricao: e.target.value })}
                   />
                 </div>
+
+                {editingId && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mudar Status</label>
+                      <select
+                        className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white transition-all text-sm font-bold"
+                        value={newEntry.status}
+                        onChange={e => setNewEntry({ ...newEntry, status: e.target.value as any })}
+                      >
+                        <option value="Pendente">Ainda Pendente</option>
+                        <option value="Resolvido">Resolvido / Concluído</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
                 {newEntry.status === 'Resolvido' && (
-                  <div className="space-y-1 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <label className="text-[10px] font-bold text-emerald-500 uppercase ml-1">Solução Efetivada</label>
+                  <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest ml-1">Solução Aplicada</label>
                     <textarea
                       required
-                      rows={3}
-                      placeholder="Qual foi a solução aplicada?"
-                      className="w-full px-4 py-3 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 dark:text-white resize-none transition-all"
+                      rows={4}
+                      placeholder="Descreva como o problema foi resolvido..."
+                      className="w-full px-6 py-5 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-[24px] outline-none focus:ring-2 focus:ring-emerald-500/20 dark:text-white text-base leading-relaxed resize-none transition-all"
                       value={newEntry.solucao}
                       onChange={e => setNewEntry({ ...newEntry, solucao: e.target.value })}
                     />
                   </div>
                 )}
-                <button type="submit" className="w-full py-4 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-                  {editingId ? 'Salvar Alterações' : 'Registrar Agora'}
-                </button>
+
+                <div className="pt-2 flex gap-4">
+                  <button type="button" onClick={handleCancel} className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-500 font-black rounded-2xl text-xs uppercase tracking-[0.2em] transition-all hover:bg-slate-200 dark:hover:bg-slate-700">
+                    Cancelar
+                  </button>
+                  <button type="submit" className="flex-[2] py-4 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-[0.2em]">
+                    {editingId ? 'Salvar Alterações' : 'Registrar Ocorrência'}
+                  </button>
+                </div>
               </form>
             </div>
           </div>
         ) : null}
 
-        {/* Lista Coluna Direita */}
-        <div className={`${showForm ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-6`}>
+        {/* Lista Coluna Direita - Agora distribui colunas proporcionalmente */}
+        <div className={`${showForm ? 'lg:col-span-5' : 'lg:col-span-12'} space-y-6`}>
           {filteredEntries.length > 0 ? (
             filteredEntries.map((entry) => (
               <div
@@ -405,14 +424,16 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
               </div>
             ))
           ) : (
-            <div className="text-center py-20 bg-white dark:bg-[#1d222a] rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
-              <span className="material-symbols-outlined text-6xl text-slate-200 mb-4">auto_stories</span>
-              <p className="text-slate-500 font-bold uppercase tracking-widest">Nenhuma Ocorrência Registrada</p>
+            <div className={`text-center flex flex-col items-center justify-center bg-white dark:bg-[#1d222a] rounded-[32px] border border-dashed border-slate-300 dark:border-slate-800 ${showForm ? 'py-12' : 'py-32'}`}>
+              <div className="size-20 rounded-full bg-slate-50 dark:bg-slate-900/50 flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-4xl text-slate-200 dark:text-slate-800">auto_stories</span>
+              </div>
+              <p className="text-slate-500 dark:text-slate-600 font-black uppercase tracking-[0.2em] text-xs">Nenhuma Ocorrência Hoje</p>
               <button
                 onClick={() => setShowForm(true)}
-                className="mt-4 text-primary font-bold text-sm hover:underline"
+                className="mt-4 text-primary font-black text-[10px] uppercase tracking-widest hover:underline"
               >
-                Clique aqui para começar o registro de hoje
+                Clique aqui para começar o registro
               </button>
             </div>
           )}
