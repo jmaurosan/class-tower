@@ -160,14 +160,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
       </div>
 
       {/* Layout principal: Lembretes + Ações Rápidas */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={`grid grid-cols-1 ${user.role === 'admin' ? 'lg:grid-cols-3' : 'lg:grid-cols-1 max-w-4xl mx-auto w-full'} gap-6`}>
         {/* Lembretes ocupa 2/3 */}
-        <div className="lg:col-span-2">
-          <Lembretes />
-        </div>
+        {user.role === 'admin' && (
+          <div className="lg:col-span-2">
+            <Lembretes />
+          </div>
+        )}
 
-        {/* Ações Rápidas ocupa 1/3 */}
-        <div className="space-y-4">
+        {/* Ações Rápidas ocupa 1/3 (ou total se não for admin) */}
+        <div className="space-y-4 w-full">
           <div className="bg-white dark:bg-[#1d222a] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
             <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-primary text-base">bolt</span>
