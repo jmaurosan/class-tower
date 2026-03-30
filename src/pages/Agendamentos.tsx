@@ -134,6 +134,19 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
 
     const isStaff = user.role === 'admin' || user.role === 'atendente';
 
+    // Verificar se já existe evento no mesmo horário
+    const conflitoHorario = agendamentos.find(
+      a => a.data === formData.data &&
+           a.hora === formData.hora &&
+           a.id !== editingId &&
+           a.status !== 'Cancelado'
+    );
+
+    if (conflitoHorario) {
+      showToast(`Já existe um evento (${conflitoHorario.titulo}) marcado para este horário.`, 'error');
+      return;
+    }
+
     const validationError = validateScheduling(formData.data, formData.hora, formData.tipo);
     if (validationError && !isStaff) {
       showToast(validationError, 'error');
@@ -159,22 +172,47 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
         }, user.id, user.name);
       }
 
-      if (formData.tipo === 'Mudança') {
-        const agora = new Date();
-        const dataFormatada = new Date(formData.data + 'T00:00:00').toLocaleDateString('pt-BR');
-
-        // Note: Avisos creation still using direct supabase for now as it's a side effect, 
-        // but could also be moved to a service.
+        // Insert into Avisos
         const { supabase } = await import('../services/supabase');
-        await supabase.from('avisos').insert([{
-          titulo: `🚚 Nova Mudança Agendada - Unidade ${user.sala_numero || user.name}`,
-          conteudo: `Uma mudança foi agendada para o dia ${dataFormatada} às ${formData.hora}.\nLocal: ${formData.local}\nResponsável: ${user.name}`,
-          prioridade: 'Media',
-          data: agora.toISOString().split('T')[0],
-          hora: agora.toTimeString().split(' ')[0].substring(0, 5),
-          criado_por: user.id
-        }]);
-      }
+        
+        if (formData.tipo === 'Mudança') {
+          const agora = new Date();
+          const dataFormatada = new Date(formData.data + 'T00:00:00').toLocaleDateString('pt-BR');
+
+          await supabase.from('avisos').insert([{
+            titulo: `🚚 Nova Mudança Agendada - Unidade ${user.sala_numero || user.name}`,
+            conteudo: `Uma mudança foi agendada para o dia ${dataFormatada} às ${formData.hora}.\nLocal: ${formData.local}\nResponsável: ${user.name}`,
+            prioridade: 'Media',
+            data: agora.toISOString().split('T')[0],
+            hora: agora.toTimeString().split(' ')[0].substring(0, 5),
+            criado_por: user.id
+          }]);
+        } else if (formData.tipo === 'Autorização de Acesso') {
+          const agora = new Date();
+          const dataFormatada = new Date(formData.data + 'T00:00:00').toLocaleDateString('pt-BR');
+          
+          // Trigger Aviso (Urgent)
+          await supabase.from('avisos').insert([{
+            titulo: `🔑 Autorização de Acesso - Unidade ${user.sala_numero || user.name}`,
+            conteudo: `A unidade autorizou a entrada de:\n\n${formData.local}\n\nMotivo/Empresa: ${formData.titulo}\nData Prevista: ${dataFormatada} às ${formData.hora}`,
+            prioridade: 'Alta',
+            data: agora.toISOString().split('T')[0],
+            hora: agora.toTimeString().split(' ')[0].substring(0, 5),
+            criado_por: user.id
+          }]);
+
+          // Insert into Diario de Bordo (Permanent Audit Log for security)
+          await supabase.from('diario').insert([{
+            data: agora.toISOString().split('T')[0],
+            hora: agora.toTimeString().split(' ')[0].substring(0, 5),
+            titulo: `Autorização de Acesso: ${formData.titulo} (Unidade ${user.sala_numero || user.name})`,
+            descricao: `Pessoas autorizadas pela unidade:\n${formData.local}\n\nPrevisão de chegada: ${dataFormatada} às ${formData.hora}`,
+            categoria: 'Segurança',
+            usuario: user.name,
+            sala_id: user.sala_numero || formData.sala_id,
+            status: 'Resolvido'
+          }]);
+        }
 
       showToast(editingId ? 'Agendamento atualizado com sucesso!' : 'Agendamento realizado com sucesso!');
       setFormData({
@@ -265,6 +303,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
       case 'Manutenção': return 'build';
       case 'Reserva': return 'celebration';
       case 'Reunião': return 'groups';
+      case 'Autorização de Acesso': return 'person_check';
     }
   };
 
@@ -328,7 +367,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                 )}
               </div>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <input required type="text" placeholder="O que será agendado?" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white" value={formData.titulo} onChange={e => setFormData({ ...formData, titulo: e.target.value })} />
+                <input required type="text" placeholder={formData.tipo === 'Autorização de Acesso' ? "Motivo ou Empresa (Ex: Equipe de Pintura, Vivo)" : "O que será agendado?"} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white" value={formData.titulo} onChange={e => setFormData({ ...formData, titulo: e.target.value })} />
                 <div className="grid grid-cols-2 gap-2">
                   <input required type="date" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-xs" value={formData.data} onChange={e => setFormData({ ...formData, data: e.target.value })} />
                   <input required type="time" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-xs" value={formData.hora} onChange={e => setFormData({ ...formData, hora: e.target.value })} />
@@ -344,12 +383,12 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                   />
                 )}
                 <select
-                  className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white ${user.role === 'sala' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white ${user.role === 'sala' ? '' : ''}`}
                   value={formData.tipo}
                   onChange={e => setFormData({ ...formData, tipo: e.target.value as any })}
-                  disabled={user.role === 'sala'}
                 >
                   <option>Mudança</option>
+                  <option>Autorização de Acesso</option>
                   {(user.role !== 'sala') && (
                     <>
                       <option>Manutenção</option>
@@ -358,7 +397,11 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                     </>
                   )}
                 </select>
-                <input required disabled={editingId ? !(user.role === 'admin' || user.role === 'atendente' || formData.sala_id === user.sala_numero) : false} type="text" placeholder="Local/Ambiente" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white disabled:opacity-50" value={formData.local} onChange={e => setFormData({ ...formData, local: e.target.value })} />
+                {formData.tipo === 'Autorização de Acesso' ? (
+                  <textarea required disabled={editingId ? !(user.role === 'admin' || user.role === 'atendente' || formData.sala_id === user.sala_numero) : false} placeholder="Nomes e CPFs dos autorizados (um por linha)&#10;Ex: João Silva - 123.456.789-00" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white disabled:opacity-50 min-h-[100px] resize-none" value={formData.local} onChange={e => setFormData({ ...formData, local: e.target.value })} />
+                ) : (
+                  <input required disabled={editingId ? !(user.role === 'admin' || user.role === 'atendente' || formData.sala_id === user.sala_numero) : false} type="text" placeholder="Local/Ambiente" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white disabled:opacity-50" value={formData.local} onChange={e => setFormData({ ...formData, local: e.target.value })} />
+                )}
                 {( !editingId || user.role === 'admin' || user.role === 'atendente' || formData.sala_id === user.sala_numero ) && (
                   <button type="submit" className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-sm">
                     {editingId ? 'Salvar Alterações' : 'Confirmar Agendamento'}
@@ -413,6 +456,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                 setShowForm(true);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
+              onBlockedClick={(reason) => showToast(`Agendamento bloqueado: ${reason}`, 'warning')}
               onSelectEvent={handleSelectEvent}
             />
           ) : (

@@ -8,11 +8,12 @@ interface CalendarViewProps {
   rules?: CalendarRule[];
   onSelectEvent?: (event: Agendamento) => void;
   onDateClick?: (date: string) => void;
+  onBlockedClick?: (reason: string) => void;
 }
 
 type ViewMode = 'month' | 'week' | 'day';
 
-const CalendarView: React.FC<CalendarViewProps> = ({ events, rules = [], onSelectEvent, onDateClick }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({ events, rules = [], onSelectEvent, onDateClick, onBlockedClick }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
 
@@ -39,7 +40,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, rules = [], onSelec
   const getDayCellClass = (dateStr: string, isToday: boolean): string => {
     const rule = getRuleForDate(dateStr);
     if (rule?.is_blocked) {
-      return 'bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-800/50 cursor-not-allowed';
+      return 'bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-800/50 cursor-pointer hover:bg-red-100/50';
     }
     if (rule && !rule.is_blocked) {
       return 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/30 cursor-pointer hover:bg-amber-100/50';
@@ -71,10 +72,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, rules = [], onSelec
     );
   };
 
-  // Handler de clique que respeita se o dia está bloqueado
+  // Handler de clique para a data
   const handleDateClick = (dateStr: string) => {
     const rule = getRuleForDate(dateStr);
-    if (rule?.is_blocked) return; // Dia bloqueado — não abre agendamento
+    if (rule?.is_blocked) {
+      onBlockedClick?.(rule.description);
+      return; // Impede a abertura do formulário
+    }
     onDateClick?.(dateStr);
   };
 
@@ -160,7 +164,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, rules = [], onSelec
           key={i}
           onClick={() => handleDateClick(dateStr)}
           title={rule?.is_blocked ? `🔴 ${rule.description} — Bloqueado` : undefined}
-          className={`flex-1 min-w-[120px] border-r border-slate-200 dark:border-slate-800 min-h-[500px] transition-colors ${rule?.is_blocked ? 'bg-red-50/50 dark:bg-red-950/20 cursor-not-allowed' : 'bg-white dark:bg-[#1d222a] cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50'}`}
+          className={`flex-1 min-w-[120px] border-r border-slate-200 dark:border-slate-800 min-h-[500px] transition-colors ${rule?.is_blocked ? 'bg-red-50/50 dark:bg-red-950/20 cursor-pointer hover:bg-red-100/30' : 'bg-white dark:bg-[#1d222a] cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50'}`}
         >
           <div className={`p-4 text-center border-b border-slate-100 dark:border-slate-800 ${isToday ? 'bg-primary/5' : rule?.is_blocked ? 'bg-red-500/10' : ''}`}>
             <p className={`text-[10px] font-black uppercase ${rule?.is_blocked ? 'text-red-400' : 'text-slate-400'}`}>{date.toLocaleDateString('pt-BR', { weekday: 'short' })}</p>

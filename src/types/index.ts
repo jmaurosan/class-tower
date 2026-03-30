@@ -119,7 +119,7 @@ export interface Agendamento {
   hora: string;
   titulo: string;
   local: string;
-  tipo: 'Mudança' | 'Manutenção' | 'Reserva' | 'Reunião';
+  tipo: 'Mudança' | 'Manutenção' | 'Reserva' | 'Reunião' | 'Autorização de Acesso';
   status: 'Confirmado' | 'Pendente' | 'Cancelado';
   sala_id: string;
 }
