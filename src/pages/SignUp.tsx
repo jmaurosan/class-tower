@@ -113,12 +113,13 @@ const SignUp: React.FC<SignUpProps> = ({ isDarkMode, toggleDarkMode }) => {
       // 5. Sucesso!
       setSuccess(
         'Cadastro realizado com sucesso! ' +
-        'Você será redirecionado para a tela de login em 3 segundos...'
+        'Por favor, verifique sua caixa de e-mail para confirmar seu acesso. ' +
+        'Você será redirecionado para a tela de login em instantes...'
       );
 
       setTimeout(() => {
         window.location.href = '/';
-      }, 3000);
+      }, 5000);
 
     } catch (err: any) {
       console.error('Erro no cadastro:', err);
