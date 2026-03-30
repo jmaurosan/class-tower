@@ -2,8 +2,9 @@
 import React, { useRef, useState } from 'react';
 import PasswordChecklist from '../components/ui/PasswordChecklist';
 import { supabase } from '../services/supabase';
-import { User, UserRole } from '../types';
+import { Agendamento, User, UserRole } from '../types';
 import { isPasswordValid } from '../utils/validators';
+import { agendamentosService } from '../services/agendamentosService';
 
 interface SettingsProps {
   user: User;
@@ -23,7 +24,26 @@ const Settings: React.FC<SettingsProps> = ({ user, onUpdateUser }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
+  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+  const [loadingAgendamentos, setLoadingAgendamentos] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fetchAgendamentos = async () => {
+    if (user.role !== 'admin' && user.role !== 'atendente') return;
+    try {
+      setLoadingAgendamentos(true);
+      const data = await agendamentosService.getAll();
+      setAgendamentos(data.filter(a => a.status !== 'Cancelado'));
+    } catch (err) {
+      console.error('Erro ao buscar agendamentos:', err);
+    } finally {
+      setLoadingAgendamentos(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchAgendamentos();
+  }, []);
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -227,7 +247,60 @@ const Settings: React.FC<SettingsProps> = ({ user, onUpdateUser }) => {
             Alterar Senha de Acesso
           </button>
         </div>
+
+        {/* SEÇÃO DE AGENDAMENTOS (PARA PERFIL) */}
+        {(user.role === 'admin' || user.role === 'atendente') && (
+          <>
+            <div className="md:col-span-1 space-y-2 pt-4">
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Agendamentos do Prédio</h4>
+              <p className="text-xs text-slate-500">Agenda completa de mudanças e serviços para consulta rápida.</p>
+            </div>
+            <div className="md:col-span-2 bg-white dark:bg-[#1d222a] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              {loadingAgendamentos ? (
+                <div className="flex justify-center py-8">
+                  <div className="size-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                </div>
+              ) : agendamentos.length > 0 ? (
+                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                  {agendamentos.map((item) => (
+                    <div key={item.id} className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-800/50">
+                      <div className="flex flex-col items-center justify-center min-w-[50px] py-1 border-r border-slate-200 dark:border-slate-800">
+                        <span className="text-[9px] font-black text-slate-400 uppercase">{new Date(item.data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short' })}</span>
+                        <span className="text-base font-black text-slate-900 dark:text-white">{new Date(item.data + 'T00:00:00').getDate()}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-[9px] font-bold text-primary uppercase tracking-wider">{item.tipo}</span>
+                          {item.sala_id && <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">• Unid {item.sala_id}</span>}
+                        </div>
+                        <h6 className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.titulo}</h6>
+                        <p className="text-[10px] text-slate-500 flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[12px]">schedule</span> {item.hora} • {item.local}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 opacity-50">
+                  <span className="material-symbols-outlined text-3xl mb-2 text-slate-300">calendar_today</span>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nenhum agendamento ativo</p>
+                </div>
+              )}
+              <div className="pt-2">
+                <button 
+                  onClick={fetchAgendamentos}
+                  className="text-[10px] font-bold text-primary flex items-center gap-1 hover:underline"
+                >
+                  <span className="material-symbols-outlined text-sm">refresh</span>
+                  Atualizar Agenda
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
+
 
       <div className="flex justify-end gap-3 pt-4">
         <button onClick={() => setLocalUser(user)} className="px-6 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">Descartar</button>

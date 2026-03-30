@@ -159,12 +159,12 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
         <div className="p-4 border-t border-slate-100 dark:border-slate-800">
           <div
             onClick={() => {
-              if (user.role === 'admin') {
+              if (user.role === 'admin' || user.role === 'atendente') {
                 setCurrentPage('settings');
                 onClose?.();
               }
             }}
-            className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${user.role === 'admin'
+            className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${user.role === 'admin' || user.role === 'atendente'
               ? 'hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer'
               : 'cursor-default'
               }`}

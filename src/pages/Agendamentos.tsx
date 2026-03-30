@@ -11,6 +11,7 @@ interface AgendamentosProps {
 }
 
 const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
+  const canCRUD = user.role !== 'atendente'; // Atendente não pode fazer CRUD
   const { showToast } = useToast();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [rules, setRules] = useState<CalendarRule[]>([]);
@@ -132,9 +133,15 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
     e.preventDefault();
 
     const isStaff = user.role === 'admin' || user.role === 'atendente';
+
     const validationError = validateScheduling(formData.data, formData.hora, formData.tipo);
     if (validationError && !isStaff) {
       showToast(validationError, 'error');
+      return;
+    }
+
+    if (!canCRUD) {
+      showToast('Atendentes não possuem permissão para realizar agendamentos.', 'error');
       return;
     }
 
@@ -203,6 +210,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
 
 
   const handleCancel = async (id: string) => {
+    if (!canCRUD) return;
     if (!confirm('Deseja cancelar este agendamento?')) return;
     try {
       await agendamentosService.updateStatus(id, 'Cancelado', user.id, user.name);
@@ -215,6 +223,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
   };
 
   const handleDeleteClick = (id: string) => {
+    if (!canCRUD) return;
     setIdToDelete(id);
     setDeleteReason('');
     setErrorMessage(null);
@@ -262,13 +271,15 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
   return (
     <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-3">
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
-        >
-          <span className="material-symbols-outlined text-xl">{showForm ? 'close' : 'add_circle'}</span>
-          {showForm ? 'Cancelar' : 'Novo Evento'}
-        </button>
+        {canCRUD && (
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all text-sm"
+          >
+            <span className="material-symbols-outlined text-xl">{showForm ? 'close' : 'add_circle'}</span>
+            {showForm ? 'Cancelar' : 'Novo Evento'}
+          </button>
+        )}
 
         <div className="flex items-center gap-2">
           {/* Toggle de Visualização */}
@@ -281,7 +292,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
             </button>
           </div>
 
-          {(user.role === 'admin' || user.role === 'atendente') && (
+          {(user.role === 'admin') && (
             <button
               onClick={() => setShowRulesModal(!showRulesModal)}
               className={`size-10 flex items-center justify-center rounded-xl border transition-all shrink-0 ${showRulesModal ? 'bg-slate-800 text-white border-slate-800' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800'}`}
@@ -434,13 +445,13 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                   </div>
 
                   <div className="opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0 mt-2 md:mt-0">
-                    {(user.role === 'admin' || user.role === 'atendente' || item.sala_id === user.sala_numero) && item.status !== 'Cancelado' && (
+                    {canCRUD && (user.role === 'admin' || item.sala_id === user.sala_numero) && item.status !== 'Cancelado' && (
                       <button onClick={() => handleSelectEvent(item)} className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Editar"><span className="material-symbols-outlined text-xl">edit</span></button>
                     )}
-                    {(user.role === 'admin' || user.role === 'atendente' || item.sala_id === user.sala_numero) && item.status !== 'Cancelado' && (
+                    {canCRUD && (user.role === 'admin' || item.sala_id === user.sala_numero) && item.status !== 'Cancelado' && (
                       <button onClick={() => handleCancel(item.id)} className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors" title="Cancelar"><span className="material-symbols-outlined text-xl">event_busy</span></button>
                     )}
-                    {(user.role === 'admin' || user.role === 'atendente' || item.sala_id === user.sala_numero) && (
+                    {canCRUD && (user.role === 'admin' || item.sala_id === user.sala_numero) && (
                       <button onClick={() => handleDeleteClick(item.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Excluir"><span className="material-symbols-outlined text-xl">delete</span></button>
                     )}
                   </div>

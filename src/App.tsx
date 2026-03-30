@@ -58,7 +58,7 @@ const App: React.FC = () => {
 
   const defaultPermissions: Record<UserRole, Page[]> = {
     admin: ['dashboard', 'encomendas', 'vistorias', 'vencimentos', 'agendamentos', 'diario', 'documentos', 'empresas', 'settings', 'support', 'salas', 'audit-logs', 'avisos', 'usuarios'],
-    atendente: ['encomendas', 'agendamentos', 'diario', 'salas', 'empresas', 'support', 'avisos'],
+    atendente: ['encomendas', 'agendamentos', 'diario', 'salas', 'empresas', 'support', 'avisos', 'settings'],
     sala: ['encomendas', 'agendamentos', 'documentos', 'empresas', 'support', 'avisos']
   };
 
