@@ -17,7 +17,7 @@ export interface User {
 export interface DocumentoAnexo {
   id: string;
   nome: string;
-  categoria: 'Atas' | 'Regimento Interno' | 'Plantas' | 'Seguros' | 'Certidões' | 'Outros';
+  categoria: 'Atas' | 'Regimento Interno' | 'Plantas' | 'Seguros' | 'Certidões' | 'Outros' | 'Autorizações';
   dataUpload: string;
   tamanho: string;
   tipo: string;

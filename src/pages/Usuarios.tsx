@@ -507,7 +507,9 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
                     { id: 'diario', label: 'Ocorrências' },
                     { id: 'documentos', label: 'Documentos' },
                     { id: 'salas', label: 'Salas' },
-                    { id: 'empresas', label: 'Prestadores' }
+                    { id: 'empresas', label: 'Prestadores' },
+                    { id: 'agendamentos', label: 'Agendamentos' },
+                    { id: 'vencimentos', label: 'Vencimentos' }
                   ].map(mod => (
                     <label key={mod.id} className="flex items-center gap-2 cursor-pointer group">
                       <div className="relative flex items-center">

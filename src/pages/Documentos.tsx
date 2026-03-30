@@ -74,7 +74,7 @@ const Documentos: React.FC<DocumentosProps> = ({ user }) => {
     }
   };
 
-  const categorias: string[] = ['Todos', 'Atas', 'Regimento Interno', 'Certidões', 'Outros'];
+  const categorias: string[] = ['Todos', 'Atas', 'Regimento Interno', 'Certidões', 'Autorizações', 'Outros'];
 
   const filteredDocs = filter === 'Todos'
     ? documentos

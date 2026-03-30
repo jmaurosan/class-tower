@@ -4,6 +4,7 @@ import CalendarView from '../components/CalendarView';
 import { useToast } from '../context/ToastContext';
 import { agendamentosService } from '../services/agendamentosService';
 import { supabase } from '../services/supabase';
+import { documentsService } from '../services/documentsService';
 import { Agendamento, User } from '../types';
 
 interface AgendamentosProps {
@@ -20,6 +21,8 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
   const [viewType, setViewType] = useState<'list' | 'calendar'>('calendar');
 
   const [showRulesModal, setShowRulesModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const [formData, setFormData] = useState({
     titulo: '',
@@ -159,6 +162,25 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
     }
 
     try {
+      setIsUploading(true);
+
+      let uploadUrl = '';
+      // Apenas fazemos upload na criação
+      if (formData.tipo === 'Mudança' && selectedFile && !editingId) {
+        const docInfo = {
+          nome: `Autorização Mudança - Unidade ${user.sala_numero || formData.sala_id || user.name}`,
+          categoria: 'Autorizações'
+        };
+        const resultadoUpload: any = await documentsService.upload(selectedFile, docInfo);
+        uploadUrl = resultadoUpload.url;
+      }
+
+      // Se editando manter o anexo anterior, se nao pegar o novo
+      const isEditingWithAnexo = editingId && formData.local.includes(' | ANEXO: ');
+      const localParaSalvar = uploadUrl 
+        ? `${formData.local} | ANEXO: ${uploadUrl}` 
+        : formData.local;
+
       if (editingId) {
         await agendamentosService.update(editingId, {
           ...formData,
@@ -166,6 +188,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
       } else {
         await agendamentosService.create({
           ...formData,
+          local: localParaSalvar,
           status: 'Pendente',
           sala_id: (user.role === 'admin' || user.role === 'atendente') ? formData.sala_id : (user.sala_numero || '0000'),
           user_id: user.id
@@ -175,19 +198,32 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
         // Insert into Avisos
         const { supabase } = await import('../services/supabase');
         
-        if (formData.tipo === 'Mudança') {
+        if (formData.tipo === 'Mudança' && !editingId) {
           const agora = new Date();
           const dataFormatada = new Date(formData.data + 'T00:00:00').toLocaleDateString('pt-BR');
 
           await supabase.from('avisos').insert([{
-            titulo: `🚚 Nova Mudança Agendada - Unidade ${user.sala_numero || user.name}`,
-            conteudo: `Uma mudança foi agendada para o dia ${dataFormatada} às ${formData.hora}.\nLocal: ${formData.local}\nResponsável: ${user.name}`,
+            titulo: `🚚 Nova Mudança Agendada - Unidade ${user.sala_numero || formData.sala_id || user.name}`,
+            conteudo: `Uma mudança foi agendada para o dia ${dataFormatada} às ${formData.hora}.\nLocal: ${formData.local}\nResponsável: ${user.name}${uploadUrl ? `\n\n📄 Documento de Autorização Anexo:\n${uploadUrl}` : ''}`,
             prioridade: 'Media',
             data: agora.toISOString().split('T')[0],
             hora: agora.toTimeString().split(' ')[0].substring(0, 5),
             criado_por: user.id
           }]);
-        } else if (formData.tipo === 'Autorização de Acesso') {
+          
+          if (uploadUrl) {
+            await supabase.from('diario').insert([{
+              data: agora.toISOString().split('T')[0],
+              hora: agora.toTimeString().split(' ')[0].substring(0, 5),
+              titulo: `Anexo de Autorização (Mudança) - Unidade ${user.sala_numero || formData.sala_id || user.name}`,
+              descricao: `O condômino anexou o documento formal de permissão.\nLink de acesso:\n${uploadUrl}`,
+              categoria: 'Segurança',
+              usuario: user.name,
+              sala_id: user.sala_numero || formData.sala_id,
+              status: 'Resolvido'
+            }]);
+          }
+        } else if (formData.tipo === 'Autorização de Acesso' && !editingId) {
           const agora = new Date();
           const dataFormatada = new Date(formData.data + 'T00:00:00').toLocaleDateString('pt-BR');
           
@@ -215,6 +251,8 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
         }
 
       showToast(editingId ? 'Agendamento atualizado com sucesso!' : 'Agendamento realizado com sucesso!');
+      setSelectedFile(null);
+      setIsUploading(false);
       setFormData({
         titulo: '',
         data: '',
@@ -228,6 +266,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
       fetchData();
     } catch (err: any) {
       console.error('Erro ao salvar agendamento:', err);
+      setIsUploading(false);
       showToast(err.message || 'Erro ao realizar agendamento', 'error');
     }
   };
@@ -400,11 +439,24 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                 {formData.tipo === 'Autorização de Acesso' ? (
                   <textarea required disabled={editingId ? !(user.role === 'admin' || user.role === 'atendente' || formData.sala_id === user.sala_numero) : false} placeholder="Nomes e CPFs dos autorizados (um por linha)&#10;Ex: João Silva - 123.456.789-00" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white disabled:opacity-50 min-h-[100px] resize-none" value={formData.local} onChange={e => setFormData({ ...formData, local: e.target.value })} />
                 ) : (
-                  <input required disabled={editingId ? !(user.role === 'admin' || user.role === 'atendente' || formData.sala_id === user.sala_numero) : false} type="text" placeholder="Local/Ambiente" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white disabled:opacity-50" value={formData.local} onChange={e => setFormData({ ...formData, local: e.target.value })} />
+                  <>
+                    <input required disabled={editingId ? !(user.role === 'admin' || user.role === 'atendente' || formData.sala_id === user.sala_numero) : false} type="text" placeholder="Local/Ambiente" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white disabled:opacity-50" value={formData.local.split(' | ANEXO: ')[0]} onChange={e => setFormData({ ...formData, local: formData.local.includes(' | ANEXO: ') ? `${e.target.value} | ANEXO: ${formData.local.split(' | ANEXO: ')[1]}` : e.target.value })} />
+                    {formData.tipo === 'Mudança' && !editingId && (
+                      <div className="space-y-1 mb-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Anexar Autorização (Pdf/Foto) <span className="opacity-50 font-normal lowercase">(Opcional)</span></label>
+                        <input
+                          type="file"
+                          accept=".pdf,image/*"
+                          onChange={e => setSelectedFile(e.target.files?.[0] || null)}
+                          className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-all cursor-pointer"
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
                 {( !editingId || user.role === 'admin' || user.role === 'atendente' || formData.sala_id === user.sala_numero ) && (
-                  <button type="submit" className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-sm">
-                    {editingId ? 'Salvar Alterações' : 'Confirmar Agendamento'}
+                  <button type="submit" disabled={isUploading} className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-sm flex items-center justify-center disabled:opacity-75 disabled:cursor-not-allowed">
+                    {isUploading ? <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : (editingId ? 'Salvar Alterações' : 'Confirmar Agendamento')}
                   </button>
                 )}
                 {editingId && !(user.role === 'admin' || user.role === 'atendente' || formData.sala_id === user.sala_numero) && (
@@ -482,8 +534,16 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                     <h4 className="text-base md:text-lg font-extrabold text-slate-900 dark:text-white leading-tight">{item.titulo}</h4>
                     <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-[11px] md:text-xs">
                       <span className="material-symbols-outlined text-sm">location_on</span>
-                      {item.local}
+                      {item.local.includes(' | ANEXO: ') ? item.local.split(' | ANEXO: ')[0] : item.local}
                     </div>
+                    {item.local.includes(' | ANEXO: ') && (
+                      <div className="mt-2 text-left">
+                        <a href={item.local.split(' | ANEXO: ')[1]} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors border border-blue-100 dark:border-blue-900/30">
+                          <span className="material-symbols-outlined text-sm">cloud_download</span>
+                          Baixar Autorização
+                        </a>
+                      </div>
+                    )}
                   </div>
 
                   <div className="opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0 mt-2 md:mt-0">
