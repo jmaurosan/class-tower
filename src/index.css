@@ -6,11 +6,13 @@
   --primary: #0f756f;
 }
 
-html, body {
-  margin: 0;
-  overflow-x: hidden;
-  position: relative;
-  width: 100%;
+html,
+body {
+  height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
+  position: fixed;
+  overscroll-behavior-y: none;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   -webkit-font-smoothing: antialiased;

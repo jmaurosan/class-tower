@@ -434,7 +434,7 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
               <button onClick={handleCloseModal} className="text-slate-400 hover:text-slate-600"><span className="material-symbols-outlined">close</span></button>
             </div>
 
-            <form onSubmit={handleAdd} className="p-8 space-y-6 overflow-y-auto custom-scrollbar">
+            <form onSubmit={handleAdd} className="p-5 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Unidade / Sala</label>

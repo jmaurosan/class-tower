@@ -133,7 +133,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, rules = [], onSelec
     return (
       <div className="grid grid-cols-7 border-l border-t border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
         {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
-          <div key={d} className="p-3 text-center text-[10px] font-black uppercase text-slate-400 border-b border-r border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+          <div key={d} className="p-1 md:p-3 text-center text-[8px] md:text-[10px] font-black uppercase text-slate-400 border-b border-r border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
             {d}
           </div>
         ))}
@@ -278,20 +278,20 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, rules = [], onSelec
                 ? currentDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })
                 : currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
             </h3>
-            <button onClick={() => navigate(1)} className="p-1.5 md:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0">
+            <button onClick={() => navigate(1)} className="p-1 md:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0">
               <span className="material-symbols-outlined text-xl md:text-2xl text-slate-600 dark:text-slate-300">chevron_right</span>
             </button>
           </div>
 
-          <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl">
+          <div className="flex bg-slate-100 dark:bg-slate-900 p-0.5 md:p-1 rounded-xl shrink-0">
             {(['month', 'week', 'day'] as ViewMode[]).map(mode => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode)}
-                className={`px-3 md:px-4 py-1.5 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === mode ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                className={`px-2 md:px-4 py-1.5 rounded-lg text-[8px] md:text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === mode ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                   }`}
               >
-                {mode === 'month' ? 'Mês' : mode === 'week' ? 'Semana' : 'Dia'}
+                {mode === 'month' ? 'Mês' : mode === 'week' ? 'Sem' : 'Dia'}
               </button>
             ))}
           </div>

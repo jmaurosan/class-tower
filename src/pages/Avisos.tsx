@@ -240,7 +240,7 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
             </div>
           ) : filteredAvisos.length > 0 ? (
             filteredAvisos.map((aviso) => (
-              <div key={aviso.id} className={`group relative bg-white dark:bg-[#1d222a] p-8 md:p-10 rounded-[40px] border transition-all duration-500 ${aviso.status === 'Cancelado' ? 'border-red-100 dark:border-red-900/30 opacity-60 grayscale-[0.5]' : 'border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl hover:border-primary/20'}`}>
+              <div key={aviso.id} className={`group relative bg-white dark:bg-[#1d222a] p-5 md:p-10 rounded-2xl md:rounded-[40px] border transition-all duration-500 ${aviso.status === 'Cancelado' ? 'border-red-100 dark:border-red-900/30 opacity-60 grayscale-[0.5]' : 'border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl hover:border-primary/20'}`}>
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                   <div className="space-y-5 flex-1">
                     <div className="flex flex-wrap items-center gap-3">

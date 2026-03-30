@@ -78,7 +78,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
   ];
 
   return (
-    <div className="p-6 md:p-8 space-y-6 animate-in fade-in duration-500">
+    <div className="p-4 md:p-8 space-y-6 animate-in fade-in duration-500">
 
       {/* Banner crítico */}
       {criticalDocs.length > 0 && (
@@ -118,7 +118,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
       )}
 
       {/* Boas-vindas */}
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 dark:from-[#1a1f28] dark:to-[#13171e] rounded-2xl p-6 md:p-8 border border-slate-700/50 shadow-xl relative overflow-hidden">
+      <div className="bg-gradient-to-br from-slate-800 to-slate-900 dark:from-[#1a1f28] dark:to-[#13171e] rounded-2xl p-5 md:p-8 border border-slate-700/50 shadow-xl relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-white/[0.02] pointer-events-none" />
         <div className="absolute -top-10 -right-10 size-48 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">

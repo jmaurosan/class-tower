@@ -264,7 +264,7 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
       )}
 
       {showForm && (
-        <div className="bg-white dark:bg-[#1d222a] p-8 rounded-2xl border border-primary/20 shadow-2xl animate-in slide-in-from-top duration-300">
+        <div className="bg-white dark:bg-[#1d222a] p-5 md:p-8 rounded-2xl border border-primary/20 shadow-2xl animate-in slide-in-from-top duration-300">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex gap-4 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl w-fit">
               <button
@@ -466,7 +466,7 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
 
       {ratingModalOpen && selectedEmpresa && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setRatingModalOpen(false)}>
-          <div className="bg-white dark:bg-[#1d222a] p-6 rounded-2xl w-full max-w-md space-y-4 shadow-xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+          <div className="bg-white dark:bg-[#1d222a] p-5 md:p-6 rounded-2xl w-full max-w-md space-y-4 shadow-xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
             <div className="text-center">
               <h3 className="text-xl font-black text-slate-900 dark:text-white mb-1">Avaliar Prestador</h3>
               <p className="text-sm text-slate-500 font-medium">{selectedEmpresa.nome}</p>

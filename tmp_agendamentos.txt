@@ -269,8 +269,8 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
   };
 
   return (
-    <div className="p-3 md:p-8 space-y-4 md:space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col gap-2">
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-3">
         {canCRUD && (
           <button
             onClick={() => setShowForm(!showForm)}
@@ -283,11 +283,11 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
 
         <div className="flex items-center gap-2">
           {/* Toggle de Visualização */}
-          <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl flex-1 overflow-hidden">
-            <button onClick={() => setViewType('calendar')} className={`flex-1 flex items-center justify-center gap-1.5 px-2 md:px-3 py-2 rounded-lg text-[10px] md:text-xs font-bold transition-all ${viewType === 'calendar' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500'}`}>
+          <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl flex-1">
+            <button onClick={() => setViewType('calendar')} className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${viewType === 'calendar' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500'}`}>
               <span className="material-symbols-outlined text-lg">calendar_month</span> Calendário
             </button>
-            <button onClick={() => setViewType('list')} className={`flex-1 flex items-center justify-center gap-1.5 px-2 md:px-3 py-2 rounded-lg text-[10px] md:text-xs font-bold transition-all ${viewType === 'list' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500'}`}>
+            <button onClick={() => setViewType('list')} className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${viewType === 'list' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500'}`}>
               <span className="material-symbols-outlined text-lg">view_stream</span> Lista
             </button>
           </div>
@@ -306,9 +306,10 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
 
       {showRulesModal && <CalendarRules user={user} rules={rules} onUpdate={fetchData} />}
 
-      <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6 md:gap-8">
-        {/* Lado Esquerdo: Filtros e Formulário ou Resumo */}
-        <div className="lg:col-span-1 space-y-6 order-1">
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Lado Esquerdo: Filtros e Formulário */}
+        <div className="lg:col-span-1 space-y-6">
           {showForm ? (
             <div className="bg-white dark:bg-[#1d222a] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl animate-in slide-in-from-left duration-300">
               <div className="flex justify-between items-center mb-4">
@@ -402,9 +403,9 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
         </div>
 
         {/* ÁREA DE CONTEÚDO PRINCIPAL (TIMELINE OU CALENDÁRIO) */}
-        <div className="lg:col-span-3 space-y-4 order-2">
+        <div className="lg:col-span-3 space-y-4">
           {viewType === 'calendar' ? (
-            <CalendarView
+          <CalendarView
               events={agendamentos.filter(a => a.status !== 'Cancelado')}
               rules={rules}
               onDateClick={(date) => {
@@ -419,6 +420,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
             <div className="space-y-4">
               {agendamentos.filter(a => a.status !== 'Cancelado').map((item) => (
                 <div key={item.id} className="group flex flex-wrap md:flex-nowrap items-center gap-4 md:gap-6 bg-white dark:bg-[#1d222a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all relative">
+                  {/* ... (rest of the card remains the same) */}
                   <div className="flex flex-col items-center justify-center min-w-[70px] md:min-w-[80px] py-1 md:py-2 border-r border-slate-100 dark:border-slate-800">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{new Date(item.data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short' })}</span>
                     <span className="text-lg md:text-xl font-black text-slate-900 dark:text-white">{new Date(item.data + 'T00:00:00').getDate()}</span>
@@ -466,7 +468,6 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
           )}
         </div>
       </div>
-
       {/* Modal de Confirmação de Exclusão */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4">

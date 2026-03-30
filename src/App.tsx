@@ -216,7 +216,7 @@ const App: React.FC = () => {
   return (
     <ToastProvider>
       <SyncProvider>
-        <div className={`min-h-screen w-full flex overflow-x-hidden bg-slate-50 dark:bg-[#15191e] transition-colors duration-300 font-sans`}>
+        <div className={`min-h-[100dvh] w-full flex overflow-x-hidden bg-slate-50 dark:bg-[#15191e] transition-colors duration-300 font-sans`}>
           <Sidebar
             user={user}
             currentPage={currentPage}
@@ -225,8 +225,8 @@ const App: React.FC = () => {
             onClose={() => setIsSidebarOpen(false)}
           />
 
-          <main className="flex-1 flex flex-col h-screen overflow-hidden">
-            <header className="h-20 bg-white dark:bg-[#1d222a] border-b border-slate-100 dark:border-slate-800 px-8 flex items-center justify-between shrink-0">
+          <main className="flex-1 flex flex-col h-[100dvh] overflow-hidden">
+            <header className="h-20 bg-white dark:bg-[#1d222a] border-b border-slate-100 dark:border-slate-800 px-4 lg:px-8 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setIsSidebarOpen(true)}

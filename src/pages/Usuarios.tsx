@@ -382,7 +382,7 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
       {/* Modal de Criação/Edição */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-[#1d222a] rounded-2xl shadow-2xl max-w-md w-full p-8 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-[#1d222a] rounded-2xl shadow-2xl max-w-md w-full p-5 md:p-8 max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-6">
               {editingUser ? 'Editar Usuário' : 'Novo Usuário'}
             </h2>

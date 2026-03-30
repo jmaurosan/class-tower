@@ -239,7 +239,7 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
         {/* Formulário Coluna Esquerda - Agora ocupa 7/12 colunas em desktop */}
         {showForm ? (
           <div className="lg:col-span-7 animate-in slide-in-from-left duration-300 h-fit sticky top-8">
-            <div className="bg-white dark:bg-[#1d222a] p-8 rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6 ring-1 ring-primary/5">
+            <div className="bg-white dark:bg-[#1d222a] p-5 md:p-8 rounded-2xl md:rounded-[32px] border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6 ring-1 ring-primary/5">
               <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center gap-3">
                   <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
@@ -424,7 +424,7 @@ const DiarioBordo: React.FC<DiarioBordoProps> = ({ user }) => {
               </div>
             ))
           ) : (
-            <div className={`text-center flex flex-col items-center justify-center bg-white dark:bg-[#1d222a] rounded-[32px] border border-dashed border-slate-300 dark:border-slate-800 ${showForm ? 'py-12' : 'py-32'}`}>
+            <div className={`text-center flex flex-col items-center justify-center bg-white dark:bg-[#1d222a] rounded-2xl md:rounded-[32px] border border-dashed border-slate-300 dark:border-slate-800 ${showForm ? 'py-12' : 'py-32'}`}>
               <div className="size-20 rounded-full bg-slate-50 dark:bg-slate-900/50 flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-4xl text-slate-200 dark:text-slate-800">auto_stories</span>
               </div>
