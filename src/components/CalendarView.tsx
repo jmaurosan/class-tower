@@ -8,7 +8,7 @@ interface CalendarViewProps {
   rules?: CalendarRule[];
   onSelectEvent?: (event: Agendamento) => void;
   onDateClick?: (date: string) => void;
-  onBlockedClick?: (reason: string) => void;
+  onBlockedClick?: (rule: CalendarRule) => void;
 }
 
 type ViewMode = 'month' | 'week' | 'day';
@@ -76,7 +76,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, rules = [], onSelec
   const handleDateClick = (dateStr: string) => {
     const rule = getRuleForDate(dateStr);
     if (rule?.is_blocked) {
-      onBlockedClick?.(rule.description);
+      onBlockedClick?.(rule);
       return; // Impede a abertura do formulário
     }
     onDateClick?.(dateStr);

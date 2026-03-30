@@ -21,6 +21,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
   const [viewType, setViewType] = useState<'list' | 'calendar'>('calendar');
 
   const [showRulesModal, setShowRulesModal] = useState(false);
+  const [ruleIdToEdit, setRuleIdToEdit] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -372,7 +373,10 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
 
           {(user.role === 'admin') && (
             <button
-              onClick={() => setShowRulesModal(!showRulesModal)}
+              onClick={() => {
+                setRuleIdToEdit(null);
+                setShowRulesModal(!showRulesModal);
+              }}
               className={`size-10 flex items-center justify-center rounded-xl border transition-all shrink-0 ${showRulesModal ? 'bg-slate-800 text-white border-slate-800' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800'}`}
               title="Configurar Regras"
             >
@@ -382,7 +386,14 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
         </div>
       </div>
 
-      {showRulesModal && <CalendarRules user={user} rules={rules} onUpdate={fetchData} />}
+      {showRulesModal && (
+         <CalendarRules 
+           user={user} 
+           rules={rules} 
+           onUpdate={fetchData} 
+           initialRuleIdToEdit={ruleIdToEdit} 
+         />
+      )}
 
       <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6 md:gap-8">
         {/* Lado Esquerdo: Filtros e Formulário ou Resumo */}
@@ -508,7 +519,15 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                 setShowForm(true);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              onBlockedClick={(reason) => showToast(`Agendamento bloqueado: ${reason}`, 'warning')}
+              onBlockedClick={(rule) => {
+                if (user.role === 'admin') {
+                  setRuleIdToEdit(rule.id);
+                  setShowRulesModal(true);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                  showToast(`Agendamento bloqueado: ${rule.description}`, 'warning');
+                }
+              }}
               onSelectEvent={handleSelectEvent}
             />
           ) : (

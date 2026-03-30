@@ -16,9 +16,10 @@ interface CalendarRulesProps {
   user: User;
   rules: CalendarRule[];
   onUpdate: () => void;
+  initialRuleIdToEdit?: string | null;
 }
 
-const CalendarRules: React.FC<CalendarRulesProps> = ({ user, rules, onUpdate }) => {
+const CalendarRules: React.FC<CalendarRulesProps> = ({ user, rules, onUpdate, initialRuleIdToEdit }) => {
   const [newRule, setNewRule] = useState({
     date: '',
     description: '',
@@ -27,6 +28,25 @@ const CalendarRules: React.FC<CalendarRulesProps> = ({ user, rules, onUpdate }) 
     allowed_end_time: '18:00'
   });
 
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
+
+  // Se vier com uma regra específica pra editar da página de Agendamentos (quando clica num dia bloqueado)
+  React.useEffect(() => {
+    if (initialRuleIdToEdit) {
+      const ruleToEdit = rules.find(r => r.id === initialRuleIdToEdit);
+      if (ruleToEdit) {
+        setEditingRuleId(ruleToEdit.id);
+        setNewRule({
+          date: ruleToEdit.date,
+          description: ruleToEdit.description,
+          is_blocked: ruleToEdit.is_blocked,
+          allowed_start_time: ruleToEdit.allowed_start_time || '08:00',
+          allowed_end_time: ruleToEdit.allowed_end_time || '18:00'
+        });
+      }
+    }
+  }, [initialRuleIdToEdit, rules]);
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [idToDelete, setIdToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -34,25 +54,56 @@ const CalendarRules: React.FC<CalendarRulesProps> = ({ user, rules, onUpdate }) 
   const handleCreateRule = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { error } = await supabase
-        .from('condo_calendar_rules')
-        .insert([{
-          date: newRule.date,
-          description: newRule.description,
-          is_blocked: newRule.is_blocked,
-          allowed_start_time: newRule.is_blocked ? null : newRule.allowed_start_time,
-          allowed_end_time: newRule.is_blocked ? null : newRule.allowed_end_time,
-          created_by: user.id
-        }]);
+      if (editingRuleId) {
+        const { error } = await supabase
+          .from('condo_calendar_rules')
+          .update({
+            date: newRule.date,
+            description: newRule.description,
+            is_blocked: newRule.is_blocked,
+            allowed_start_time: newRule.is_blocked ? null : newRule.allowed_start_time,
+            allowed_end_time: newRule.is_blocked ? null : newRule.allowed_end_time
+          })
+          .eq('id', editingRuleId);
 
-      if (error) throw error;
+        if (error) throw error;
+        setEditingRuleId(null);
+        alert('Regra atualizada com sucesso!');
+      } else {
+        const { error } = await supabase
+          .from('condo_calendar_rules')
+          .insert([{
+            date: newRule.date,
+            description: newRule.description,
+            is_blocked: newRule.is_blocked,
+            allowed_start_time: newRule.is_blocked ? null : newRule.allowed_start_time,
+            allowed_end_time: newRule.is_blocked ? null : newRule.allowed_end_time,
+            created_by: user.id
+          }]);
+
+        if (error) throw error;
+        alert('Regra criada com sucesso!');
+      }
+
       setNewRule({ date: '', description: '', is_blocked: true, allowed_start_time: '08:00', allowed_end_time: '18:00' });
       onUpdate();
-      alert('Regra criada com sucesso!');
     } catch (err) {
-      console.error('Erro ao criar regra:', err);
+      console.error('Erro ao salvar regra:', err);
       alert('Erro ao salvar regra.');
     }
+  };
+
+  const handleEditClick = (rule: CalendarRule) => {
+    setEditingRuleId(rule.id);
+    setNewRule({
+      date: rule.date,
+      description: rule.description,
+      is_blocked: rule.is_blocked,
+      allowed_start_time: rule.allowed_start_time || '08:00',
+      allowed_end_time: rule.allowed_end_time || '18:00'
+    });
+    // Scrollar pro topo suavemente se o modal estiver muito longo
+    document.querySelector('.custom-scrollbar')?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDeleteClick = (id: string) => {
@@ -154,10 +205,24 @@ const CalendarRules: React.FC<CalendarRulesProps> = ({ user, rules, onUpdate }) 
             </div>
           )}
 
-          <button type="submit" className="w-full py-3 bg-slate-800 dark:bg-white text-white dark:text-slate-900 font-black rounded-xl hover:opacity-90 transition-all text-sm tracking-wide flex items-center justify-center gap-2">
-            <span className="material-symbols-outlined text-lg">add_circle</span>
-            Salvar Regra
-          </button>
+          <div className="flex gap-2">
+            <button type="submit" className="flex-1 py-3 bg-slate-800 dark:bg-white text-white dark:text-slate-900 font-black rounded-xl hover:opacity-90 transition-all text-sm tracking-wide flex items-center justify-center gap-2">
+              <span className="material-symbols-outlined text-lg">{editingRuleId ? 'save' : 'add_circle'}</span>
+              {editingRuleId ? 'Salvar Alterações' : 'Salvar Regra'}
+            </button>
+            {editingRuleId && (
+              <button 
+                type="button"
+                onClick={() => {
+                  setEditingRuleId(null);
+                  setNewRule({ date: '', description: '', is_blocked: true, allowed_start_time: '08:00', allowed_end_time: '18:00' });
+                }} 
+                className="px-4 py-3 bg-slate-100 dark:bg-slate-900 text-slate-500 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-800 transition-all text-sm tracking-wide flex items-center justify-center gap-2"
+              >
+                Cancelar
+              </button>
+            )}
+          </div>
         </form>
 
         <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
@@ -176,9 +241,14 @@ const CalendarRules: React.FC<CalendarRulesProps> = ({ user, rules, onUpdate }) 
                   </span>
                 )}
               </div>
-              <button onClick={() => handleDeleteClick(rule.id)} className="text-slate-400 hover:text-red-500 transition-colors">
-                <span className="material-symbols-outlined text-lg">delete</span>
-              </button>
+              <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                <button type="button" onClick={() => handleEditClick(rule)} className="text-slate-400 hover:text-blue-500 transition-colors" title="Editar">
+                  <span className="material-symbols-outlined text-lg">edit</span>
+                </button>
+                <button type="button" onClick={() => handleDeleteClick(rule.id)} className="text-slate-400 hover:text-red-500 transition-colors" title="Excluir">
+                  <span className="material-symbols-outlined text-lg">delete</span>
+                </button>
+              </div>
             </div>
           ))}
           {rules.length === 0 && <p className="text-center text-slate-400 py-4 text-xs font-medium italic">Nenhuma regra especial cadastrada.</p>}
