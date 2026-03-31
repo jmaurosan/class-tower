@@ -403,9 +403,6 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
             <div className="p-6 space-y-4">
               <div>
                 <h4 className="text-lg font-black text-slate-900 dark:text-white truncate" title={empresa.nome}>{empresa.nome}</h4>
-                {empresa.cnpj && (
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{empresa.cnpj}</p>
-                )}
               </div>
 
               <div className="flex items-center gap-2">
