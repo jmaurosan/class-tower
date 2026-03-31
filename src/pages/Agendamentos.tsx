@@ -455,12 +455,28 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                     {formData.tipo === 'Mudança' && !editingId && (
                       <div className="space-y-1 mb-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Anexar Autorização (Pdf/Foto) <span className="opacity-50 font-normal lowercase">(Opcional)</span></label>
-                        <input
-                          type="file"
-                          accept=".pdf,image/*"
-                          onChange={e => setSelectedFile(e.target.files?.[0] || null)}
-                          className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-all cursor-pointer"
-                        />
+                        <div className="relative group">
+                          <input
+                            type="file"
+                            accept=".pdf,image/*"
+                            onChange={e => setSelectedFile(e.target.files?.[0] || null)}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            title="Clique para escolher um documento"
+                          />
+                          <div className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between text-xs transition-all group-hover:border-primary/20">
+                            <div className="flex items-center gap-2 overflow-hidden">
+                              <span className="material-symbols-outlined text-base text-slate-400">
+                                {selectedFile ? 'draft' : 'upload_file'}
+                              </span>
+                              <span className={`font-bold truncate ${selectedFile ? 'text-primary' : 'text-slate-400'}`}>
+                                {selectedFile ? selectedFile.name : 'Nenhum arquivo anexado'}
+                              </span>
+                            </div>
+                            <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-lg font-bold shrink-0 ml-2 group-hover:bg-primary/20 transition-colors">
+                              {selectedFile ? 'Trocar' : 'Escolher'}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </>
