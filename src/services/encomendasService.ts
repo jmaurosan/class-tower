@@ -3,11 +3,19 @@ import { Encomenda } from '../types';
 import { supabase } from './supabase';
 
 export const encomendasService = {
-  async getAll() {
-    const { data, error } = await supabase
+  async getAll(includeHistory: boolean = false) {
+    let query = supabase
       .from('encomendas')
       .select('*')
       .order('created_at', { ascending: false });
+
+    if (!includeHistory) {
+      const sixtyDaysAgo = new Date();
+      sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+      query = query.gte('created_at', sixtyDaysAgo.toISOString());
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     // Adapt database field names to frontend Encomenda type if necessary
@@ -50,6 +58,18 @@ export const encomendasService = {
         executed_by_name: userName,
         new_data: data
       }]);
+    }
+
+    // Call the push notification Edge Function (Fire and forget to not block UI)
+    if (encomenda.sala_id) {
+      supabase.functions.invoke('onesignal-push', {
+        body: {
+          sala_id: encomenda.sala_id,
+          titulo: 'Sua Encomenda Chegou!',
+          mensagem: `Recebemos uma nova encomenda (${encomenda.categoria}) destinada à sua unidade. Por favor, retire na portaria.`,
+          url: window.location.origin + '/app/encomendas'
+        }
+      }).catch(err => console.error("Falha ao enviar push:", err));
     }
 
     return data;

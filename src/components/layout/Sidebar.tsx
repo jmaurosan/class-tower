@@ -1,6 +1,9 @@
 
 import React from 'react';
 import { Page, User } from '../../types';
+import { supabase } from '../../services/supabase';
+import { avisosService } from '../../services/avisosService';
+import { useToast } from '../../context/ToastContext';
 
 interface SidebarProps {
   user: User;
@@ -11,6 +14,9 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, isOpen, onClose }) => {
+  const { showToast } = useToast();
+  const [isSignalingSOS, setIsSignalingSOS] = React.useState(false);
+
   // Configuração centralizada de itens de menu
   const allMenuItems = [
     { id: 'dashboard', icon: 'dashboard', label: 'Dashboard', roles: ['admin'] },
@@ -54,6 +60,37 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
     }
 
     return 'Unidade Comercial';
+  };
+
+  const triggerEmergency = async () => {
+    setIsSignalingSOS(true);
+    try {
+      await avisosService.create({
+        data: new Date().toISOString().split('T')[0],
+        hora: new Date().toTimeString().split(' ')[0].substring(0, 5),
+        titulo: '🚨 ALERTA DE EMERGÊNCIA / SOS 🚨',
+        conteudo: `Emergência acionada fisicamente pela portaria/gestão. Por favor, verifiquem imediatamente as instalações ou acionem o suporte de segurança caso não haja resposta.`,
+        prioridade: 'Critica',
+        criado_por: user.name,
+        status: 'Ativo'
+      });
+
+      await supabase.from('audit_logs').insert([{
+        table_name: 'seguranca',
+        record_id: 'sos-' + Date.now(),
+        action: 'EMERGENCY_TRIGGER',
+        executed_by: user.id,
+        executed_by_name: user.name,
+        new_data: { type: 'SOS_MANUAL_BTN' }
+      }]);
+
+      showToast('Alerta de Emergência disparado com sucesso!', 'error');
+    } catch (error) {
+      console.error('Erro ao acionar emergência', error);
+      showToast('Falha ao disparar alerta. Tente novamente.', 'error');
+    } finally {
+      setIsSignalingSOS(false);
+    }
   };
 
   return (
@@ -119,6 +156,23 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
               </span>
             </button>
           ))}
+
+          {user.role !== 'sala' && (
+            <div className="pt-6 pb-2 px-2">
+              <button
+                onClick={() => {
+                  if (window.confirm("⚠️ ALERTA DE EMERGÊNCIA DA PORTARIA ⚠️\nIsso disparará um aviso imediato com prioridade MÁXIMA para todos os administradores e logs do sistema.\n\nTem certeza que deseja acionar o PÂNICO?")) {
+                    triggerEmergency();
+                  }
+                }}
+                disabled={isSignalingSOS}
+                className="w-full flex items-center justify-center gap-2 px-3 py-3 rounded-xl bg-red-600 dark:bg-red-700 hover:bg-red-700 text-white font-black uppercase tracking-widest shadow-lg shadow-red-500/30 active:scale-95 transition-all animate-pulse disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-[20px]">e911_emergency</span>
+                {isSignalingSOS ? 'Disparando...' : 'Botão de Pânico'}
+              </button>
+            </div>
+          )}
 
           {user.role === 'admin' && (
             <>

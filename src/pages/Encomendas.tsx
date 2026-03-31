@@ -11,8 +11,8 @@ interface EncomendasProps {
 const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
   const { showToast } = useToast();
   const isResident = user.role === 'sala';
-  // If resident, filter by their own room (sala_numero)
-  const { encomendas, loading, addEncomenda, updateStatus, updateEncomenda, deleteEncomenda, refresh } = useEncomendas(isResident ? user.sala_numero : undefined);
+  const [includeHistory, setIncludeHistory] = useState(false);
+  const { encomendas, loading, addEncomenda, updateStatus, updateEncomenda, deleteEncomenda, refresh } = useEncomendas(isResident ? user.sala_numero : undefined, includeHistory);
 
   const [showForm, setShowForm] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);

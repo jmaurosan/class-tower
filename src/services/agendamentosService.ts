@@ -3,11 +3,19 @@ import { Agendamento } from '../types';
 import { supabase } from './supabase';
 
 export const agendamentosService = {
-  async getAll() {
-    const { data, error } = await supabase
+  async getAll(includeHistory: boolean = false) {
+    let query = supabase
       .from('agendamentos')
       .select('*')
       .order('data', { ascending: true });
+
+    if (!includeHistory) {
+      const sixtyDaysAgo = new Date();
+      sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+      query = query.gte('data', sixtyDaysAgo.toISOString().split('T')[0]);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     return data as Agendamento[];

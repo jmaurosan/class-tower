@@ -4,13 +4,13 @@ import { encomendasService } from '../services/encomendasService';
 import { offlineService } from '../services/offlineService';
 import { Encomenda } from '../types';
 
-export const useEncomendas = (salaFilter?: string) => {
+export const useEncomendas = (salaFilter?: string, includeHistory: boolean = false) => {
   const [encomendas, setEncomendas] = useState<Encomenda[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchEncomendas = useCallback(async () => {
     try {
-      let data = await encomendasService.getAll();
+      let data = await encomendasService.getAll(includeHistory);
       if (salaFilter) {
         data = data.filter(e => e.sala_id === salaFilter);
       }
@@ -20,7 +20,7 @@ export const useEncomendas = (salaFilter?: string) => {
     } finally {
       setLoading(false);
     }
-  }, [salaFilter]);
+  }, [salaFilter, includeHistory]);
 
   useEffect(() => {
     fetchEncomendas();

@@ -42,6 +42,22 @@ const App: React.FC = () => {
     }
   }, []);
 
+  useEffect(() => {
+    // @ts-ignore
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    if (user?.id) {
+      // @ts-ignore
+      window.OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.login(user.id);
+      });
+    } else {
+      // @ts-ignore
+      window.OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.logout();
+      });
+    }
+  }, [user?.id]);
+
   const handleOpenNews = () => {
     setShowNews(true);
     setHasNewUpdates(false);

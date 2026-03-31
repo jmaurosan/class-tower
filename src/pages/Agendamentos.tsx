@@ -41,10 +41,12 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const [includeHistory, setIncludeHistory] = useState(false);
+
   const fetchData = async () => {
     try {
       setLoading(true);
-      const agendamentosData = await agendamentosService.getAll();
+      const agendamentosData = await agendamentosService.getAll(includeHistory);
       setAgendamentos(agendamentosData);
 
       const rulesData = await agendamentosService.getCalendarRules();
@@ -58,7 +60,9 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
 
   useEffect(() => {
     fetchData();
+  }, [user.id, includeHistory]);
 
+  useEffect(() => {
     const channel = supabase
       .channel('agendamentos_realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, () => {
@@ -601,6 +605,18 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                   <p className="text-slate-500 font-bold uppercase tracking-widest">Nenhum agendamento futuro</p>
                 </div>
               )}
+            </div>
+          )}
+          
+          {!includeHistory && (
+            <div className="mt-4 flex justify-center">
+              <button 
+                onClick={() => setIncludeHistory(true)}
+                className="px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 text-sm"
+              >
+                <span className="material-symbols-outlined text-[16px]">history</span>
+                Carregar Histórico Antigo (mais de 60 dias)
+              </button>
             </div>
           )}
         </div>
