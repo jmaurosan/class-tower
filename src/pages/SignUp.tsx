@@ -100,6 +100,7 @@ const SignUp: React.FC<SignUpProps> = ({ isDarkMode, toggleDarkMode }) => {
         password: formData.senha,
         options: {
           data: {
+            name: `${formData.nomeCompleto} (Sala ${formData.salaNumero})`,
             full_name: formData.nomeCompleto,
             role: 'sala',
             sala_numero: formData.salaNumero,

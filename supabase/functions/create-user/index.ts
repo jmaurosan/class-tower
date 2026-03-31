@@ -43,7 +43,13 @@ serve(async (req) => {
       email,
       password,
       email_confirm: true,
-      user_metadata: { full_name: name, role, sala_numero, permissions }
+      user_metadata: { 
+        name: role === 'sala' ? `${name} (Sala ${sala_numero})` : name,
+        full_name: name, 
+        role, 
+        sala_numero, 
+        permissions 
+      }
     })
 
     if (createError) {
