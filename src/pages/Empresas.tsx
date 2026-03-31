@@ -376,9 +376,7 @@ const PrestadoresServico: React.FC<EmpresasProps> = ({ user }) => {
                 <span className="material-symbols-outlined text-3xl">{getIconSetor(empresa.setor)}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className={`px-2 py-1 rounded text-[10px] font-black border uppercase tracking-tighter ${getStatusColor(empresa.status)}`}>
-                  {empresa.status}
-                </span>
+
                 {canManage && (
                   <div className="flex items-center gap-1">
                     <button
