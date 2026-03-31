@@ -33,7 +33,8 @@ export const SyncProvider: React.FC<{ children: React.ReactNode }> = ({ children
           break;
         case 'avisos':
           if (item.action === 'create') await avisosService.create(item.payload);
-          if (item.action === 'delete') await avisosService.delete(item.payload.id);
+          if (item.action === 'update') await avisosService.update(item.payload.id, item.payload.updates, item.payload.reason);
+          if (item.action === 'delete') await avisosService.delete(item.payload.id, item.payload.reason || 'Sincronização Offline');
           break;
         case 'vistorias':
           if (item.action === 'create') await vistoriasService.create(item.payload);

@@ -58,7 +58,7 @@ export const avisosService = {
     return data;
   },
 
-  async delete(id: string, userId?: string, userName?: string) {
+  async delete(id: string, reason: string, userId?: string, userName?: string) {
     // Get old data for audit log
     const { data: oldData } = await supabase
       .from('avisos')
@@ -81,7 +81,8 @@ export const avisosService = {
           action: 'DELETE',
           executed_by: userId,
           executed_by_name: userName,
-          old_data: oldData
+          old_data: oldData,
+          new_data: { justificativa: reason }
         }]);
       } catch (logErr) {
         console.warn('Logging failed but data was deleted:', logErr);
@@ -89,7 +90,7 @@ export const avisosService = {
     }
   },
 
-  async update(id: string, updates: Partial<Aviso>, userId?: string, userName?: string) {
+  async update(id: string, updates: Partial<Aviso>, reason?: string, userId?: string, userName?: string) {
     // Get old data for audit log
     const { data: oldData } = await supabase
       .from('avisos')
@@ -113,7 +114,7 @@ export const avisosService = {
           executed_by: userId,
           executed_by_name: userName,
           old_data: oldData,
-          new_data: updates
+          new_data: reason ? { ...updates, justificativa: reason } : updates
         }]);
       } catch (logErr) {
         console.warn('Logging failed but data was updated:', logErr);

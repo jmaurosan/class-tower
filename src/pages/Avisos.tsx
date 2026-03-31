@@ -17,10 +17,12 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
     titulo: '',
     conteudo: '',
     prioridade: 'Baixa' as Aviso['prioridade'],
-    sala_numero: ''
+    sala_numero: '',
+    motivo_alteracao: ''
   });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [idToDelete, setIdToDelete] = useState<string | null>(null);
+  const [deleteReason, setDeleteReason] = useState('');
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [idToCancel, setIdToCancel] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState('');
@@ -51,9 +53,16 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
     const agora = new Date();
     try {
       if (editingId) {
+        if (canManage && !formData.motivo_alteracao.trim()) {
+           showToast('Por favor, informe o motivo da alteração.', 'error');
+           return;
+        }
         await updateAviso(editingId, {
-          ...formData
-        }, user.id, user.name);
+          titulo: formData.titulo,
+          conteudo: formData.conteudo,
+          prioridade: formData.prioridade,
+          sala_numero: formData.sala_numero
+        }, formData.motivo_alteracao, user.id, user.name);
       } else {
         await addAviso({
           ...formData,
@@ -96,9 +105,13 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
 
   const confirmDelete = async () => {
     if (!idToDelete) return;
+    if (canManage && !deleteReason.trim()) {
+      setErrorMessage('Por favor, informe o motivo da exclusão.');
+      return;
+    }
     try {
       setIsDeleting(true);
-      await deleteAviso(idToDelete, user.id, user.name);
+      await deleteAviso(idToDelete, deleteReason, user.id, user.name);
       showToast('Aviso excluído com sucesso!');
       setShowDeleteModal(false);
       setIdToDelete(null);
@@ -115,7 +128,8 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
       titulo: aviso.titulo,
       conteudo: aviso.conteudo,
       prioridade: aviso.prioridade,
-      sala_numero: aviso.sala_numero || ''
+      sala_numero: aviso.sala_numero || '',
+      motivo_alteracao: ''
     });
     setEditingId(aviso.id);
     setShowForm(true);
@@ -139,7 +153,7 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
       await updateAviso(idToCancel, {
         status: 'Cancelado',
         justificativa_cancelamento: cancelReason
-      }, user.id, user.name);
+      }, cancelReason, user.id, user.name);
       showToast('Aviso cancelado com sucesso!');
       setShowCancelModal(false);
       setIdToCancel(null);
@@ -210,6 +224,20 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
                   />
                   <p className="text-[9px] text-slate-500 ml-1">Informe a unidade que receberá este comunicado.</p>
                 </div>
+
+                {editingId && canManage && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Motivo da Alteração *</label>
+                    <textarea 
+                      required 
+                      rows={2} 
+                      placeholder="Por que este aviso está sendo alterado?" 
+                      className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 dark:text-white text-sm font-medium resize-none transition-all" 
+                      value={formData.motivo_alteracao} 
+                      onChange={e => setFormData({ ...formData, motivo_alteracao: e.target.value })} 
+                    />
+                  </div>
+                )}
 
                 <button type="submit" className="w-full py-4 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-[0.2em] mt-2">
                   {editingId ? 'Salvar Alterações' : 'Publicar Agora'}
@@ -326,6 +354,19 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
             </div>
 
             <div className="space-y-4">
+              {canManage && (
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Motivo da Exclusão *</label>
+                  <textarea
+                    required
+                    value={deleteReason}
+                    onChange={(e) => setDeleteReason(e.target.value)}
+                    placeholder="Por que este aviso está sendo excluído?"
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-red-500/20 dark:text-white text-sm min-h-[80px] resize-none"
+                  />
+                </div>
+              )}
+
               {errorMessage && (
                 <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-bold">
                   {errorMessage}
