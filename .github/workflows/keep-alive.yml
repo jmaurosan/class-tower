@@ -20,14 +20,28 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: |
           echo "🔄 Executing keep-alive for Supabase..."
-          echo "📍 Supabase URL: ${SUPABASE_URL}"
+          
+          # Limpar eventuais espaços em branco, aspas ou quebras de linha (\r) dos Secrets
+          CLEAN_URL=$(echo "$SUPABASE_URL" | tr -d '\r\n" ')
+          CLEAN_KEY=$(echo "$SUPABASE_ANON_KEY" | tr -d '\r\n" ')
+          
+          if [ -z "$CLEAN_URL" ] || [ -z "$CLEAN_KEY" ]; then
+            echo "❌ ERROR: SUPABASE_URL or SUPABASE_ANON_KEY is missing."
+            echo "Please ensure you have configured VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your repository's Actions Secrets."
+            exit 1
+          fi
+          
+          echo "📍 Supabase URL is configured."
+          
+          # Disable exit on error for curl commands
+          set +e
           
           # Query 1: Tabela profiles
           echo "📊 Querying profiles table..."
           profiles_response=$(curl -s -w "\n%{http_code}" -X GET \
-            "${SUPABASE_URL}/rest/v1/profiles?select=id&limit=1" \
-            -H "apikey: ${SUPABASE_ANON_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+            "${CLEAN_URL}/rest/v1/profiles?select=id&limit=1" \
+            -H "apikey: ${CLEAN_KEY}" \
+            -H "Authorization: Bearer ${CLEAN_KEY}")
           
           profiles_code=$(echo "$profiles_response" | tail -n1)
           echo "✓ Profiles table: HTTP $profiles_code"
@@ -35,9 +49,9 @@ jobs:
           # Query 2: Tabela avisos
           echo "📊 Querying avisos table..."
           avisos_response=$(curl -s -w "\n%{http_code}" -X GET \
-            "${SUPABASE_URL}/rest/v1/avisos?select=id&limit=1" \
-            -H "apikey: ${SUPABASE_ANON_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+            "${CLEAN_URL}/rest/v1/avisos?select=id&limit=1" \
+            -H "apikey: ${CLEAN_KEY}" \
+            -H "Authorization: Bearer ${CLEAN_KEY}")
           
           avisos_code=$(echo "$avisos_response" | tail -n1)
           echo "✓ Avisos table: HTTP $avisos_code"
@@ -45,19 +59,23 @@ jobs:
           # Query 3: Tabela encomendas
           echo "📊 Querying encomendas table..."
           encomendas_response=$(curl -s -w "\n%{http_code}" -X GET \
-            "${SUPABASE_URL}/rest/v1/encomendas?select=id&limit=1" \
-            -H "apikey: ${SUPABASE_ANON_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+            "${CLEAN_URL}/rest/v1/encomendas?select=id&limit=1" \
+            -H "apikey: ${CLEAN_KEY}" \
+            -H "Authorization: Bearer ${CLEAN_KEY}")
           
           encomendas_code=$(echo "$encomendas_response" | tail -n1)
           echo "✓ Encomendas table: HTTP $encomendas_code"
+          
+          # Re-enable exit on error
+          set -e
           
           # Verificar se todas as queries foram bem-sucedidas
           if [[ "$profiles_code" == "200" ]] && [[ "$avisos_code" == "200" ]] && [[ "$encomendas_code" == "200" ]]; then
             echo "✅ Keep-alive executed successfully on all tables!"
             exit 0
           else
-            echo "⚠️ Some queries may have failed, but database is active"
+            echo "⚠️ Some queries may have failed (HTTP status not 200). DB might still be active."
+            # Exit 0 so the workflow doesn't fail if the DB just returned 4xx (e.g. RLS issues)
             exit 0
           fi
 
