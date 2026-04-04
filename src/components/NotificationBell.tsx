@@ -88,7 +88,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ user }) => {
 
         {/* Dropdown de notificações */}
         {isOpen && (
-          <div className="absolute top-12 right-0 w-80 max-h-[480px] bg-white dark:bg-[#1d222a] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl z-[999] flex flex-col animate-in fade-in zoom-in-95 duration-150 origin-top-right">
+          <div className="fixed sm:absolute top-24 sm:top-12 left-4 right-4 sm:left-auto sm:right-0 sm:w-80 max-h-[480px] bg-white dark:bg-[#1d222a] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl z-[999] flex flex-col animate-in fade-in zoom-in-95 duration-150 origin-top-right">
             {/* Cabeçalho */}
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
               <div>
