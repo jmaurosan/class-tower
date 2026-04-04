@@ -1,17 +1,17 @@
-
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useVencimentos } from '../hooks/useVencimentos';
 import { supabase } from '../services/supabase';
-import { Page, User } from '../types';
+import { User } from '../types';
 import Lembretes from './Lembretes';
 
 interface DashboardProps {
   user: User;
-  setCurrentPage: (page: Page) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const { documentos, updateVencimentoStatus } = useVencimentos();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({ ocupacao: '0%', vistorias: '0', agendamentos: '0', dbSize: '...', salas: '0' });
 
   const fetchStats = async () => {
@@ -64,17 +64,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
   };
 
   const metricCards = [
-    { label: 'Empresas', value: stats.ocupacao, icon: 'meeting_room', color: 'text-emerald-400', bg: 'from-emerald-500/20 to-emerald-500/5', border: 'border-emerald-500/20', target: 'salas' as Page },
-    { label: 'Vistorias', value: stats.vistorias, icon: 'assignment_turned_in', color: 'text-amber-400', bg: 'from-amber-500/20 to-amber-500/5', border: 'border-amber-500/20', target: 'vistorias' as Page },
-    { label: 'Documentos', value: criticalDocs.length.toString(), icon: 'notification_important', color: 'text-red-400', bg: 'from-red-500/20 to-red-500/5', border: 'border-red-500/20', target: 'vencimentos' as Page },
-    { label: 'Agendamentos', value: stats.agendamentos, icon: 'calendar_month', color: 'text-blue-400', bg: 'from-blue-500/20 to-blue-500/5', border: 'border-blue-500/20', target: 'agendamentos' as Page },
+    { label: 'Empresas', value: stats.ocupacao, icon: 'meeting_room', color: 'text-emerald-400', bg: 'from-emerald-500/20 to-emerald-500/5', border: 'border-emerald-500/20', target: '/salas' },
+    { label: 'Vistorias', value: stats.vistorias, icon: 'assignment_turned_in', color: 'text-amber-400', bg: 'from-amber-500/20 to-amber-500/5', border: 'border-amber-500/20', target: '/vistorias' },
+    { label: 'Documentos', value: criticalDocs.length.toString(), icon: 'notification_important', color: 'text-red-400', bg: 'from-red-500/20 to-red-500/5', border: 'border-red-500/20', target: '/vencimentos' },
+    { label: 'Agendamentos', value: stats.agendamentos, icon: 'calendar_month', color: 'text-blue-400', bg: 'from-blue-500/20 to-blue-500/5', border: 'border-blue-500/20', target: '/agendamentos' },
   ];
 
   const quickActions = [
-    { label: 'Nova Vistoria', icon: 'add_task', color: 'bg-amber-500', target: 'vistorias' as Page },
-    { label: 'Ver Documentos', icon: 'folder_open', color: 'bg-blue-500', target: 'vencimentos' as Page },
-    { label: 'Agendamentos', icon: 'event', color: 'bg-purple-500', target: 'agendamentos' as Page },
-    { label: 'Gerenciar Salas', icon: 'meeting_room', color: 'bg-emerald-500', target: 'salas' as Page },
+    { label: 'Nova Vistoria', icon: 'add_task', color: 'bg-amber-500', target: '/vistorias' },
+    { label: 'Ver Documentos', icon: 'folder_open', color: 'bg-blue-500', target: '/vencimentos' },
+    { label: 'Agendamentos', icon: 'event', color: 'bg-purple-500', target: '/agendamentos' },
+    { label: 'Gerenciar Salas', icon: 'meeting_room', color: 'bg-emerald-500', target: '/salas' },
   ];
 
   return (
@@ -144,7 +144,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
         {metricCards.map((card, i) => (
           <div
             key={i}
-            onClick={() => setCurrentPage(card.target)}
+            onClick={() => navigate(card.target)}
             className={`bg-gradient-to-br ${card.bg} backdrop-blur border ${card.border} rounded-2xl p-5 cursor-pointer hover:scale-[1.03] hover:shadow-xl transition-all duration-200 group`}
           >
             <div className="flex justify-between items-start mb-4">
@@ -179,7 +179,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, setCurrentPage }) => {
               {quickActions.map((action, i) => (
                 <button
                   key={i}
-                  onClick={() => setCurrentPage(action.target)}
+                  onClick={() => navigate(action.target)}
                   className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group text-left"
                 >
                   <div className={`size-9 rounded-lg ${action.color} flex items-center justify-center shrink-0`}>

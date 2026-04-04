@@ -82,14 +82,12 @@ export const documentsService = {
 
 
   async delete(doc: DocumentoAnexo) {
-    console.log('🗑️ Iniciando exclusão do documento:', doc.id, doc.nome);
 
     // 1. Delete from Storage
     // Tenta remover tanto do storagePath quanto do storage_path (caso venha direto do insert)
     const storagePath = doc.storagePath || (doc as any).storage_path;
 
     if (storagePath) {
-      console.log('📦 Removendo do storage:', storagePath);
       const { error: storageError } = await supabase.storage
         .from('documentos')
         .remove([storagePath]);
@@ -100,7 +98,6 @@ export const documentsService = {
     }
 
     // 2. Delete from Database
-    console.log('cl dbs 📝 Removendo do banco de dados:', doc.id);
     const { error: dbError } = await supabase
       .from('documentos')
       .delete()
@@ -110,8 +107,6 @@ export const documentsService = {
       console.error('❌ Erro no Banco ao deletar:', dbError);
       throw dbError;
     }
-
-    console.log('✅ Documento excluído com sucesso');
   },
 
   subscribe(callback: (payload: any) => void) {

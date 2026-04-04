@@ -1,14 +1,13 @@
-
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
-interface LoginProps {
-  signIn: (email: string, password: string) => Promise<void>;
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
-}
-
-const Login: React.FC<LoginProps> = ({ signIn, isDarkMode, toggleDarkMode }) => {
+const Login: React.FC = () => {
+  const { signIn } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -193,12 +192,12 @@ const Login: React.FC<LoginProps> = ({ signIn, isDarkMode, toggleDarkMode }) => 
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
                     Primeiro acesso?
                   </p>
-                  <button
-                    onClick={() => window.location.href = '/signup'}
+                  <Link
+                    to="/signup"
                     className="text-sm font-bold text-primary hover:underline"
                   >
                     Cadastre-se aqui
-                  </button>
+                  </Link>
                 </div>
 
 

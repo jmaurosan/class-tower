@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Page, User } from '../../types';
 import { supabase } from '../../services/supabase';
 import { avisosService } from '../../services/avisosService';
@@ -7,15 +7,16 @@ import { useToast } from '../../context/ToastContext';
 
 interface SidebarProps {
   user: User;
-  currentPage: Page;
-  setCurrentPage: (page: Page) => void;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, isOpen, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ user, isOpen, onClose }) => {
   const { showToast } = useToast();
+  const location = useLocation();
   const [isSignalingSOS, setIsSignalingSOS] = React.useState(false);
+
+  const currentPage = location.pathname.substring(1) || 'dashboard';
 
   // Configuração centralizada de itens de menu
   const allMenuItems = [
@@ -135,14 +136,10 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
 
         <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto custom-scrollbar">
           {visibleMenuItems.map((item) => (
-            <button
+            <Link
               key={item.id}
-              onClick={() => {
-                setCurrentPage(item.id as Page);
-                if (onClose) {
-                  onClose();
-                }
-              }}
+              to={`/${item.id}`}
+              onClick={onClose}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group ${currentPage === item.id
                 ? 'bg-primary/10 text-primary border-r-2 border-primary rounded-r-none'
                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -154,7 +151,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
               <span className={`text-sm ${currentPage === item.id ? 'font-bold' : 'font-medium'}`}>
                 {item.label}
               </span>
-            </button>
+            </Link>
           ))}
 
           {user.role !== 'sala' && (
@@ -180,11 +177,9 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
                 <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-[0.2em]">Sistemas</p>
               </div>
 
-              <button
-                onClick={() => {
-                  setCurrentPage('settings');
-                  onClose?.();
-                }}
+              <Link
+                to="/settings"
+                onClick={onClose}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${currentPage === 'settings'
                   ? 'bg-primary/10 text-primary border-r-2 border-primary rounded-r-none'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -192,12 +187,10 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
               >
                 <span className={`material-symbols-outlined ${currentPage === 'settings' ? 'fill-1' : ''}`}>settings</span>
                 <span className={`text-sm ${currentPage === 'settings' ? 'font-bold' : 'font-medium'}`}>Configurações</span>
-              </button>
-              <button
-                onClick={() => {
-                  setCurrentPage('support');
-                  onClose?.();
-                }}
+              </Link>
+              <Link
+                to="/support"
+                onClick={onClose}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${currentPage === 'support'
                   ? 'bg-primary/10 text-primary border-r-2 border-primary rounded-r-none'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -205,22 +198,22 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
               >
                 <span className={`material-symbols-outlined ${currentPage === 'support' ? 'fill-1' : ''}`}>contact_support</span>
                 <span className={`text-sm ${currentPage === 'support' ? 'font-bold' : 'font-medium'}`}>Suporte</span>
-              </button>
+              </Link>
             </>
           )}
         </nav>
 
         <div className="p-4 border-t border-slate-100 dark:border-slate-800">
-          <div
+          <Link
+            to="/settings"
             onClick={() => {
               if (user.role === 'admin' || user.role === 'atendente') {
-                setCurrentPage('settings');
                 onClose?.();
               }
             }}
             className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${user.role === 'admin' || user.role === 'atendente'
               ? 'hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer'
-              : 'cursor-default'
+              : 'cursor-default pointer-events-none'
               }`}
           >
             <img
@@ -232,7 +225,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user, currentPage, setCurrentPage, is
               <span className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[120px]">{user.name}</span>
               <span className="text-[10px] text-slate-500 dark:text-slate-500 uppercase">{getRoleLabel(user.role)}</span>
             </div>
-          </div>
+          </Link>
           <div className="mt-2 flex justify-center">
             <span className="text-[9px] text-slate-400 dark:text-slate-600 font-medium">v1.5.0-comercial</span>
           </div>

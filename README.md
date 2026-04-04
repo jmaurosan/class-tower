@@ -1,22 +1,33 @@
 # 🏢 Class Tower - Sistema de Gestão Condominial
 
-Bem-vindo ao **Class Tower**, uma plataforma premium para gestão operacional de condomínios residenciais e comerciais.
+Bem-vindo ao **Class Tower**, uma plataforma premium para gestão operacional de condomínios residenciais e comerciais. O sistema foi modernizado com uma arquitetura baseada em Contextos e Roteamento avançado para garantir escalabilidade e segurança.
 
 ## 🚀 Funcionalidades
 
-- **Dashboard Real-time:** Visão geral de métricas vitais.
-- **Gestão de Encomendas:** Registro com foto, baixa digital e auditoria.
-- **Portal de Avisos:** Comunicação categorizada por urgência.
-- **Controle de Vistorias:** Laudos técnicos detalhados com status.
-- **Agendamentos:** Reserva de espaços e gestão de mudanças.
-- **Segurança (RLS):** Dados protegidos por nível de acesso (Admin, Atendente, Morador).
+- **Dashboard Real-time:** Visão geral de métricas vitais e dados em tempo real.
+- **Gestão de Encomendas:** Registro com foto, baixa digital e sistema de auditoria.
+- **Portal de Avisos:** Comunicação categorizada por urgência com suporte a Push Notifications.
+- **Controle de Vistorias:** Laudos técnicos detalhados com status e histórico.
+- **Agendamentos:** Reserva de espaços e gestão de mudanças integrada ao calendário.
+- **Segurança Avançada:** Dados protegidos por Row Level Security (RLS) e navegação controlada por perfis.
 
-## 🛠️ Tech Stack
+## 🏗️ Arquitetura e Tech Stack
 
-- **Frontend:** React + TypeScript + Vite
-- **Estilização:** Tailwind CSS + Design System Customizado
-- **Backend/DB:** Supabase (PostgreSQL, Auth, Storage, Realtime)
-- **PWA:** Vite Plugin PWA (Instalável em Mobile)
+- **Frontend:** React 19 + TypeScript + Vite.
+- **Roteamento:** React Router v7 com suporte a `ProtectedRoute` para controle de acesso granular.
+- **Gestão de Estado (Contextos):**
+  - `AuthContext`: Centraliza a autenticação, perfil do usuário e sincronização com Supabase.
+  - `ThemeContext`: Gestão nativa de Modo Escuro (Dark Mode).
+- **Estilização:** Tailwind CSS com Design System premium e animações fluidas.
+- **Backend/DB:** Supabase (PostgreSQL, Auth, Storage, Realtime).
+- **PWA:** Vite Plugin PWA (Totalmente instalável em dispositivos móveis).
+- **Estabilidade:** `ErrorBoundary` global para captura de falhas em tempo de execução.
+
+## 🔒 Segurança
+
+- **Política de Senhas:** Exigência mínima de 8 caracteres e presença de números para maior proteção.
+- **Proteção de Rotas:** Uso de `ProtectedRoute` para validar sessões e permissões (Admin, Atendente, Sala).
+- **Auditoria:** Logs de auditoria para ações críticas do sistema.
 
 ## 📦 Como Rodar Localmente
 
@@ -30,12 +41,11 @@ Bem-vindo ao **Class Tower**, uma plataforma premium para gestão operacional de
    npm install
    ```
 
-3. Configure as variáveis de ambiente:
-   Crie um arquivo `.env.local` na raiz e adicione:
+3. Configure as variáveis de ambiente (`.env.local` ou `.env`):
    ```env
    VITE_SUPABASE_URL=sua_url_supabase
    VITE_SUPABASE_ANON_KEY=sua_key_anon_supabase
-   GEMINI_API_KEY=sua_api_key (opcional se usar IA no Edge)
+   VITE_ONESIGNAL_APP_ID=seu_id_onesignal
    ```
 
 4. Execute o projeto:
@@ -43,14 +53,17 @@ Bem-vindo ao **Class Tower**, uma plataforma premium para gestão operacional de
    npm run dev
    ```
 
-## ☁️ Como Fazer Deploy na Vercel
+## 📂 Estrutura do Projeto
 
-1. Crie uma conta na [Vercel](https://vercel.com).
-2. Clique em **"Add New Project"** e importe este repositório do GitHub.
-3. Nas configurações do projeto ("Environment Variables"), adicione:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-   - `GEMINI_API_KEY` (se necessário)
-4. Clique em **Deploy**.
+- `/src/context`: Provedores de estado global (Auth, Theme).
+- `/src/components/auth`: Componentes de proteção de rotas.
+- `/src/hooks`: Hooks customizados (`useAuth`, `usePermissions`).
+- `/supabase/migrations`: Scripts de banco de dados e definições de schema.
 
-> **Nota:** As rotas de SPA já estão configuradas via `vercel.json`.
+## ☁️ Deploy na Vercel
+
+O projeto está otimizado para a Vercel. Certifique-se de configurar as variáveis de ambiente acima no painel da Vercel. As rotas SPA são tratadas automaticamente via `vercel.json`.
+
+---
+> [!NOTE]
+> Este projeto foi modernizado para utilizar os padrões mais recentes do React e Supabase, focando em uma experiência de usuário (UX) premium.

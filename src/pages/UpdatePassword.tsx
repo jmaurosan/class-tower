@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PasswordChecklist from '../components/ui/PasswordChecklist';
 import { supabase } from '../services/supabase';
 import { isPasswordValid } from '../utils/validators';
@@ -10,6 +10,7 @@ const UpdatePassword: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const navigate = useNavigate();
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,11 +36,11 @@ const UpdatePassword: React.FC = () => {
       });
 
       if (error) throw error;
-      setSuccess('Senha redefinida com sucesso! Você já pode fechar esta página e logar no sistema.');
+      setSuccess('Senha redefinida com sucesso! Redirecionando para o login...');
 
-      // Opcional: Redirecionar para o login após alguns segundos
+      // Redirecionar para o login após alguns segundos
       setTimeout(() => {
-        window.location.href = '/';
+        navigate('/login');
       }, 3000);
 
     } catch (err: any) {

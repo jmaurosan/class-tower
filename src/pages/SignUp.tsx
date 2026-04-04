@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import PasswordChecklist from '../components/ui/PasswordChecklist';
 import PasswordInput from '../components/ui/PasswordInput';
 import { supabase } from '../services/supabase';
 import { isPasswordValid } from '../utils/validators';
+import { useTheme } from '../context/ThemeContext';
 
-interface SignUpProps {
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
-}
-
-const SignUp: React.FC<SignUpProps> = ({ isDarkMode, toggleDarkMode }) => {
+const SignUp: React.FC = () => {
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const [formData, setFormData] = useState({
     salaNumero: '',
     nomeCompleto: '',
@@ -93,7 +91,6 @@ const SignUp: React.FC<SignUpProps> = ({ isDarkMode, toggleDarkMode }) => {
 
       // 4. Criar usuário no Supabase Auth
       const sanitizedEmail = formData.email.trim().toLowerCase();
-      console.log('[SIGNUP] Tentando criar usuário:', { email: sanitizedEmail });
 
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: sanitizedEmail,
@@ -119,7 +116,7 @@ const SignUp: React.FC<SignUpProps> = ({ isDarkMode, toggleDarkMode }) => {
       );
 
       setTimeout(() => {
-        window.location.href = '/';
+        window.location.href = '/login';
       }, 5000);
 
     } catch (err: any) {
@@ -270,12 +267,12 @@ const SignUp: React.FC<SignUpProps> = ({ isDarkMode, toggleDarkMode }) => {
 
           {/* Back to Login */}
           <div className="mt-6 text-center">
-            <button
-              onClick={() => window.location.href = '/'}
+            <Link
+              to="/login"
               className="text-sm text-primary hover:underline font-medium"
             >
               ← Voltar para o login
-            </button>
+            </Link>
           </div>
         </div>
 

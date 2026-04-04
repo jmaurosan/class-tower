@@ -1,24 +1,26 @@
-
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import PasswordChecklist from '../components/ui/PasswordChecklist';
 import { supabase } from '../services/supabase';
 import { Agendamento, User, UserRole } from '../types';
 import { isPasswordValid } from '../utils/validators';
 import { agendamentosService } from '../services/agendamentosService';
+import { useAuth } from '../context/AuthContext';
 
-interface SettingsProps {
-  user: User;
-  onUpdateUser: (user: User) => void;
-}
-
-const Settings: React.FC<SettingsProps> = ({ user, onUpdateUser }) => {
+const Settings: React.FC = () => {
+  const { user, updateProfile } = useAuth();
   const [notifications, setNotifications] = useState({
     system: true,
     email: false,
     sms: true
   });
 
-  const [localUser, setLocalUser] = useState<User>(user);
+  const [localUser, setLocalUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      setLocalUser(user);
+    }
+  }, [user]);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -41,9 +43,17 @@ const Settings: React.FC<SettingsProps> = ({ user, onUpdateUser }) => {
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchAgendamentos();
-  }, []);
+  }, [user]);
+
+  if (!localUser || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="size-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -84,9 +94,13 @@ const Settings: React.FC<SettingsProps> = ({ user, onUpdateUser }) => {
     }
   };
 
-  const handleSave = () => {
-    onUpdateUser(localUser);
-    alert("Configurações salvas com sucesso!");
+  const handleSave = async () => {
+    try {
+      await updateProfile(localUser);
+      alert("Configurações salvas com sucesso!");
+    } catch (err) {
+      alert("Erro ao salvar configurações.");
+    }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {

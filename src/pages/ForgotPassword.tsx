@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
+import { useTheme } from '../context/ThemeContext';
 
-interface ForgotPasswordProps {
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
-}
-
-const ForgotPassword: React.FC<ForgotPasswordProps> = ({ isDarkMode, toggleDarkMode }) => {
+const ForgotPassword: React.FC = () => {
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -128,12 +126,12 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ isDarkMode, toggleDarkM
 
           {/* Back to Login */}
           <div className="mt-6 text-center">
-            <button
-              onClick={() => window.location.href = '/'}
+            <Link
+              to="/login"
               className="text-sm text-primary hover:underline font-medium"
             >
               ← Voltar para o login
-            </button>
+            </Link>
           </div>
         </div>
 
