@@ -145,5 +145,13 @@ export const agendamentosService = {
       .select('*');
     if (error) throw error;
     return data;
+  },
+
+  async deleteCalendarRule(id: string) {
+    const { error } = await supabase
+      .from('condo_calendar_rules')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
   }
 };

@@ -29,6 +29,9 @@ import Support from './pages/Support';
 import Usuarios from './pages/Usuarios';
 import Vencimentos from './pages/Vencimentos';
 import Vistorias from './pages/Vistorias';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfUse from './pages/TermsOfUse';
+import ResponsibilityTerm from './pages/ResponsibilityTerm';
 
 const AppRoutes: React.FC = () => {
   const { user } = useAuth();
@@ -74,6 +77,9 @@ const AppRoutes: React.FC = () => {
 
             <Route path="/settings" element={<Settings />} />
             <Route path="/support" element={<Support />} />
+            <Route path="privacy" element={<PrivacyPolicy />} />
+            <Route path="terms" element={<TermsOfUse />} />
+            <Route path="responsibility" element={<ResponsibilityTerm />} />
           </Route>
         </Route>
 

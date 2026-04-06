@@ -188,19 +188,61 @@ const Sidebar: React.FC<SidebarProps> = ({ user, isOpen, onClose }) => {
                 <span className={`material-symbols-outlined ${currentPage === 'settings' ? 'fill-1' : ''}`}>settings</span>
                 <span className={`text-sm ${currentPage === 'settings' ? 'font-bold' : 'font-medium'}`}>Configurações</span>
               </Link>
-              <Link
-                to="/support"
-                onClick={onClose}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${currentPage === 'support'
-                  ? 'bg-primary/10 text-primary border-r-2 border-primary rounded-r-none'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-                  }`}
-              >
-                <span className={`material-symbols-outlined ${currentPage === 'support' ? 'fill-1' : ''}`}>contact_support</span>
-                <span className={`text-sm ${currentPage === 'support' ? 'font-bold' : 'font-medium'}`}>Suporte</span>
-              </Link>
             </>
           )}
+
+          {/* AJUDA E TERMOS - VISÍVEL PARA TODOS */}
+          <div className="pt-8 pb-4">
+            <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-[0.2em]">Ajuda e Termos</p>
+          </div>
+
+          <Link
+            to="/support"
+            onClick={onClose}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${currentPage === 'support'
+              ? 'bg-primary/10 text-primary border-r-2 border-primary rounded-r-none'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+          >
+            <span className={`material-symbols-outlined ${currentPage === 'support' ? 'fill-1' : ''}`}>contact_support</span>
+            <span className={`text-sm ${currentPage === 'support' ? 'font-bold' : 'font-medium'}`}>Suporte Técnico</span>
+          </Link>
+
+          <Link
+            to="/privacy"
+            onClick={onClose}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${currentPage === 'privacy'
+              ? 'bg-primary/10 text-primary border-r-2 border-primary rounded-r-none'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+          >
+            <span className={`material-symbols-outlined ${currentPage === 'privacy' ? 'fill-1' : ''}`}>verified_user</span>
+            <span className={`text-sm ${currentPage === 'privacy' ? 'font-bold' : 'font-medium'}`}>Privacidade</span>
+          </Link>
+
+          <Link
+            to="/terms"
+            onClick={onClose}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${currentPage === 'terms'
+              ? 'bg-primary/10 text-primary border-r-2 border-primary rounded-r-none'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+          >
+            <span className={`material-symbols-outlined ${currentPage === 'terms' ? 'fill-1' : ''}`}>gavel</span>
+            <span className={`text-sm ${currentPage === 'terms' ? 'font-bold' : 'font-medium'}`}>Termos de Uso</span>
+          </Link>
+
+          <Link
+            to="/responsibility"
+            onClick={onClose}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${currentPage === 'responsibility'
+              ? 'bg-primary/10 text-primary border-r-2 border-primary rounded-r-none'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+          >
+            <span className={`material-symbols-outlined ${currentPage === 'responsibility' ? 'fill-1' : ''}`}>assignment_turned_in</span>
+            <span className={`text-sm ${currentPage === 'responsibility' ? 'font-bold' : 'font-medium'}`}>Responsabilidades</span>
+          </Link>
         </nav>
 
         <div className="p-4 border-t border-slate-100 dark:border-slate-800">

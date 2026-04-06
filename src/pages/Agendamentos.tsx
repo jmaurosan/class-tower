@@ -553,7 +553,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
           ) : (
             <div className="space-y-4">
               {agendamentos.filter(a => a.status !== 'Cancelado').map((item) => (
-                <div key={item.id} className="group flex flex-wrap md:flex-nowrap items-center gap-4 md:gap-6 bg-white dark:bg-[#1d222a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all relative">
+                <div key={item.id} className="group flex flex-wrap md:flex-nowrap items-center gap-4 md:gap-6 bg-white dark:bg-[#1d222a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all relative overflow-hidden">
                   <div className="flex flex-col items-center justify-center min-w-[70px] md:min-w-[80px] py-1 md:py-2 border-r border-slate-100 dark:border-slate-800">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{new Date(item.data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short' })}</span>
                     <span className="text-lg md:text-xl font-black text-slate-900 dark:text-white">{new Date(item.data + 'T00:00:00').getDate()}</span>
@@ -585,7 +585,7 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                     )}
                   </div>
 
-                  <div className="opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0 mt-2 md:mt-0">
+                  <div className="opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-2 md:pt-0 mt-2 md:mt-0 pr-4">
                     {canCRUD && (user.role === 'admin' || item.sala_id === user.sala_numero) && item.status !== 'Cancelado' && (
                       <button onClick={() => handleSelectEvent(item)} className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Editar"><span className="material-symbols-outlined text-xl">edit</span></button>
                     )}
@@ -598,6 +598,81 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                   </div>
                 </div>
               ))}
+
+              {/* SEÇÃO DE REGRAS E BLOQUEIOS NA LISTA */}
+              {rules.length > 0 && (
+                <div className="mt-12 space-y-4">
+                  <div className="flex items-center gap-3 px-2">
+                    <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800"></div>
+                    <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap">Bloqueios e Regras de Agenda</h4>
+                    <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800"></div>
+                  </div>
+
+                  {rules.map((rule) => (
+                    <div key={rule.id} className="group flex items-center gap-4 md:gap-6 bg-slate-50 dark:bg-slate-900/40 p-4 md:px-5 md:py-4 rounded-2xl border border-slate-200 dark:border-slate-800/60 shadow-sm hover:shadow-md transition-all relative overflow-hidden">
+                      <div className="flex flex-col items-center justify-center min-w-[70px] md:min-w-[80px] py-1 border-r border-slate-200/60 dark:border-slate-800/60">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{new Date(rule.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short' })}</span>
+                        <span className="text-lg md:text-xl font-black text-slate-900 dark:text-white">{new Date(rule.date + 'T00:00:00').getDate()}</span>
+                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">{new Date(rule.date + 'T00:00:00').toLocaleDateString('pt-BR', { month: 'short' })}</span>
+                      </div>
+
+                      <div className={`size-10 md:size-12 rounded-full flex items-center justify-center shrink-0 ${rule.type === 'blocked' ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                        <span className="material-symbols-outlined text-xl md:text-2xl">{rule.type === 'blocked' ? 'block' : 'calendar_today'}</span>
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-black border uppercase tracking-tighter ${
+                            rule.type === 'blocked' 
+                              ? 'bg-red-500/10 text-red-500 border-red-500/20' 
+                              : 'bg-amber-500/10 text-amber-600 dark:text-amber-500 border-amber-500/20'
+                          }`}>
+                            {rule.type === 'blocked' ? 'Bloqueado' : 'Horário Especial'}
+                          </span>
+                        </div>
+                        <h4 className="text-sm md:text-base font-bold text-slate-800 dark:text-slate-200 truncate">{rule.description}</h4>
+                        {rule.type === 'special' && rule.special_hours && (
+                          <p className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
+                            <span className="material-symbols-outlined text-[12px]">schedule</span>
+                            {rule.special_hours.start} até {rule.special_hours.end}
+                          </p>
+                        )}
+                      </div>
+
+                      {user.role === 'admin' && (
+                        <div className="flex gap-2 pr-4 ml-auto">
+                          <button 
+                            onClick={() => {
+                              setRuleIdToEdit(rule.id);
+                              setShowRulesModal(true);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }} 
+                            className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-xl">edit</span>
+                          </button>
+                          <button 
+                            onClick={async () => {
+                              if (window.confirm('Excluir esta regra de calendário?')) {
+                                try {
+                                  await agendamentosService.deleteCalendarRule(rule.id);
+                                  showToast('Regra excluída com sucesso', 'success');
+                                  fetchData();
+                                } catch (err) {
+                                  showToast('Erro ao excluir regra', 'error');
+                                }
+                              }
+                            }}
+                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-xl">delete</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {agendamentos.length === 0 && (
                 <div className="text-center py-20 bg-white dark:bg-[#1d222a] rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
