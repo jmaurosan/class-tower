@@ -14,12 +14,16 @@ export const OneSignalProvider: React.FC<OneSignalProviderProps> = ({ user, chil
     if (user?.id) {
       // @ts-ignore
       window.OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.login(user.id);
+        if (OneSignal?.login) {
+          await OneSignal.login(user.id);
+        }
       });
     } else {
       // @ts-ignore
       window.OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.logout();
+        if (OneSignal?.logout) {
+          await OneSignal.logout();
+        }
       });
     }
   }, [user?.id]);

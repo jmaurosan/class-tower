@@ -19,15 +19,22 @@
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.init({
-        appId: "87c78823-809c-47df-ac07-092c693d76b5",
-        safari_web_id: "",
-        notifyButton: {
-            enable: true,
-        },
+    // Só inicializa se não for localhost para evitar erro de domínio que trava o app
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        OneSignalDeferred.push(async function(OneSignal) {
+            try {
+                await OneSignal.init({
+                    appId: "87c78823-809c-47df-ac07-092c693d76b5",
+                    safari_web_id: "",
+                    notifyButton: {
+                        enable: true,
+                    },
+                });
+            } catch (err) {
+                console.warn('OneSignal failed to initialize:', err);
+            }
         });
-    });
+    }
     </script>
 
     <script>
