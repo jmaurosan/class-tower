@@ -53,7 +53,7 @@ describe('Sidebar Component', () => {
     render(<Sidebar user={mockAdmin} currentPage="dashboard" setCurrentPage={() => { }} />);
     const labels = screen.getAllByText('Gestor Predial');
     expect(labels.length).toBeGreaterThan(0);
-    expect(screen.queryByText('Morador / Sala')).not.toBeInTheDocument();
+    expect(screen.queryByText('Morador')).not.toBeInTheDocument();
   });
 
   it('shows correct role label for sala', () => {

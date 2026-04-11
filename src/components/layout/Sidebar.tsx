@@ -54,8 +54,8 @@ const Sidebar: React.FC<SidebarProps> = ({ user, isOpen, onClose }) => {
     if (lowerRole.includes('admin')) return 'Gestor Predial';
     if (lowerRole.includes('atendente') || lowerRole.includes('colaborador')) return 'Colaborador';
 
-    // Padrão para todos os outros casos (incluindo 'sala', 'morador', 'condômino', etc)
-    // Isso garante que "Morador / Sala" nunca seja exibido
+    // Padrão para todos os outros casos (incluindo 'sala', 'condômino', 'locatário', etc)
+    // Isso garante que termos residenciais nunca sejam exibidos no rótulo frontal
     if (user.sala_numero && user.sala_numero !== '0000') {
       return `Unidade ${user.sala_numero}`;
     }

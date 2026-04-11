@@ -89,7 +89,7 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
     if (canManage) return avisos;
 
     return avisos.filter(aviso => {
-      // Moradores veem apenas avisos direcionados à sua sala ou criados por eles mesmos
+      // Condôminos e Locatários veem apenas avisos direcionados à sua sala ou criados por eles mesmos
       const isForMySala = aviso.sala_numero === user.sala_numero;
       const amCreator = aviso.criado_por === user.id;
       

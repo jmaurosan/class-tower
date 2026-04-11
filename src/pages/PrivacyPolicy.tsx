@@ -112,9 +112,16 @@ const PrivacyPolicy: React.FC = () => {
                 'Portabilidade',
                 'Revogação de Consentimento'
               ].map((right, i) => (
-                <div key={i} className="p-3 bg-white dark:bg-[#1d222a] border border-slate-200 dark:border-slate-800 rounded-xl text-center">
-                  <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 leading-tight">{right}</span>
-                </div>
+                <a 
+                  key={i} 
+                  href={`https://wa.me/5571996332932?text=${encodeURIComponent(`Olá! Gostaria de exercer meu direito de *${right}* no Class Tower.`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-3 bg-white dark:bg-[#1d222a] border border-slate-200 dark:border-slate-800 rounded-xl text-center hover:border-primary/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group"
+                  title={`Clique para solicitar: ${right}`}
+                >
+                  <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 leading-tight group-hover:text-primary transition-colors">{right}</span>
+                </a>
               ))}
             </div>
           </section>
@@ -125,7 +132,7 @@ const PrivacyPolicy: React.FC = () => {
               Cookies e Contato
             </h2>
             <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              Utilizamos cookies para melhorar a experiência. Para exercer seus direitos ou esclarecer dúvidas, entre em contato com nosso DPO pelo WhatsApp:
+              Utilizamos cookies para melhorar a experiência. Para exercer seus direitos ou esclarecer dúvidas, entre em contato com nosso **Responsável pela Privacidade** pelo WhatsApp:
             </p>
             <div className="mt-4 flex flex-col sm:flex-row gap-4 items-center justify-center">
               <a 
@@ -134,8 +141,8 @@ const PrivacyPolicy: React.FC = () => {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-2xl font-black shadow-lg shadow-emerald-500/20 hover:scale-[1.02] transition-all text-sm uppercase tracking-widest"
               >
-                <span className="material-symbols-outlined">chat</span>
-                Falar com o DPO
+                <span className="material-symbols-outlined text-lg">verified_user</span>
+                Privacidade e Dados
               </a>
               <Link 
                 to="/" 

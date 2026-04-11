@@ -140,7 +140,7 @@ const ResponsibilityTerm: React.FC = () => {
               Conduta e Ética
             </h2>
             <p className="text-lg">
-              A utilização da plataforma deve ser pautada pelo respeito mútuo entre moradores, funcionários e prestadores de serviço. O uso do sistema para assédio, reclamações infundadas ou disseminação de informações falsas será tratado como falta gravíssima.
+              A utilização da plataforma deve ser pautada pelo respeito mútuo entre condôminos, locatários, funcionários e prestadores de serviço. O uso do sistema para assédio, reclamações infundadas ou disseminação de informações falsas será tratado como falta gravíssima.
             </p>
           </section>
         </div>

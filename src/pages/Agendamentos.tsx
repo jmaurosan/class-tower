@@ -501,14 +501,34 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
             <div className="bg-white dark:bg-[#1d222a] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-4">Resumo da Semana</h4>
               <div className="space-y-4">
-                <div className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                  <span className="text-sm font-bold text-slate-600 dark:text-slate-300">Total</span>
-                  <span className="text-lg font-black text-primary">{agendamentos.length}</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                  <span className="text-sm font-bold text-slate-600 dark:text-slate-300">Ativos</span>
-                  <span className="text-lg font-black text-amber-500">{agendamentos.filter(a => a.status !== 'Cancelado').length}</span>
-                </div>
+                {(() => {
+                  const now = new Date();
+                  const start = new Date(now);
+                  start.setDate(now.getDate() - now.getDay());
+                  start.setHours(0, 0, 0, 0);
+                  
+                  const end = new Date(start);
+                  end.setDate(start.getDate() + 6);
+                  end.setHours(23, 59, 59, 999);
+
+                  const weekEvents = agendamentos.filter(a => {
+                    const eventDate = new Date(a.data + 'T00:00:00');
+                    return eventDate >= start && eventDate <= end && a.status !== 'Cancelado';
+                  });
+
+                  return (
+                    <>
+                      <div className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                        <span className="text-sm font-bold text-slate-600 dark:text-slate-300">Total</span>
+                        <span className="text-lg font-black text-primary">{weekEvents.length}</span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                        <span className="text-sm font-bold text-slate-600 dark:text-slate-300">Confirmados</span>
+                        <span className="text-lg font-black text-amber-500">{weekEvents.filter(a => a.status === 'Confirmado').length}</span>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
 
               {/* CARD DE INFORMAÇÃO SOBRE MUDANÇAS */}

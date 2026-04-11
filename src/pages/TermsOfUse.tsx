@@ -47,7 +47,7 @@ const TermsOfUse: React.FC = () => {
               Aceitação dos Termos
             </h2>
             <p>
-              Ao acessar e utilizar a plataforma <span className="font-bold text-slate-900 dark:text-white">Class Tower</span>, você concorda em cumprir e estar vinculado a estes Termos de Uso. Este sistema foi desenvolvido exclusivamente para a otimização da gestão operacional de condomínios comerciais e residenciais. Se você não concorda com qualquer parte destes termos, não deverá utilizar a plataforma.
+              Ao acessar e utilizar a plataforma <span className="font-bold text-slate-900 dark:text-white">Class Tower</span>, você concorda em cumprir e estar vinculado a estes Termos de Uso. Este sistema foi desenvolvido exclusivamente para a otimização da gestão operacional de condomínios comerciais. Se você não concorda com qualquer parte destes termos, não deverá utilizar a plataforma.
             </p>
           </section>
 
@@ -75,7 +75,7 @@ const TermsOfUse: React.FC = () => {
                 </li>
                 <li className="flex items-start gap-3 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                   <span className="material-symbols-outlined text-primary">person_off</span>
-                  <span>Não compartilhar credenciais com terceiros ou outros moradores.</span>
+                  <span>Não compartilhar credenciais com terceiros, outros condôminos ou locatários.</span>
                 </li>
               </ul>
             </div>
