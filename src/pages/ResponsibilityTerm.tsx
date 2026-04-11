@@ -56,16 +56,16 @@ const ResponsibilityTerm: React.FC = () => {
           <section>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-8 flex items-baseline gap-4">
               <span className="text-4xl text-slate-200 dark:text-slate-800 font-black">01</span>
-              Agendamentos e Áreas Comuns
+              Agendamentos de Mudança e Reforma
             </h2>
             <div className="space-y-4 text-lg">
               <p>
-                Ao agendar espaços comuns (como Salão de Festas, Espaço Gourmet ou Salas de Reunião) pela plataforma, o usuário declara-se ciente de que:
+                Ao realizar agendamentos para mudança, reforma ou manutenções na sala que fogem da responsabilidade do condomínio pela plataforma, o usuário declara-se ciente de que:
               </p>
               <ul className="space-y-4">
                 <li className="flex gap-4">
                   <span className="material-symbols-outlined text-orange-500 shrink-0">check_circle</span>
-                  <span>É integralmente responsável por quaisquer danos materiais causados ao espaço ou aos móveis durante o período reservado.</span>
+                  <span>É integralmente responsável por quaisquer danos materiais causados às áreas do condomínio durante o período reservado.</span>
                 </li>
                 <li className="flex gap-4">
                   <span className="material-symbols-outlined text-orange-500 shrink-0">check_circle</span>
@@ -74,6 +74,10 @@ const ResponsibilityTerm: React.FC = () => {
                 <li className="flex gap-4">
                   <span className="material-symbols-outlined text-orange-500 shrink-0">check_circle</span>
                   <span>O cancelamento fora do prazo estabelecido poderá acarretar taxas administrativas conforme as Regras de Calendário.</span>
+                </li>
+                <li className="flex gap-4">
+                  <span className="material-symbols-outlined text-orange-500 shrink-0">check_circle</span>
+                  <span>É obrigatório deixar a autorização de acesso com as pessoas que irão frequentar o condomínio, conforme o evento/serviço criado no agendamento.</span>
                 </li>
               </ul>
             </div>
@@ -91,7 +95,7 @@ const ResponsibilityTerm: React.FC = () => {
               <ul className="space-y-4">
                 <li className="flex gap-4">
                   <span className="material-symbols-outlined text-orange-500 shrink-0">package_2</span>
-                  <span>Retirar encomendas registradas em seu nome ou unidade em tempo hábil.</span>
+                  <span>Retirar encomendas registradas em seu nome ou unidade no prazo máximo de 48 horas.</span>
                 </li>
                 <li className="flex gap-4">
                   <span className="material-symbols-outlined text-orange-500 shrink-0">history_edu</span>
