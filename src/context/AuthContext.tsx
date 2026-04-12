@@ -112,9 +112,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
       });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        fetchProfile(session.user.id);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log(`🔔 [AUTH] Evento: ${event}`, session?.user?.id);
+      
+      if (session?.user) {
+        // Se já temos o usuário e o ID é o mesmo, não recarregar (evita loop)
+        if (user?.id === session.user.id) {
+          setLoading(false);
+          return;
+        }
+        
+        try {
+          await fetchProfile(session.user.id);
+        } catch (err) {
+          console.error('❌ [AUTH] Erro ao processar mudança de estado:', err);
+          setLoading(false);
+        }
       } else {
         setUser(null);
         setLoading(false);
@@ -129,38 +142,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
-    console.log('🔐 [AUTH] Iniciando processo de login...', { email });
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    console.log('🔐 [AUTH] Iniciando signIn...', { email });
+    // O fetchProfile será disparado automaticamente pelo onAuthStateChange
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      if (error) {
-        console.error('❌ [AUTH] Erro no signInWithPassword:', error.message);
-        throw error;
-      }
-
-      console.log('✅ [AUTH] Credenciais aceitas. Buscando informações do perfil...');
-      if (data.session?.user?.id) {
-        // Timeout de 10 segundos para não deixar a interface travada pra sempre
-        const profilePromise = fetchProfile(data.session.user.id);
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('TIMEOUT_PROFILE_FETCH')), 15000)
-        );
-
-        await Promise.race([profilePromise, timeoutPromise]);
-        console.log('🏁 [AUTH] Fluxo de login completo.');
-      }
-
-      return data;
-    } catch (err: any) {
-      console.error('❌ [AUTH] Falha no fluxo de signIn:', err);
-      if (err.message === 'TIMEOUT_PROFILE_FETCH') {
-        throw new Error('O servidor demorou muito para responder. Tente novamente.');
-      }
-      throw err;
-    }
+    if (error) throw error;
+    return data;
   };
 
   return (
