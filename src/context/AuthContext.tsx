@@ -17,50 +17,58 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const isFetching = React.useRef<string | null>(null);
+  const isFetchingRef = React.useRef<string | null>(null);
 
   const fetchProfile = async (id: string, retryCount = 0) => {
     const MAX_RETRIES = 5;
-    
+
     // Evitar buscas duplicadas para o mesmo ID ao mesmo tempo
-    if (isFetching.current === id && retryCount === 0) return;
-    isFetching.current = id;
-      console.log(`🔍 [AUTH] Tentando carregar perfil para ${id} (Tentativa ${retryCount + 1})...`);
+    if (isFetchingRef.current === id && retryCount === 0 && user) {
+      setLoading(false);
+      return;
+    }
+    
+    isFetchingRef.current = id;
+
+    try {
+      console.log(`🔍 [AUTH] Carregando perfil: ${id} (Tentativa ${retryCount + 1})`);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', id)
-        .maybeSingle(); // Usar maybeSingle para não disparar erro 406 se não existir
+        .maybeSingle();
 
       if (error) {
-        console.error('❌ [AUTH] Erro no Supabase ao buscar perfil:', error);
+        console.error('❌ [AUTH] Erro no Supabase:', error);
         throw error;
       }
 
+      // Se o perfil não existe ainda, tenta o retry (Pode ser delay da Trigger)
       if (!data) {
         if (retryCount < MAX_RETRIES) {
-          const delay = Math.pow(2, retryCount) * 500; // Exponential backoff
-          console.warn(`⚠️ [AUTH] Perfil ainda não apareceu no banco. Tentando em ${delay}ms...`);
+          const delay = Math.pow(2, retryCount) * 500;
+          console.warn(`⚠️ [AUTH] Perfil não encontrado. Nova tentativa em ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           return fetchProfile(id, retryCount + 1);
         }
         throw new Error('PROFILE_NOT_FOUND');
       }
 
-      console.log('✅ [AUTH] Perfil carregado com sucesso:', { role: data.role });
+      // Mapeamento de Role Seguro
+      const dbRole = (data.role || '').toLowerCase();
+      let finalRole: UserRole = 'sala';
       
-      const rawRole = (data.role || '').toLowerCase();
-      let normalizedRole: UserRole = 'sala';
-      
-      if (rawRole.includes('admin')) normalizedRole = 'admin';
-      else if (rawRole.includes('atendente') || rawRole.includes('colaborador')) normalizedRole = 'atendente';
+      if (dbRole.includes('admin')) finalRole = 'admin';
+      else if (dbRole.includes('atendente') || dbRole.includes('colaborador')) finalRole = 'atendente';
+
+      console.log('✅ [AUTH] Perfil carregado:', { role: finalRole, sala: data.sala_numero });
 
       setUser({
         id: data.id,
         name: data.full_name || data.name || data.email?.split('@')[0] || 'Usuário',
         email: data.email || '',
-        role: normalizedRole,
+        role: finalRole,
         avatar: data.avatar_url || `https://picsum.photos/seed/${data.id}/100/100`,
         sala_numero: data.sala_numero,
         status: data.status as 'Ativo' | 'Bloqueado',
@@ -68,71 +76,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
     } catch (err: any) {
-      console.error('❌ [AUTH] Falha no fetchProfile:', err.message || err);
+      console.error('❌ [AUTH] Falha crítica:', err.message || err);
       if (retryCount >= MAX_RETRIES) {
         setUser(null);
       }
-      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const updateProfile = async (updates: Partial<User>) => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: updates.name,
-          avatar_url: updates.avatar,
-          role: updates.role,
-          sala_numero: updates.sala_numero,
-          // Adicione outros campos se necessário
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      // Recarregar o perfil para garantir consistência
-      await fetchProfile(user.id);
-    } catch (err) {
-      console.error('❌ [AUTH] Erro ao atualizar perfil:', err);
-      throw err;
-    }
-  };
-
   useEffect(() => {
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => {
-        if (session) {
-          fetchProfile(session.user.id);
-        } else {
-          setLoading(false);
-        }
-      })
-      .catch(() => {
-        setLoading(false);
-      });
-
+    // onAuthStateChange já lida com a sessão inicial (evento INITIAL_SESSION)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log(`🔔 [AUTH] Evento: ${event}`, session?.user?.id);
+      console.log(`🔔 [AUTH] Evento: ${event}`, session?.user?.email);
       
       if (session?.user) {
-        // Usar o ID da ref para evitar closure viciada
-        if (isFetching.current === session.user.id && user) {
-          setLoading(false);
-          return;
-        }
-        
-        try {
-          await fetchProfile(session.user.id);
-        } catch (err) {
-          setLoading(false);
-        }
+        await fetchProfile(session.user.id);
       } else {
-        isFetching.current = null;
+        isFetchingRef.current = null;
         setUser(null);
         setLoading(false);
       }
@@ -142,23 +103,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    try {
+      setLoading(true);
+      await supabase.auth.signOut();
+      setUser(null);
+    } catch (err) {
+      console.error('❌ [AUTH] Erro ao sair:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const signIn = async (email: string, password: string) => {
-    console.log('🔐 [AUTH] Iniciando signIn...', { email });
-    // O fetchProfile será disparado automaticamente pelo onAuthStateChange
-    const { data, error } = await supabase.auth.signInWithPassword({
+    console.log('🔐 [AUTH] Iniciando signIn...');
+    const result = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) throw error;
-    return data;
+    if (result.error) throw result.error;
+    
+    // O onAuthStateChange cuidará de chamar o fetchProfile
+    return result.data;
+  };
+
+  const updateProfile = async (updates: Partial<User>) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: updates.name,
+          avatar_url: updates.avatar,
+          role: updates.role,
+          sala_numero: updates.sala_numero,
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      await fetchProfile(user.id);
+    } catch (err) {
+      console.error('❌ [AUTH] Erro update:', err);
+      throw err;
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, setUser, logout, signIn, updateProfile, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      setUser, 
+      logout, 
+      signIn, 
+      updateProfile, 
+      isAuthenticated: !!user 
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -97,18 +97,19 @@ const SignUp: React.FC = () => {
         password: formData.senha,
         options: {
           data: {
-            name: `${formData.nomeCompleto} (Sala ${formData.salaNumero})`,
             full_name: formData.nomeCompleto,
+            name: formData.nomeCompleto,
             role: 'sala',
             sala_numero: formData.salaNumero,
             permissions: ['encomendas', 'agendamentos', 'documentos', 'empresas', 'support', 'avisos']
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/login`
         }
       });
 
       if (authError) throw authError;
 
-      // 5. Sucesso!
+      console.log('✅ [SIGNUP] Usuário criado com sucesso:', authData.user?.id);
       setSuccess(
         '🚀 CADASTRO REALIZADO! \n\n' +
         'IMPORTANTE: Você recebeu um e-mail de confirmação AGORA. ' +
