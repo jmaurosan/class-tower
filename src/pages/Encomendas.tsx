@@ -93,11 +93,12 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
+      // Usar Picsum como fallback se não houver foto capturada
       let foto_url = `https://picsum.photos/seed/${Math.random()}/200/200`;
 
       if (capturedPhoto) {
+        console.log('📸 [ENCOMENDAS] Iniciando upload da foto...');
         const fileName = `pkg-${Date.now()}.jpg`;
         const base64Data = capturedPhoto.split(',')[1];
         const byteCharacters = atob(base64Data);
@@ -108,21 +109,30 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
         const byteArray = new Uint8Array(byteNumbers);
         const blob = new Blob([byteArray], { type: 'image/jpeg' });
 
+        // Tentar upload para o bucket 'documentos' que é o padrão do projeto
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('documentos')
           .upload(`encomendas/${fileName}`, blob);
 
-        if (!uploadError && uploadData) {
+        if (uploadError) {
+          console.error("❌ [ENCOMENDAS] Erro no upload:", uploadError);
+          showToast("Erro ao salvar foto: " + uploadError.message, "error");
+          // Continuamos sem a foto se o upload falhar para não travar o registro?
+          // Melhor parar e avisar o usuário se ele quis colocar uma foto.
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (uploadData) {
           const { data: { publicUrl } } = supabase.storage
             .from('documentos')
             .getPublicUrl(`encomendas/${fileName}`);
           foto_url = publicUrl;
-        } else if (uploadError) {
-          console.error("Erro no upload da foto:", uploadError);
-          showToast("Erro ao fazer upload da foto.", "error");
+          console.log('✅ [ENCOMENDAS] Foto salva:', foto_url);
         }
       }
 
+      console.log('💾 [ENCOMENDAS] Salvando registro no banco de dados...');
       if (editingId) {
         await updateEncomenda(editingId, {
           destinatario: newPackage.destinatario || '',
@@ -150,8 +160,8 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
       handleCloseModal();
       await refresh();
     } catch (err: any) {
-      console.error('Erro ao salvar encomenda:', err);
-      showToast(err.message || 'Erro ao salvar no banco de dados.', 'error');
+      console.error('❌ [ENCOMENDAS] Erro crítico:', err);
+      showToast('Erro ao salvar no banco de dados: ' + (err.message || 'Tente novamente.'), 'error');
     } finally {
       setIsSubmitting(false);
     }
