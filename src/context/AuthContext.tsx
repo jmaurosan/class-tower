@@ -30,20 +30,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         if (error.code === 'PGRST116' && retryCount < MAX_RETRIES) {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          console.warn(`⚠️ [AUTH] Perfil não encontrado (UID: ${id}), tentando novamente (${retryCount + 1}/${MAX_RETRIES})...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
           return fetchProfile(id, retryCount + 1);
         }
-        if (error.name === 'AbortError' || error.message?.includes('aborted')) return;
-        throw error;
+        console.error('❌ [AUTH] Erro real no Supabase ao buscar perfil:', error);
+        throw error; // Lançar erro para ser capturado no catch abaixo e re-lançado
       }
 
       if (data) {
-        let normalizedRole: UserRole = 'sala';
+        console.log('✅ [AUTH] Perfil carregado com sucesso:', { id: data.id, role: data.role });
         const rawRole = (data.role || '').toLowerCase();
-
+        let normalizedRole: UserRole = 'sala';
+        
         if (rawRole.includes('admin')) normalizedRole = 'admin';
         else if (rawRole.includes('atendente') || rawRole.includes('colaborador')) normalizedRole = 'atendente';
-        else normalizedRole = 'sala';
 
         setUser({
           id: data.id,
@@ -58,7 +59,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err: any) {
       if (err.name === 'AbortError' || err.message?.includes('aborted')) return;
-      console.error('❌ [AUTH] Erro ao buscar perfil:', err.message);
+      console.error('❌ [AUTH] Falha crítica no fetchProfile:', err.message || err);
+      setErrorState(err.message || 'Erro ao carregar perfil');
+      throw err; // RE-LANÇAR para que o Login.tsx saiba que falhou!
     } finally {
       setLoading(false);
     }
@@ -119,20 +122,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
+    console.log('🔐 [AUTH] Iniciando processo de login...', { email });
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [AUTH] Erro no signInWithPassword:', error.message);
+        throw error;
+      }
 
+      console.log('✅ [AUTH] Credenciais aceitas. Buscando informações do perfil...');
       if (data.session?.user?.id) {
-        await fetchProfile(data.session.user.id);
+        // Timeout de 10 segundos para não deixar a interface travada pra sempre
+        const profilePromise = fetchProfile(data.session.user.id);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('TIMEOUT_PROFILE_FETCH')), 15000)
+        );
+
+        await Promise.race([profilePromise, timeoutPromise]);
+        console.log('🏁 [AUTH] Fluxo de login completo.');
       }
 
       return data;
-    } catch (err) {
+    } catch (err: any) {
+      console.error('❌ [AUTH] Falha no fluxo de signIn:', err);
+      if (err.message === 'TIMEOUT_PROFILE_FETCH') {
+        throw new Error('O servidor demorou muito para responder. Tente novamente.');
+      }
       throw err;
     }
   };

@@ -52,9 +52,9 @@ const UpdatePassword: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#15191e] p-4 transition-colors duration-500">
-      <div className="w-full max-w-md bg-white dark:bg-[#1d222a] p-8 md:p-12 rounded-[32px] shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-500">
-        <div className="text-center mb-8">
+    <div className="min-h-screen w-full flex flex-col md:items-center md:justify-center bg-slate-50 dark:bg-[#15191e] p-4 md:p-8 overflow-y-auto transition-colors duration-500">
+      <div className="w-full max-w-md bg-white dark:bg-[#1d222a] p-6 md:p-12 rounded-[24px] md:rounded-[32px] shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-500 my-auto">
+        <div className="text-center mb-6 md:mb-8">
           <div className="size-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <span className="material-symbols-outlined text-primary text-4xl">lock_reset</span>
           </div>

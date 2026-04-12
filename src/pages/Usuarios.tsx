@@ -202,14 +202,17 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
     try {
       setIsDeleting(true);
 
-      // 1. Buscar dados do usuário antes de deletar para log
-      const { data: oldUser, error: fetchError } = await supabase
+      // 1. Buscar dados do usuário antes de deletar para log (Uso mais seguro do que .single())
+      const { data: userProfiles, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userToDelete)
-        .single();
+        .eq('id', userToDelete);
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        console.warn('Perfil não encontrado ao tentar excluir, prosseguindo com exclusão de login:', fetchError);
+      }
+
+      const oldUser = userProfiles && userProfiles.length > 0 ? userProfiles[0] : { id: userToDelete, full_name: 'Usuário Removido' };
 
       // 2. Deletar o usuário através da Edge Function (Auth + Database)
       const { data: fnData, error: fnError } = await supabase.functions.invoke('delete-user', {
@@ -559,10 +562,10 @@ const Usuarios: React.FC<UsuariosProps> = ({ currentUser }) => {
       )}
       {/* Modal de Confirmação de Exclusão */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-          <div className="bg-white dark:bg-[#1d222a] rounded-[24px] shadow-2xl max-w-sm w-full p-8 border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-300">
-            <div className="flex flex-col items-center text-center mb-6">
-              <div className="size-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mb-4">
+        <div className="min-h-screen w-full flex flex-col md:items-center md:justify-center bg-slate-50 dark:bg-[#15191e] p-4 md:p-8 overflow-y-auto transition-colors duration-500">
+          <div className="w-full max-w-md bg-white dark:bg-[#1d222a] p-6 md:p-12 rounded-[24px] md:rounded-[32px] shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-500 my-auto">
+            <div className="text-center mb-6 md:mb-8">
+              <div className="size-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mb-4 mx-auto">
                 <span className="material-symbols-outlined text-3xl">delete_forever</span>
               </div>
               <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Excluir Usuário?</h3>

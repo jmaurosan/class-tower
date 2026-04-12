@@ -35,6 +35,18 @@
             }
         });
     }
+
+    // AUTO-RECOVERY: Se o app ficar travado na tela de carregamento por mais de 20 segundos
+    setTimeout(() => {
+        const root = document.getElementById('root');
+        if (root && root.innerHTML.includes('Verificando acesso')) {
+            console.warn('🚀 [AUTO-RECOVERY] O login parece estar travado. Limpando cache e tentando novamente...');
+            localStorage.clear();
+            sessionStorage.clear();
+            // Só faz o reload se realmente estiver na tela de loading travada
+            window.location.reload();
+        }
+    }, 20000);
     </script>
 
     <script>

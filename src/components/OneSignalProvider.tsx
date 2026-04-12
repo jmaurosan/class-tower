@@ -14,15 +14,25 @@ export const OneSignalProvider: React.FC<OneSignalProviderProps> = ({ user, chil
     if (user?.id) {
       // @ts-ignore
       window.OneSignalDeferred.push(async function(OneSignal) {
-        if (OneSignal?.login) {
-          await OneSignal.login(user.id);
+        try {
+          if (OneSignal?.login) {
+            console.log('🔔 [ONESIGNAL] Vinculando usuário:', user.id);
+            await OneSignal.login(user.id);
+          }
+        } catch (err) {
+          console.warn('⚠️ [ONESIGNAL] Erro ao logar no OneSignal:', err);
         }
       });
     } else {
       // @ts-ignore
       window.OneSignalDeferred.push(async function(OneSignal) {
-        if (OneSignal?.logout) {
-          await OneSignal.logout();
+        try {
+          if (OneSignal?.logout) {
+            console.log('🔔 [ONESIGNAL] Deslogando usuário...');
+            await OneSignal.logout();
+          }
+        } catch (err) {
+          console.warn('⚠️ [ONESIGNAL] Erro ao deslogar no OneSignal:', err);
         }
       });
     }
