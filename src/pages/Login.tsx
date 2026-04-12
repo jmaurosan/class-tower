@@ -1,13 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
 const Login: React.FC = () => {
-  const { signIn } = useAuth();
+  const { signIn, user, loading } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
+
+  // ✨ DESTRAVE: Se o usuário logou, mas a tela de login ainda está aberta, 
+  // nós forçamos o redirecionamento para o Dashboard.
+  useEffect(() => {
+    if (user && !loading) {
+      console.log('🚀 [LOGIN] Usuário detectado, redirecionando para o Dashboard...');
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, loading, navigate]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

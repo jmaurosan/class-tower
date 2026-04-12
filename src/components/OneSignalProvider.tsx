@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { User } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 interface OneSignalProviderProps {
   user: User | null;
@@ -7,10 +8,15 @@ interface OneSignalProviderProps {
 }
 
 export const OneSignalProvider: React.FC<OneSignalProviderProps> = ({ user, children }) => {
+  const { loading } = useAuth();
+
   useEffect(() => {
     // @ts-ignore
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     
+    // Se estiver carregando o perfil, não fazemos nada (evita conflitos)
+    if (loading) return;
+
     if (user?.id) {
       // @ts-ignore
       window.OneSignalDeferred.push(async function(OneSignal) {
