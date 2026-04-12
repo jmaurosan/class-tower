@@ -61,7 +61,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#15191e] p-4 transition-colors duration-500 relative overflow-hidden">
+    <div className="min-h-screen w-full flex flex-col md:items-center md:justify-center bg-slate-50 dark:bg-[#15191e] p-4 py-8 md:p-8 overflow-y-auto transition-colors duration-500 relative">
       {/* Elementos Decorativos de Fundo */}
       <div className="absolute top-[-10%] left-[-10%] size-[40%] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] size-[40%] bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
