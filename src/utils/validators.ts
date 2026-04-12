@@ -1,5 +1,5 @@
 export const PASSWORD_REQUIREMENTS = {
-  minLength: 8,
+  minLength: 6,
   hasUpperCase: /[A-Z]/,
   hasNumber: /\d/,
   hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/,

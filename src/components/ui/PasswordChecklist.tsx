@@ -10,7 +10,7 @@ const PasswordChecklist: React.FC<PasswordChecklistProps> = ({ password }) => {
   const validation = validatePassword(password);
 
   const requirements = [
-    { label: 'Mínimo de 8 caracteres', met: validation.length },
+    { label: 'Mínimo de 6 caracteres', met: validation.length },
     { label: 'Pelo menos um número', met: validation.number },
     { label: 'Pelo menos uma letra maiúscula', met: validation.upper },
     { label: 'Pelo menos um caractere especial (@, #, $, etc.)', met: validation.special },

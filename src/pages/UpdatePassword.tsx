@@ -50,7 +50,13 @@ const UpdatePassword: React.FC = () => {
 
     } catch (err: any) {
       console.error('Error updating password:', err);
-      setError('Ocorreu um erro ao tentar mudar sua senha. O link pode ter expirado.');
+      // 🔥 Melhoria: Mostrar a mensagem real do erro (ex: "Senha muito curta")
+      // se não for possível, mostramos a mensagem de link expirado como fallback.
+      if (err.message && !err.message.includes('expired')) {
+        setError(`Erro: ${err.message}`);
+      } else {
+        setError('O link de redefinição pode ter expirado ou já foi utilizado. Solicite um novo e-mail.');
+      }
     } finally {
       setIsLoading(false);
     }
