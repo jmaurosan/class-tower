@@ -8,15 +8,13 @@
 
 html,
 body {
-  height: 100dvh;
-  width: 100vw;
-  overflow: hidden;
-  position: fixed;
-  overscroll-behavior-y: none;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  min-height: 100dvh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #f8fafc;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
