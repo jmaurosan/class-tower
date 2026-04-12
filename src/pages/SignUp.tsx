@@ -110,9 +110,9 @@ const SignUp: React.FC = () => {
 
       // 5. Sucesso!
       setSuccess(
-        'Cadastro realizado com sucesso! ' +
-        'Por favor, verifique sua caixa de e-mail para confirmar seu acesso. ' +
-        'Você será redirecionado para a tela de login em instantes...'
+        '🚀 CADASTRO REALIZADO! \n\n' +
+        'IMPORTANTE: Você recebeu um e-mail de confirmação AGORA. ' +
+        'Você PRECISA clicar no link dentro do e-mail para ativar sua conta, caso contrário não conseguirá logar.'
       );
 
       setTimeout(() => {

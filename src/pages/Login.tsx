@@ -12,27 +12,59 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [view, setView] = useState<'login' | 'forgot-password'>('login');
+  const [isEmailNotConfirmed, setIsEmailNotConfirmed] = useState(false);
+
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      setError('Por favor, digite seu e-mail para reenviar a confirmação.');
+      return;
+    }
+    setResendLoading(true);
+    setError('');
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email.trim().toLowerCase(),
+        options: {
+          emailRedirectTo: `${window.location.origin}/login`
+        }
+      });
+      if (error) throw error;
+      setSuccess('E-mail de confirmação reenviado! Verifique sua caixa de entrada.');
+      setIsEmailNotConfirmed(false);
+    } catch (err: any) {
+      console.error('Resend error:', err);
+      setError('Erro ao reenviar e-mail: ' + (err.message || 'Tente novamente.'));
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setSuccess('');
+    setIsEmailNotConfirmed(false);
 
     try {
       const sanitizedEmail = email.trim().toLowerCase();
       await signIn(sanitizedEmail, password);
-      // Login bem-sucedido! O estado global (useAuth) vai atualizar e redirecionar automaticamente.
     } catch (err: any) {
       console.error('Login error:', err);
-      if (err.message === 'Invalid login credentials') {
+      const msg = err.message || '';
+      
+      if (msg.includes('Invalid login credentials')) {
         setError('E-mail ou senha incorretos. Verifique suas credenciais.');
-      } else if (err.message === 'Email not confirmed') {
-        setError('E-mail não confirmado. Verifique sua caixa de entrada.');
+      } else if (msg.includes('Email not confirmed') || err.status === 400) {
+        setError('Seu e-mail ainda não foi confirmado.');
+        setIsEmailNotConfirmed(true);
       } else {
-        setError('Ocorreu um erro ao tentar acessar o sistema. Tente novamente mais tarde.');
+        setError('Erro ao acessar o sistema. Tente novamente mais tarde.');
       }
       setIsLoading(false);
     }
@@ -164,9 +196,34 @@ const Login: React.FC = () => {
                   </div>
 
                   {error && (
-                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 text-red-500 text-xs font-bold animate-in fade-in slide-in-from-top-1">
-                      <span className="material-symbols-outlined text-sm">error</span>
-                      {error}
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex flex-col gap-2 text-red-500 text-xs font-bold animate-in fade-in slide-in-from-top-1">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-sm">error</span>
+                        {error}
+                      </div>
+                      
+                      {isEmailNotConfirmed && (
+                        <button
+                          type="button"
+                          onClick={handleResendConfirmation}
+                          disabled={resendLoading}
+                          className="mt-2 py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          {resendLoading ? (
+                            <div className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          ) : (
+                            <span className="material-symbols-outlined text-sm">mail</span>
+                          )}
+                          Reenviar E-mail de Confirmação
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {success && (
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-2 text-emerald-600 text-xs font-bold animate-in fade-in slide-in-from-top-1">
+                      <span className="material-symbols-outlined text-sm">check_circle</span>
+                      {success}
                     </div>
                   )}
 

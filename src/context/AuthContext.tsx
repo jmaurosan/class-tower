@@ -19,49 +19,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (id: string, retryCount = 0) => {
-    const MAX_RETRIES = 3;
+    const MAX_RETRIES = 5; // Aumentado para lidar com delays de trigger
 
     try {
+      console.log(`🔍 [AUTH] Tentando carregar perfil para ${id} (Tentativa ${retryCount + 1})...`);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle(); // Usar maybeSingle para não disparar erro 406 se não existir
 
       if (error) {
-        if (error.code === 'PGRST116' && retryCount < MAX_RETRIES) {
-          console.warn(`⚠️ [AUTH] Perfil não encontrado (UID: ${id}), tentando novamente (${retryCount + 1}/${MAX_RETRIES})...`);
-          await new Promise(resolve => setTimeout(resolve, 1000));
+        console.error('❌ [AUTH] Erro no Supabase ao buscar perfil:', error);
+        throw error;
+      }
+
+      if (!data) {
+        if (retryCount < MAX_RETRIES) {
+          const delay = Math.pow(2, retryCount) * 500; // Exponential backoff
+          console.warn(`⚠️ [AUTH] Perfil ainda não apareceu no banco. Tentando em ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
           return fetchProfile(id, retryCount + 1);
         }
-        console.error('❌ [AUTH] Erro real no Supabase ao buscar perfil:', error);
-        throw error; // Lançar erro para ser capturado no catch abaixo e re-lançado
+        throw new Error('PROFILE_NOT_FOUND');
       }
 
-      if (data) {
-        console.log('✅ [AUTH] Perfil carregado com sucesso:', { id: data.id, role: data.role });
-        const rawRole = (data.role || '').toLowerCase();
-        let normalizedRole: UserRole = 'sala';
-        
-        if (rawRole.includes('admin')) normalizedRole = 'admin';
-        else if (rawRole.includes('atendente') || rawRole.includes('colaborador')) normalizedRole = 'atendente';
+      console.log('✅ [AUTH] Perfil carregado com sucesso:', { role: data.role });
+      
+      const rawRole = (data.role || '').toLowerCase();
+      let normalizedRole: UserRole = 'sala';
+      
+      if (rawRole.includes('admin')) normalizedRole = 'admin';
+      else if (rawRole.includes('atendente') || rawRole.includes('colaborador')) normalizedRole = 'atendente';
 
-        setUser({
-          id: data.id,
-          name: data.full_name || data.name || data.email?.split('@')[0],
-          email: data.email || '',
-          role: normalizedRole,
-          avatar: data.avatar_url || `https://picsum.photos/seed/${data.id}/100/100`,
-          sala_numero: data.sala_numero,
-          status: data.status as 'Ativo' | 'Bloqueado',
-          permissions: data.permissions || {}
-        });
-      }
+      setUser({
+        id: data.id,
+        name: data.full_name || data.name || data.email?.split('@')[0] || 'Usuário',
+        email: data.email || '',
+        role: normalizedRole,
+        avatar: data.avatar_url || `https://picsum.photos/seed/${data.id}/100/100`,
+        sala_numero: data.sala_numero,
+        status: data.status as 'Ativo' | 'Bloqueado',
+        permissions: data.permissions || {}
+      });
+      
     } catch (err: any) {
-      if (err.name === 'AbortError' || err.message?.includes('aborted')) return;
-      console.error('❌ [AUTH] Falha crítica no fetchProfile:', err.message || err);
-      setErrorState(err.message || 'Erro ao carregar perfil');
-      throw err; // RE-LANÇAR para que o Login.tsx saiba que falhou!
+      console.error('❌ [AUTH] Falha no fetchProfile:', err.message || err);
+      if (retryCount >= MAX_RETRIES) {
+        setUser(null);
+      }
+      throw err;
     } finally {
       setLoading(false);
     }

@@ -36,11 +36,16 @@ const UpdatePassword: React.FC = () => {
       });
 
       if (error) throw error;
-      setSuccess('Senha redefinida com sucesso! Redirecionando para o login...');
+      setSuccess('Senha redefinida com sucesso!');
 
-      // Redirecionar para o login após alguns segundos
+      // ✨ BLINDAGEM: Limpar TUDO do navegador para forçar um login limpo
+      // Isso evita conflitos entre a sessão de recuperação e a nova senha
+      await supabase.auth.signOut();
+      localStorage.clear();
+      sessionStorage.clear();
+
       setTimeout(() => {
-        navigate('/login');
+        navigate('/login', { replace: true });
       }, 3000);
 
     } catch (err: any) {
