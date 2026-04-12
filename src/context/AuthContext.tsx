@@ -18,10 +18,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (id: string, retryCount = 0) => {
-    const MAX_RETRIES = 5; // Aumentado para lidar com delays de trigger
+  const isFetching = React.useRef<string | null>(null);
 
-    try {
+  const fetchProfile = async (id: string, retryCount = 0) => {
+    const MAX_RETRIES = 5;
+    
+    // Evitar buscas duplicadas para o mesmo ID ao mesmo tempo
+    if (isFetching.current === id && retryCount === 0) return;
+    isFetching.current = id;
       console.log(`🔍 [AUTH] Tentando carregar perfil para ${id} (Tentativa ${retryCount + 1})...`);
       const { data, error } = await supabase
         .from('profiles')
@@ -116,8 +120,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log(`🔔 [AUTH] Evento: ${event}`, session?.user?.id);
       
       if (session?.user) {
-        // Se já temos o usuário e o ID é o mesmo, não recarregar (evita loop)
-        if (user?.id === session.user.id) {
+        // Usar o ID da ref para evitar closure viciada
+        if (isFetching.current === session.user.id && user) {
           setLoading(false);
           return;
         }
@@ -125,10 +129,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           await fetchProfile(session.user.id);
         } catch (err) {
-          console.error('❌ [AUTH] Erro ao processar mudança de estado:', err);
           setLoading(false);
         }
       } else {
+        isFetching.current = null;
         setUser(null);
         setLoading(false);
       }

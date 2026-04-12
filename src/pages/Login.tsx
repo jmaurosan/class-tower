@@ -63,6 +63,9 @@ const Login: React.FC = () => {
     try {
       const sanitizedEmail = email.trim().toLowerCase();
       await signIn(sanitizedEmail, password);
+      // 🔥 Se o login no Auth deu certo, paramos o spinner local.
+      // O useEffect de redirecionamento cuidará do resto.
+      setIsLoading(false);
     } catch (err: any) {
       console.error('Login error:', err);
       const msg = err.message || '';
