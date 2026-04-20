@@ -71,6 +71,23 @@ serve(async (req) => {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }, { onConflict: 'id' })
+
+      // Criar aviso de boas-vindas para o novo usuário
+      const agora = new Date()
+      await supabaseAdmin.from('avisos').insert([{
+        titulo: 'Bem-vindo ao Class Tower!',
+        conteudo: `Olá ${name}! Sua conta foi criada com sucesso no sistema Class Tower. Aqui você pode acompanhar encomendas, agendamentos, avisos e muito mais. Qualquer dúvida, acesse o Suporte Técnico no menu lateral.`,
+        prioridade: 'Baixa',
+        data: agora.toISOString().split('T')[0],
+        hora: agora.toTimeString().split(' ')[0].substring(0, 5),
+        criado_por: 'Sistema',
+        sala_numero: role === 'sala' ? sala_numero : null,
+        status: 'Ativo'
+      }]).then(() => {
+        console.log('Welcome notification created for user:', name)
+      }).catch((err: any) => {
+        console.warn('Failed to create welcome notification:', err)
+      })
     }
 
     return new Response(

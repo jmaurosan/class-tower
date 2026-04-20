@@ -85,6 +85,16 @@ const Sidebar: React.FC<SidebarProps> = ({ user, isOpen, onClose }) => {
         new_data: { type: 'SOS_MANUAL_BTN' }
       }]);
 
+      // Push notification apenas para administradores
+      supabase.functions.invoke('onesignal-push', {
+        body: {
+          target_role: 'admin',
+          titulo: 'ALERTA DE EMERGÊNCIA / SOS',
+          mensagem: `Emergência acionada por ${user.name}. Verifiquem imediatamente as instalações.`,
+          url: window.location.origin + '/avisos'
+        }
+      }).catch(err => console.error("Falha ao enviar push de emergência:", err));
+
       showToast('Alerta de Emergência disparado com sucesso!', 'error');
     } catch (error) {
       console.error('Erro ao acionar emergência', error);

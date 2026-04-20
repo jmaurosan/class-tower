@@ -30,45 +30,67 @@ serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false }
     })
 
-    const { sala_id, titulo, mensagem, url } = await req.json()
+    const { sala_id, titulo, mensagem, url, target_role } = await req.json()
 
-    if (!sala_id || !titulo || !mensagem) {
-      return new Response(JSON.stringify({ error: 'sala_id, titulo e mensagem são obrigatórios' }), {
+    if (!titulo || !mensagem) {
+      return new Response(JSON.stringify({ error: 'titulo e mensagem são obrigatórios' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
-    // 1. Fetch Room Number (sala_numero) from `salas` table using sala_id
-    const { data: salaData, error: salaError } = await supabaseAdmin
-      .from('salas')
-      .select('numero')
-      .eq('id', sala_id)
-      .single()
+    let userIds: string[] = []
 
-    if (salaError || !salaData) {
-      return new Response(JSON.stringify({ error: 'Sala não encontrada' }), {
-        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    if (target_role) {
+      // Modo: enviar push para todos os usuários de uma role específica (ex: admin)
+      const { data: usersData, error: usersError } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .ilike('role', `%${target_role}%`)
+        .eq('status', 'Ativo')
+
+      if (usersError) {
+        return new Response(JSON.stringify({ error: `Erro ao buscar usuários com role ${target_role}` }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
+      userIds = (usersData || []).map((u: any) => u.id)
+    } else if (sala_id) {
+      // Modo: enviar push para moradores de uma sala específica
+      const { data: salaData, error: salaError } = await supabaseAdmin
+        .from('salas')
+        .select('numero')
+        .eq('id', sala_id)
+        .single()
+
+      if (salaError || !salaData) {
+        return new Response(JSON.stringify({ error: 'Sala não encontrada' }), {
+          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
+      const sala_numero = salaData.numero;
+
+      const { data: usersData, error: usersError } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('sala_numero', sala_numero)
+
+      if (usersError) {
+        return new Response(JSON.stringify({ error: 'Erro ao buscar moradores da sala' }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
+      userIds = (usersData || []).map((u: any) => u.id)
+    } else {
+      return new Response(JSON.stringify({ error: 'sala_id ou target_role é obrigatório' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
-
-    const sala_numero = salaData.numero;
-
-    // 2. Find all profiles belonging to this room
-    const { data: usersData, error: usersError } = await supabaseAdmin
-      .from('profiles')
-      .select('id')
-      .eq('sala_numero', sala_numero)
-
-    if (usersError) {
-      return new Response(JSON.stringify({ error: 'Erro ao buscar moradores da sala' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
-    }
-
-    const userIds = usersData.map((u: any) => u.id)
 
     if (userIds.length === 0) {
-      return new Response(JSON.stringify({ message: 'Nenhum usuário vinculado a esta sala' }), {
+      return new Response(JSON.stringify({ message: 'Nenhum usuário encontrado para o destino informado' }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
