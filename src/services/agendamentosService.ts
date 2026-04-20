@@ -153,5 +153,12 @@ export const agendamentosService = {
       .delete()
       .eq('id', id);
     if (error) throw error;
+  },
+
+  subscribe(callback: (payload: any) => void) {
+    return supabase
+      .channel('public:agendamentos')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, callback)
+      .subscribe();
   }
 };
