@@ -636,25 +636,30 @@ const Agendamentos: React.FC<AgendamentosProps> = ({ user }) => {
                         <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">{new Date(rule.date + 'T00:00:00').toLocaleDateString('pt-BR', { month: 'short' })}</span>
                       </div>
 
-                      <div className={`size-10 md:size-12 rounded-full flex items-center justify-center shrink-0 ${rule.type === 'blocked' ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
-                        <span className="material-symbols-outlined text-xl md:text-2xl">{rule.type === 'blocked' ? 'block' : 'calendar_today'}</span>
+                      {/* A regra é descrita por `is_blocked` + `allowed_start_time`/
+                          `allowed_end_time`. O código lia `rule.type` e
+                          `rule.special_hours`, que não existem: como ambos eram
+                          sempre undefined, todo dia bloqueado aparecia em âmbar
+                          como "Horário Especial" e o intervalo nunca era exibido. */}
+                      <div className={`size-10 md:size-12 rounded-full flex items-center justify-center shrink-0 ${rule.is_blocked ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                        <span className="material-symbols-outlined text-xl md:text-2xl">{rule.is_blocked ? 'block' : 'calendar_today'}</span>
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className={`px-2 py-0.5 rounded text-[9px] font-black border uppercase tracking-tighter ${
-                            rule.type === 'blocked' 
-                              ? 'bg-red-500/10 text-red-500 border-red-500/20' 
+                            rule.is_blocked
+                              ? 'bg-red-500/10 text-red-500 border-red-500/20'
                               : 'bg-amber-500/10 text-amber-600 dark:text-amber-500 border-amber-500/20'
                           }`}>
-                            {rule.type === 'blocked' ? 'Bloqueado' : 'Horário Especial'}
+                            {rule.is_blocked ? 'Bloqueado' : 'Horário Especial'}
                           </span>
                         </div>
                         <h4 className="text-sm md:text-base font-bold text-slate-800 dark:text-slate-200 truncate">{rule.description}</h4>
-                        {rule.type === 'special' && rule.special_hours && (
+                        {!rule.is_blocked && rule.allowed_start_time && rule.allowed_end_time && (
                           <p className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
                             <span className="material-symbols-outlined text-[12px]">schedule</span>
-                            {rule.special_hours.start} até {rule.special_hours.end}
+                            {rule.allowed_start_time} até {rule.allowed_end_time}
                           </p>
                         )}
                       </div>

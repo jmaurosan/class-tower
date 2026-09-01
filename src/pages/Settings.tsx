@@ -31,7 +31,7 @@ const Settings: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchAgendamentos = async () => {
-    if (user.role !== 'admin' && user.role !== 'atendente') return;
+    if (!user || (user.role !== 'admin' && user.role !== 'atendente')) return;
     try {
       setLoadingAgendamentos(true);
       const data = await agendamentosService.getAll();
@@ -85,7 +85,7 @@ const Settings: React.FC = () => {
       const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
 
       if (data) {
-        setLocalUser(prev => ({ ...prev, avatar: data.publicUrl }));
+        setLocalUser(prev => (prev ? { ...prev, avatar: data.publicUrl } : prev));
         setStatus({ type: 'success', message: 'Imagem carregada! Clique em Salvar para confirmar.' });
       }
     } catch (error: any) {

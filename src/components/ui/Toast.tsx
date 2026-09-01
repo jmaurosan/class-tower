@@ -10,6 +10,7 @@ const ToastContainer: React.FC = () => {
       case 'success': return 'check_circle';
       case 'error': return 'error';
       case 'info': return 'info';
+      case 'warning': return 'warning';
       default: return 'info';
     }
   };
@@ -19,6 +20,7 @@ const ToastContainer: React.FC = () => {
       case 'success': return 'bg-emerald-500 text-white shadow-emerald-500/20';
       case 'error': return 'bg-red-500 text-white shadow-red-500/20';
       case 'info': return 'bg-blue-500 text-white shadow-blue-500/20';
+      case 'warning': return 'bg-amber-500 text-white shadow-amber-500/20';
       default: return 'bg-slate-800 text-white shadow-slate-800/20';
     }
   };

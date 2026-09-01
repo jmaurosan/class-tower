@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { usePermissions } from '../../hooks/usePermissions';
 import Sidebar from './Sidebar';
 import NotificationBell from '../NotificationBell';
 import WhatIsNewModal from '../business/WhatIsNewModal';
@@ -11,15 +10,16 @@ import { ToastProvider } from '../../context/ToastContext';
 import ToastContainer from '../ui/Toast';
 
 const RootLayout: React.FC = () => {
-  const { user, logout, setUser } = useAuth();
+  const { user, logout } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showNews, setShowNews] = useState(false);
-  
-  const { isPageAllowed } = usePermissions(user);
+  const location = useLocation();
 
-  // Descobrir o nome da página atual baseada na URL
-  const pathname = window.location.pathname.substring(1) || 'dashboard';
+  // useLocation() em vez de window.location: a leitura direta do objeto global
+  // não é reativa, então o título do cabeçalho dependia de um re-render vindo
+  // por acaso de outro lugar.
+  const pathname = location.pathname.substring(1) || 'dashboard';
 
   const getPageTitle = (path: string) => {
     const pageNames: Record<string, string> = {
@@ -49,8 +49,6 @@ const RootLayout: React.FC = () => {
         <div className={`min-h-[100dvh] w-full flex overflow-x-hidden bg-slate-50 dark:bg-[#15191e] transition-colors duration-300 font-sans`}>
           <Sidebar
             user={user}
-            currentPage={pathname as any}
-            setCurrentPage={() => {}} // Agora o React Router gerencia isso via links
             isOpen={isSidebarOpen}
             onClose={() => setIsSidebarOpen(false)}
           />

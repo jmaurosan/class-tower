@@ -75,7 +75,7 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
 
       setShowForm(false);
       setEditingId(null);
-      setFormData({ titulo: '', conteudo: '', prioridade: 'Baixa', sala_numero: '' });
+      setFormData({ titulo: '', conteudo: '', prioridade: 'Baixa', sala_numero: '', motivo_alteracao: '' });
       showToast(editingId ? 'Aviso atualizado com sucesso!' : 'Aviso publicado com sucesso!');
     } catch (error: any) {
       console.error('Error saving aviso:', error);
@@ -173,7 +173,7 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
           onClick={() => {
             if (showForm && editingId) {
               setEditingId(null);
-              setFormData({ titulo: '', conteudo: '', prioridade: 'Baixa', sala_numero: '' });
+              setFormData({ titulo: '', conteudo: '', prioridade: 'Baixa', sala_numero: '', motivo_alteracao: '' });
             } else {
               setShowForm(!showForm);
             }
@@ -247,7 +247,7 @@ const Avisos: React.FC<AvisosProps> = ({ user }) => {
                     type="button" 
                     onClick={() => {
                       setEditingId(null);
-                      setFormData({ titulo: '', conteudo: '', prioridade: 'Baixa', sala_numero: '' });
+                      setFormData({ titulo: '', conteudo: '', prioridade: 'Baixa', sala_numero: '', motivo_alteracao: '' });
                     }}
                     className="w-full py-3 text-slate-400 font-bold text-[10px] uppercase hover:text-primary transition-colors"
                   >

@@ -122,6 +122,8 @@ export interface Agendamento {
   tipo: 'Mudança' | 'Manutenção' | 'Reserva' | 'Reunião' | 'Autorização de Acesso';
   status: 'Confirmado' | 'Pendente' | 'Cancelado';
   sala_id: string;
+  /** Dono do agendamento. A policy RLS `agendamentos_*` usa esta coluna. */
+  user_id?: string;
 }
 
 export interface Empresa {

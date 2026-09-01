@@ -80,7 +80,7 @@ const Vistorias: React.FC<VistoriasProps> = ({ user }) => {
     setEditingId(v.id);
     setFormData({
       unidade: v.unidade,
-      local: v.local,
+      local: v.local || '',
       urgencia: v.urgencia,
       tecnico: v.tecnico,
       descricao: v.descricao || ''
