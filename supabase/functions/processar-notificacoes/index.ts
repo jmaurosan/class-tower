@@ -183,11 +183,27 @@ async function enviarPush(
 
     if (resposta.ok) return
 
-    ultimoErro = `OneSignal ${resposta.status} (${esquema}): ${JSON.stringify(retorno).slice(0, 250)}`
+    // Prefixo e tamanho, nunca o valor: distingue chave de app (os_v2_app_)
+    // de chave de organização (os_v2_org_) sem expor o segredo.
+    const pista = `app=${appId.slice(0, 8)} chave=${restKey.slice(0, 11)}…(${restKey.length})`
+    ultimoErro = `OneSignal ${resposta.status} (${esquema}) [${pista}]: ${JSON.stringify(retorno).slice(0, 200)}`
 
     // Só vale tentar o outro esquema em erro de autenticação.
     if (resposta.status !== 401 && resposta.status !== 403) break
   }
 
-  throw new Error(ultimoErro)
+  // Diagnóstico: a chave consegue ao menos LER o app? Isso separa "chave de
+  // outro app" (leitura também falha) de "chave sem permissão de envio"
+  // (leitura passa, criação de notificação não).
+  let sonda = ''
+  try {
+    const r = await fetch(`https://onesignal.com/api/v1/apps/${appId}`, {
+      headers: { 'Authorization': `Key ${restKey}` },
+    })
+    sonda = ` sonda_leitura=${r.status}`
+  } catch {
+    sonda = ' sonda_leitura=erro'
+  }
+
+  throw new Error(ultimoErro + sonda)
 }
