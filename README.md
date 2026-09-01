@@ -25,9 +25,16 @@ Bem-vindo ao **Class Tower**, uma plataforma premium para gestão operacional de
 
 ## 🔒 Segurança
 
-- **Política de Senhas:** Exigência mínima de 8 caracteres e presença de números para maior proteção.
-- **Proteção de Rotas:** Uso de `ProtectedRoute` para validar sessões e permissões (Admin, Atendente, Sala).
-- **Auditoria:** Logs de auditoria para ações críticas do sistema.
+- **Política de Senhas:** mínimo de 6 caracteres, com maiúscula, número e caractere especial (`src/utils/validators.ts`).
+- **Cadastro de morador:** validado no servidor pela Edge Function `signup-morador`, que confere a sala e o nome do responsável antes de criar a conta. O papel do usuário é fixado em `sala` — nunca vem do cliente.
+- **Gestão de usuários:** as Edge Functions `create-user` e `delete-user` exigem um administrador autenticado.
+- **Proteção de Rotas:** `ProtectedRoute` valida sessão e permissões (Admin, Atendente, Sala). É uma conveniência de navegação; a autorização real é o RLS.
+- **Isolamento por unidade:** aplicado por Row Level Security no Postgres — cada morador só enxerga as encomendas e avisos da própria sala.
+- **Auditoria:** `audit_logs` é append-only, legível apenas por administradores, e não permite forjar o autor da ação.
+
+> O estado de segurança do banco está em
+> `supabase/migrations/20260831120000_hardening_seguranca.sql`. Os scripts em
+> `supabase/migrations/_legado/` são histórico e não devem ser executados.
 
 ## 📦 Como Rodar Localmente
 

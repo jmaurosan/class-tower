@@ -4,12 +4,19 @@
 
 ### 👥 Usuários de Teste
 
+> ⚠️ **Senhas não são versionadas.** Este arquivo já continha as senhas reais
+> em texto puro, inclusive a da conta de administrador — qualquer pessoa com
+> acesso ao repositório entrava no sistema. Elas foram removidas e **precisam
+> ser trocadas**, porque continuam no histórico do Git.
+>
+> Guarde as credenciais de teste no gerenciador de senhas da equipe.
+
 | Perfil | E-mail | Senha | Sala | Nome |
 |--------|--------|-------|------|------|
-| **Admin** | `mauromonit@gmail.com` | `Mauro@2026` | - | Mauro (Admin) |
-| **Atendente** | `atendente@classtower.com.br` | `Atendente@2026` | - | Carlos Silva |
-| **Condômino** | `condomino1@classtower.com.br` | `Condomino@2026` | 101 | Maria Santos |
-| **Condômino** | `condomino2@classtower.com.br` | `Condomino@2026` | 205 | João Oliveira |
+| **Admin** | *(ver gerenciador de senhas)* | — | - | Mauro (Admin) |
+| **Atendente** | `atendente@classtower.com.br` | — | - | Carlos Silva |
+| **Condômino** | `condomino1@classtower.com.br` | — | 101 | Maria Santos |
+| **Condômino** | `condomino2@classtower.com.br` | — | 205 | João Oliveira |
 
 ### 📢 Avisos Criados (5 avisos)
 
@@ -38,20 +45,20 @@
 
 #### 1.1 Login como Admin
 - [ ] Acessar `http://localhost:5173`
-- [ ] Fazer login com `mauromonit@gmail.com` / `Mauro@2026`
+- [ ] Fazer login com `mauromonit@gmail.com` / *(senha no gerenciador)*
 - [ ] Verificar se o nome "Mauro (Admin)" aparece no header
 - [ ] Verificar se todas as opções do menu estão visíveis
 - [ ] Fazer logout
 
 #### 1.2 Login como Atendente
-- [ ] Fazer login com `atendente@classtower.com.br` / `Atendente@2026`
+- [ ] Fazer login com `atendente@classtower.com.br` / *(senha no gerenciador)*
 - [ ] Verificar se o nome "Carlos Silva (Atendente)" aparece
 - [ ] Verificar quais páginas estão acessíveis
 - [ ] Tentar acessar "Usuários" (deve ser bloqueado)
 - [ ] Fazer logout
 
 #### 1.3 Login como Condômino
-- [ ] Fazer login com `condomino1@classtower.com.br` / `Condomino@2026`
+- [ ] Fazer login com `condomino1@classtower.com.br` / *(senha no gerenciador)*
 - [ ] Verificar se o nome "Maria Santos" aparece
 - [ ] Verificar se vê apenas suas próprias encomendas
 - [ ] Verificar se não tem acesso a funcionalidades administrativas

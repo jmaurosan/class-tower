@@ -12,10 +12,11 @@ FROM auth.users u
 LEFT JOIN public.profiles p ON u.id = p.id
 WHERE u.email = 'mauromonit@gmail.com';
 
--- 2. Se o usuário existir, resetar a senha para: Mauro@2026
+-- 2. Se o usuário existir, resetar a senha para o valor abaixo.
+--    NUNCA versione a senha real: troque o placeholder na hora de executar.
 UPDATE auth.users
 SET 
-  encrypted_password = crypt('Mauro@2026', gen_salt('bf')),
+  encrypted_password = crypt('TROQUE_ESTA_SENHA', gen_salt('bf')),
   updated_at = now()
 WHERE email = 'mauromonit@gmail.com';
 
@@ -31,7 +32,7 @@ SELECT
   u.email,
   p.name,
   p.role,
-  'Senha resetada para: Mauro@2026' as status
+  'Senha resetada. Troque-a apos o primeiro login.' as status
 FROM auth.users u
 JOIN public.profiles p ON u.id = p.id
 WHERE u.email = 'mauromonit@gmail.com';
