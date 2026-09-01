@@ -128,3 +128,89 @@ Se precisar reverter tudo:
 
 O rollback devolve o banco ao estado **funcional e inseguro** anterior. É uma
 medida temporária para ganhar tempo de investigação, não um destino.
+
+---
+
+# Fila de notificações (outbox)
+
+Substitui o disparo fire-and-forget que saía do navegador do porteiro. A
+notificação passa a nascer junto com a encomenda, e um worker entrega com
+retentativa.
+
+**A ordem também importa aqui**: a migration cria um agendamento que chama a
+Edge Function. Suba a função antes.
+
+## 1. Deploy da função
+
+```bash
+pwsh ./scripts/deploy-funcoes.ps1
+```
+
+Já inclui a `processar-notificacoes`.
+
+## 2. Guardar a service_role key no Vault
+
+O cron precisa dela para chamar a função. Uma vez só, no SQL Editor:
+
+```sql
+select vault.create_secret(
+  '<SUA_SERVICE_ROLE_KEY>',
+  'service_role_key',
+  'Usada pelo cron para chamar a Edge Function de notificações'
+);
+```
+
+A chave fica criptografada — nunca em texto puro na definição do job.
+
+## 3. Aplicar a migration
+
+`supabase/migrations/20260901100000_fila_notificacoes.sql`
+
+Habilita `pg_cron` e `pg_net`, cria a fila, o trigger e o agendamento de um
+minuto.
+
+## 4. Configurar o OneSignal
+
+Sem `ONESIGNAL_APP_ID` e `ONESIGNAL_REST_API_KEY` a função devolve 500 e
+**preserva a fila** — de propósito, para não gastar as tentativas de cada
+notificação até todas irem para `falha`. Assim que as chaves forem
+configuradas, o acúmulo é entregue sozinho.
+
+## 5. Verificação
+
+```sql
+-- O agendamento existe e está ativo?
+select jobname, schedule, active from cron.job where jobname = 'processar-notificacoes';
+
+-- Estado da fila
+select status, count(*), max(created_at) from public.notificacoes_fila group by status;
+
+-- As últimas execuções do cron deram certo?
+select status, return_message, start_time
+from cron.job_run_details
+where jobname = 'processar-notificacoes'
+order by start_time desc limit 10;
+```
+
+Teste de ponta a ponta: registre uma encomenda para uma sala que tenha morador
+cadastrado e acompanhe a linha correspondente sair de `pendente` para
+`enviado` em até um minuto.
+
+## Diagnóstico
+
+| Sintoma | Onde olhar |
+|---|---|
+| Fila cresce, nada sai | `cron.job_run_details`; a chave está no Vault? |
+| Tudo em `falha` | coluna `ultimo_erro`; normalmente chave do OneSignal |
+| `enviado` com `destinatarios = 0` | a unidade não tem morador cadastrado — não é erro |
+| Morador não recebeu, mas consta `enviado` | limitação do web push: no iPhone exige o PWA instalado na tela de início |
+
+Essa última linha é o motivo de considerar WhatsApp como canal principal. A
+troca mexe apenas na função `entregar` da Edge Function — fila, trigger e
+agendamento continuam iguais.
+
+## O botão de pânico não passa pela fila
+
+Continua chamando `onesignal-push` diretamente. A fila roda a cada minuto, e
+um minuto de atraso num alerta de emergência é inaceitável. Para o SOS, a
+entrega imediata vale mais que a garantia de retentativa.

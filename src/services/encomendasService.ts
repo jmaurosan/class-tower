@@ -69,17 +69,16 @@ export const encomendasService = {
       }]);
     }
 
-    // Call the push notification Edge Function (Fire and forget to not block UI)
-    if (encomenda.sala_id) {
-      supabase.functions.invoke('onesignal-push', {
-        body: {
-          sala_id: encomenda.sala_id,
-          titulo: 'Sua Encomenda Chegou!',
-          mensagem: `Recebemos uma nova encomenda (${encomenda.categoria}) destinada à sua unidade. Por favor, retire na portaria.`,
-          url: window.location.origin + '/app/encomendas'
-        }
-      }).catch(err => console.error("Falha ao enviar push:", err));
-    }
+    // A notificação de chegada NÃO é disparada daqui.
+    //
+    // Antes havia um functions.invoke() fire-and-forget neste ponto: se
+    // falhasse, o erro ia para um console que ninguém lê, e se o porteiro
+    // fechasse a aba antes da requisição sair, o morador nunca era avisado.
+    //
+    // Agora um trigger em `encomendas` enfileira o aviso na mesma transação
+    // do INSERT, e a Edge Function `processar-notificacoes` entrega com
+    // retentativa. Se a encomenda foi gravada, a notificação existe.
+    // Ver supabase/migrations/20260901100000_fila_notificacoes.sql
 
     return data;
   },

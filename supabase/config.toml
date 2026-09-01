@@ -25,4 +25,11 @@ verify_jwt = true
 
 [functions.onesignal-push]
 # Exige equipe autenticada (requireStaff).
+# Continua existindo para o botão de pânico, que precisa de entrega imediata
+# e não passa pela fila.
+verify_jwt = true
+
+[functions.processar-notificacoes]
+# Worker da fila, chamado pelo pg_cron. Além do JWT do gateway, confere que o
+# token é o service_role — a anon key também é um JWT válido.
 verify_jwt = true

@@ -30,7 +30,8 @@ $FUNCOES = @(
     @{ Nome = 'signup-morador'; Descricao = 'Auto-cadastro de morador (valida sala e responsável no servidor)' },
     @{ Nome = 'create-user';    Descricao = 'Criação de usuário (exige admin autenticado)' },
     @{ Nome = 'delete-user';    Descricao = 'Exclusão de usuário (exige admin autenticado)' },
-    @{ Nome = 'onesignal-push'; Descricao = 'Envio de push (exige equipe autenticada)' }
+    @{ Nome = 'onesignal-push'; Descricao = 'Envio de push imediato (botão de pânico)' },
+    @{ Nome = 'processar-notificacoes'; Descricao = 'Worker da fila de notificações (chamado pelo pg_cron)' }
 )
 
 $SECRETS_OBRIGATORIOS = @('ONESIGNAL_APP_ID', 'ONESIGNAL_REST_API_KEY')
