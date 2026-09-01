@@ -1,64 +1,109 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { describe, expect, it } from 'vitest';
 import Sidebar from '../components/layout/Sidebar';
+import { ToastProvider } from '../context/ToastContext';
 import { User } from '../types';
 
-const mockAdmin: User = {
+// O Sidebar usa useLocation() e useToast(), então precisa dos dois providers.
+// A versão anterior deste arquivo renderizava o componente solto e passava as
+// props currentPage/setCurrentPage, que deixaram de existir na migração para o
+// React Router — os cinco testes falhavam com
+// "useLocation() may be used only in the context of a <Router>".
+const renderSidebar = (user: User, rota = '/dashboard') =>
+  render(
+    <MemoryRouter initialEntries={[rota]}>
+      <ToastProvider>
+        <Sidebar user={user} />
+      </ToastProvider>
+    </MemoryRouter>,
+  );
+
+const admin: User = {
   id: '1',
   name: 'Admin User',
   email: 'admin@test.com',
   role: 'admin',
   permissions: {},
-  avatar: ''
+  avatar: '',
 };
 
-const mockSala: User = {
+const sala: User = {
   id: '2',
   name: 'Sala User',
   email: 'sala@test.com',
   role: 'sala',
   sala_numero: '101',
   permissions: {},
-  avatar: ''
+  avatar: '',
 };
 
-describe('Sidebar Component', () => {
-  it('renders admin options for admin user', () => {
-    const setCurrentPage = vi.fn();
-    render(<Sidebar user={mockAdmin} currentPage="dashboard" setCurrentPage={setCurrentPage} />);
+const atendente: User = {
+  id: '3',
+  name: 'Atendente User',
+  email: 'atendente@test.com',
+  role: 'atendente',
+  permissions: {},
+  avatar: '',
+};
 
-    expect(screen.getByText('Configurações')).toBeInTheDocument();
-    expect(screen.getByText('Suporte')).toBeInTheDocument();
+describe('Sidebar', () => {
+  it('mostra os itens administrativos para o admin', () => {
+    renderSidebar(admin);
+
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Cadastro de Usuários')).toBeInTheDocument();
+    expect(screen.getByText('Logs de Auditoria')).toBeInTheDocument();
+    expect(screen.getByText('Vistorias')).toBeInTheDocument();
   });
 
-  it('does NOT render admin options for sala user', () => {
-    const setCurrentPage = vi.fn();
-    render(<Sidebar user={mockSala} currentPage="dashboard" setCurrentPage={setCurrentPage} />);
+  it('esconde os itens administrativos do usuário de sala', () => {
+    renderSidebar(sala);
 
-    expect(screen.queryByText('Configurações')).not.toBeInTheDocument();
-    expect(screen.queryByText('Suporte')).not.toBeInTheDocument();
+    expect(screen.queryByText('Dashboard')).not.toBeInTheDocument();
+    expect(screen.queryByText('Cadastro de Usuários')).not.toBeInTheDocument();
+    expect(screen.queryByText('Logs de Auditoria')).not.toBeInTheDocument();
+    expect(screen.queryByText('Vistorias')).not.toBeInTheDocument();
   });
 
-  it('navigates when clicked', () => {
-    const setCurrentPage = vi.fn();
-    render(<Sidebar user={mockAdmin} currentPage="dashboard" setCurrentPage={setCurrentPage} />);
+  it('mostra ao usuário de sala apenas os módulos dele', () => {
+    renderSidebar(sala);
 
-    // Note: Material symbols might be rendered as text if ligatures are used.
-    // We search by text label which is present in the span.
-    fireEvent.click(screen.getByText('Portal de Avisos'));
-    expect(setCurrentPage).toHaveBeenCalledWith('avisos');
+    expect(screen.getByText('Encomendas')).toBeInTheDocument();
+    expect(screen.getByText('Avisos')).toBeInTheDocument();
+    expect(screen.getByText('Agendamentos')).toBeInTheDocument();
   });
 
-  it('shows correct role label for admin', () => {
-    render(<Sidebar user={mockAdmin} currentPage="dashboard" setCurrentPage={() => { }} />);
-    const labels = screen.getAllByText('Gestor Predial');
-    expect(labels.length).toBeGreaterThan(0);
-    expect(screen.queryByText('Morador')).not.toBeInTheDocument();
+  it('respeita permissão customizada gravada no perfil', () => {
+    renderSidebar({ ...sala, permissions: { vistorias: true } });
+
+    // A permissão explícita do banco tem prioridade sobre o padrão do papel.
+    expect(screen.getByText('Vistorias')).toBeInTheDocument();
   });
 
-  it('shows correct role label for sala', () => {
-    render(<Sidebar user={mockSala} currentPage="dashboard" setCurrentPage={() => { }} />);
-    const labels = screen.getAllByText('Unidade 101');
-    expect(labels.length).toBeGreaterThan(0);
+  it('exibe o rótulo de papel correto', () => {
+    const { unmount } = renderSidebar(admin);
+    expect(screen.getAllByText('Gestor Predial').length).toBeGreaterThan(0);
+    unmount();
+
+    renderSidebar(sala);
+    expect(screen.getAllByText('Unidade 101').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Gestor Predial')).not.toBeInTheDocument();
+  });
+
+  it('mostra o botão de pânico para a equipe e esconde do morador', () => {
+    const { unmount } = renderSidebar(atendente);
+    expect(screen.getByText('Botão de Pânico')).toBeInTheDocument();
+    unmount();
+
+    renderSidebar(sala);
+    expect(screen.queryByText('Botão de Pânico')).not.toBeInTheDocument();
+  });
+
+  it('marca como ativo o item da rota atual', () => {
+    renderSidebar(admin, '/encomendas');
+
+    const link = screen.getByText('Encomendas').closest('a');
+    expect(link).toHaveAttribute('href', '/encomendas');
   });
 });
