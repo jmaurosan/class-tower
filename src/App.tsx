@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -7,38 +7,47 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import RootLayout from './components/layout/RootLayout';
 
-// Páginas Públicas
+// Login é a primeira tela de todo visitante: fica no bundle inicial.
 import Login from './pages/Login';
-import SignUp from './pages/SignUp';
-import ForgotPassword from './pages/ForgotPassword';
-import UpdatePassword from './pages/UpdatePassword';
 
-// Páginas Privadas
-import Dashboard from './pages/Dashboard';
-import Agendamentos from './pages/Agendamentos';
-import AuditLogs from './pages/AuditLogs';
-import Avisos from './pages/Avisos';
-import DiarioBordo from './pages/DiarioBordo';
-import Documentos from './pages/Documentos';
-import PrestadoresServico from './pages/Empresas';
-import Encomendas from './pages/Encomendas';
-import Lembretes from './pages/Lembretes';
-import Salas from './pages/Salas';
-import Settings from './pages/Settings';
-import Support from './pages/Support';
-import Usuarios from './pages/Usuarios';
-import Vencimentos from './pages/Vencimentos';
-import Vistorias from './pages/Vistorias';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsOfUse from './pages/TermsOfUse';
-import ResponsibilityTerm from './pages/ResponsibilityTerm';
+// As demais páginas viram chunks sob demanda. Antes, as 21 telas iam num
+// único arquivo de 753 kB que todo mundo baixava só para ver o login.
+const SignUp = lazy(() => import('./pages/SignUp'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const UpdatePassword = lazy(() => import('./pages/UpdatePassword'));
+
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Agendamentos = lazy(() => import('./pages/Agendamentos'));
+const AuditLogs = lazy(() => import('./pages/AuditLogs'));
+const Avisos = lazy(() => import('./pages/Avisos'));
+const DiarioBordo = lazy(() => import('./pages/DiarioBordo'));
+const Documentos = lazy(() => import('./pages/Documentos'));
+const PrestadoresServico = lazy(() => import('./pages/Empresas'));
+const Encomendas = lazy(() => import('./pages/Encomendas'));
+const Lembretes = lazy(() => import('./pages/Lembretes'));
+const Salas = lazy(() => import('./pages/Salas'));
+const Settings = lazy(() => import('./pages/Settings'));
+const Support = lazy(() => import('./pages/Support'));
+const Usuarios = lazy(() => import('./pages/Usuarios'));
+const Vencimentos = lazy(() => import('./pages/Vencimentos'));
+const Vistorias = lazy(() => import('./pages/Vistorias'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfUse = lazy(() => import('./pages/TermsOfUse'));
+const ResponsibilityTerm = lazy(() => import('./pages/ResponsibilityTerm'));
+
+const CarregandoPagina: React.FC = () => (
+  <div className="h-full w-full min-h-[50vh] flex items-center justify-center">
+    <div className="size-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+  </div>
+);
 
 const AppRoutes: React.FC = () => {
   const { user } = useAuth();
 
   return (
     <OneSignalProvider user={user}>
-      <Routes>
+      <Suspense fallback={<CarregandoPagina />}>
+        <Routes>
         {/* Rotas Públicas */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
@@ -85,7 +94,8 @@ const AppRoutes: React.FC = () => {
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        </Routes>
+      </Suspense>
     </OneSignalProvider>
   );
 };

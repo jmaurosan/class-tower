@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
+    "strict": true,
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
     "module": "ESNext",
@@ -31,6 +32,8 @@
   },
   "exclude": [
     "supabase/functions",
+    "scripts",
+    "dist",
     "*.js"
   ]
 }

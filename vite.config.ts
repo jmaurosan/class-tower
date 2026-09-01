@@ -52,6 +52,10 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       setupFiles: './src/tests/setup.ts',
       css: true,
+      // O pool padrão ('forks') não consegue iniciar os workers no Windows
+      // aqui: a suíte terminava com "Timeout waiting for worker to respond"
+      // e zero testes executados.
+      pool: 'threads',
     }
   };
 });
