@@ -1,10 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { adminClient, corsHeaders, json, requireStaff } from '../_shared/auth.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+const ROLES_PERMITIDOS = ['admin', 'atendente', 'sala']
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -12,36 +9,37 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    
-    // OneSignal Keys
-    const onesignalAppId = Deno.env.get('ONESIGNAL_APP_ID')!
-    const onesignalRestKey = Deno.env.get('ONESIGNAL_REST_API_KEY')!
+    // 🔒 Sem esta guarda, qualquer pessoa com a anon key podia disparar push
+    // para todos os administradores ou para qualquer unidade do prédio —
+    // um vetor de spam e de phishing com a identidade visual do condomínio.
+    // Quem envia push é a equipe: registro de encomenda e botão de pânico.
+    const guard = await requireStaff(req)
+    if ('error' in guard) return guard.error
+
+    const onesignalAppId = Deno.env.get('ONESIGNAL_APP_ID')
+    const onesignalRestKey = Deno.env.get('ONESIGNAL_REST_API_KEY')
 
     if (!onesignalAppId || !onesignalRestKey) {
       console.error('OneSignal keys missing on Edge Function Environment')
-      return new Response(JSON.stringify({ error: 'Configuração OneSignal ausente no servidor' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      return json({ error: 'Configuração OneSignal ausente no servidor' }, 500)
     }
 
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { autoRefreshToken: false, persistSession: false }
-    })
-
+    const supabaseAdmin = adminClient()
     const { sala_id, titulo, mensagem, url, target_role } = await req.json()
 
     if (!titulo || !mensagem) {
-      return new Response(JSON.stringify({ error: 'titulo e mensagem são obrigatórios' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      return json({ error: 'titulo e mensagem são obrigatórios' }, 400)
     }
 
     let userIds: string[] = []
 
     if (target_role) {
-      // Modo: enviar push para todos os usuários de uma role específica (ex: admin)
+      // Whitelist: `target_role` ia direto para um .ilike('%' + valor + '%'),
+      // então um valor vazio ou com curinga atingia a base inteira.
+      if (!ROLES_PERMITIDOS.includes(target_role)) {
+        return json({ error: 'target_role inválido' }, 400)
+      }
+
       const { data: usersData, error: usersError } = await supabaseAdmin
         .from('profiles')
         .select('id')
@@ -49,91 +47,71 @@ serve(async (req) => {
         .eq('status', 'Ativo')
 
       if (usersError) {
-        return new Response(JSON.stringify({ error: `Erro ao buscar usuários com role ${target_role}` }), {
-          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        })
+        return json({ error: `Erro ao buscar usuários com role ${target_role}` }, 500)
       }
 
-      userIds = (usersData || []).map((u: any) => u.id)
+      userIds = (usersData || []).map((u: { id: string }) => u.id)
+
     } else if (sala_id) {
-      // Modo: enviar push para moradores de uma sala específica
       const { data: salaData, error: salaError } = await supabaseAdmin
         .from('salas')
         .select('numero')
         .eq('id', sala_id)
-        .single()
+        .maybeSingle()
 
       if (salaError || !salaData) {
-        return new Response(JSON.stringify({ error: 'Sala não encontrada' }), {
-          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        })
+        return json({ error: 'Sala não encontrada' }, 404)
       }
-
-      const sala_numero = salaData.numero;
 
       const { data: usersData, error: usersError } = await supabaseAdmin
         .from('profiles')
         .select('id')
-        .eq('sala_numero', sala_numero)
+        .eq('sala_numero', salaData.numero)
+        .eq('status', 'Ativo')
 
       if (usersError) {
-        return new Response(JSON.stringify({ error: 'Erro ao buscar moradores da sala' }), {
-          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        })
+        return json({ error: 'Erro ao buscar moradores da sala' }, 500)
       }
 
-      userIds = (usersData || []).map((u: any) => u.id)
+      userIds = (usersData || []).map((u: { id: string }) => u.id)
+
     } else {
-      return new Response(JSON.stringify({ error: 'sala_id ou target_role é obrigatório' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      return json({ error: 'sala_id ou target_role é obrigatório' }, 400)
     }
 
     if (userIds.length === 0) {
-      return new Response(JSON.stringify({ message: 'Nenhum usuário encontrado para o destino informado' }), {
-        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      return json({ message: 'Nenhum usuário encontrado para o destino informado' }, 200)
     }
 
-    // 3. Send Push via OneSignal REST API using external_id
     const body = {
       app_id: onesignalAppId,
-      target_channel: "push",
-      include_aliases: {
-        external_id: userIds
-      },
+      target_channel: 'push',
+      include_aliases: { external_id: userIds },
       headings: { en: titulo, pt: titulo },
       contents: { en: mensagem, pt: mensagem },
-      url: url || "https://classe-tower.vercel.app/" // Default Link
+      url: url || 'https://classe-tower.vercel.app/',
     }
 
-    const response = await fetch("https://onesignal.com/api/v1/notifications", {
-      method: "POST",
+    const response = await fetch('https://onesignal.com/api/v1/notifications', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Basic ${onesignalRestKey}`
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${onesignalRestKey}`,
       },
-      body: JSON.stringify(body)
-    });
+      body: JSON.stringify(body),
+    })
 
     const onesignalData = await response.json()
 
     if (!response.ok) {
       console.error('OneSignal Error:', onesignalData)
-      return new Response(JSON.stringify({ error: 'Falha na API da OneSignal', details: onesignalData }), {
-        status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      return json({ error: 'Falha na API da OneSignal', details: onesignalData }, 502)
     }
 
-    return new Response(JSON.stringify({ success: true, targets: userIds.length, onesignal_response: onesignalData }), {
-      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
+    return json({ success: true, targets: userIds.length, onesignal_response: onesignalData })
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Fatal Edge Function Error:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return json({ error: (error as Error).message }, 500)
   }
 })

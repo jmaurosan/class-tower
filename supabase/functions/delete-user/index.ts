@@ -1,10 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-function-secret',
-}
+import { adminClient, corsHeaders, json, requireAdmin } from '../_shared/auth.ts'
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -12,51 +7,53 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const functionSecret = Deno.env.get('FUNCTION_SECRET')
-    const receivedSecret = req.headers.get('x-function-secret')
-
-    if (functionSecret && receivedSecret !== functionSecret) {
-      return new Response(JSON.stringify({ error: 'Não autorizado' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
-    }
-
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { autoRefreshToken: false, persistSession: false }
-    })
+    // 🔒 Só um admin autenticado exclui usuários. Antes, qualquer chamada com
+    // a anon key podia apagar qualquer conta informando o id.
+    const guard = await requireAdmin(req)
+    if ('error' in guard) return guard.error
 
     const { userId } = await req.json()
 
     if (!userId) {
-      return new Response(JSON.stringify({ error: 'userId é obrigatório' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      return json({ error: 'userId é obrigatório' }, 400)
     }
 
-    // 1. Deleta da tabela profiles explicitamente (garantia)
+    if (userId === guard.caller.id) {
+      return json({ error: 'Você não pode excluir a própria conta' }, 400)
+    }
+
+    const supabaseAdmin = adminClient()
+
+    // Impede que o último admin do sistema seja removido, o que deixaria o
+    // condomínio sem ninguém capaz de gerenciar usuários.
+    const { data: alvo } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (alvo && String(alvo.role ?? '').toLowerCase().includes('admin')) {
+      const { count } = await supabaseAdmin
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .ilike('role', '%admin%')
+
+      if ((count ?? 0) <= 1) {
+        return json({ error: 'Não é possível excluir o último administrador' }, 400)
+      }
+    }
+
     await supabaseAdmin.from('profiles').delete().eq('id', userId)
 
-    // 2. Deleta do Auth via Admin API
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
-
     if (deleteError) {
-      return new Response(JSON.stringify({ error: deleteError.message }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      return json({ error: deleteError.message }, 400)
     }
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-    )
+    return json({ success: true })
 
   } catch (error) {
     console.error('delete-user error:', error)
-    return new Response(
-      JSON.stringify({ error: (error as Error).message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    )
+    return json({ error: (error as Error).message }, 500)
   }
 })
