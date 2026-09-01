@@ -31,10 +31,9 @@ serve(async (req) => {
   try {
     // Só o cron chama esta função. O gateway já exige um JWT válido, mas isso
     // inclui a anon key — então conferimos que o token é mesmo o service_role.
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const token = req.headers.get('Authorization')?.replace('Bearer ', '')
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '').trim()
 
-    if (!token || token !== serviceKey) {
+    if (!ehServiceRole(token)) {
       return json({ error: 'Não autorizado' }, 401)
     }
 
@@ -105,6 +104,31 @@ serve(async (req) => {
   }
 })
 
+/**
+ * A comparação direta com SUPABASE_SERVICE_ROLE_KEY falhava: o valor que a
+ * função recebe no ambiente nem sempre é byte a byte o mesmo que está no
+ * painel (o Supabase vem migrando o formato das chaves de API).
+ *
+ * Ler a claim `role` é confiável porque a assinatura do token já foi
+ * verificada pelo gateway — a função está publicada com verify_jwt = true,
+ * então nada com assinatura inválida chega até aqui.
+ */
+function ehServiceRole(token: string | undefined): boolean {
+  if (!token) return false
+
+  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.trim()
+  if (key && token === key) return true
+
+  try {
+    const payload = token.split('.')[1]
+    if (!payload) return false
+    const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
+    return JSON.parse(json)?.role === 'service_role'
+  } catch {
+    return false
+  }
+}
+
 async function resolverDestinatarios(
   db: ReturnType<typeof adminClient>,
   n: Notificacao,
@@ -131,25 +155,39 @@ async function enviarPush(
   userIds: string[],
   n: Notificacao,
 ): Promise<void> {
-  const resposta = await fetch('https://onesignal.com/api/v1/notifications', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Basic ${restKey}`,
-    },
-    body: JSON.stringify({
-      app_id: appId,
-      target_channel: 'push',
-      include_aliases: { external_id: userIds },
-      headings: { en: n.titulo, pt: n.titulo },
-      contents: { en: n.mensagem, pt: n.mensagem },
-      url: n.url ? `https://classe-tower.vercel.app${n.url}` : 'https://classe-tower.vercel.app/',
-    }),
+  const corpo = JSON.stringify({
+    app_id: appId,
+    target_channel: 'push',
+    include_aliases: { external_id: userIds },
+    headings: { en: n.titulo, pt: n.titulo },
+    contents: { en: n.mensagem, pt: n.mensagem },
+    url: n.url ? `https://classe-tower.vercel.app${n.url}` : 'https://classe-tower.vercel.app/',
   })
 
-  const corpo = await resposta.json().catch(() => ({}))
+  // O OneSignal mudou o esquema de autorização: as chaves antigas usam
+  // `Basic`, as novas usam `Key`. Como o formato depende de quando o app foi
+  // criado, tentamos um e caímos no outro se vier 401.
+  let ultimoErro = ''
 
-  if (!resposta.ok) {
-    throw new Error(`OneSignal ${resposta.status}: ${JSON.stringify(corpo).slice(0, 300)}`)
+  for (const esquema of ['Basic', 'Key']) {
+    const resposta = await fetch('https://onesignal.com/api/v1/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `${esquema} ${restKey}`,
+      },
+      body: corpo,
+    })
+
+    const retorno = await resposta.json().catch(() => ({}))
+
+    if (resposta.ok) return
+
+    ultimoErro = `OneSignal ${resposta.status} (${esquema}): ${JSON.stringify(retorno).slice(0, 250)}`
+
+    // Só vale tentar o outro esquema em erro de autenticação.
+    if (resposta.status !== 401 && resposta.status !== 403) break
   }
+
+  throw new Error(ultimoErro)
 }
