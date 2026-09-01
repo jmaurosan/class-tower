@@ -38,87 +38,37 @@ const SignUp: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1. Buscar sala no banco (maybeSingle não dá erro se não achar nada)
-      const { data: sala, error: salaError } = await supabase
-        .from('salas')
-        .select('*')
-        .eq('numero', formData.salaNumero.trim())
-        .maybeSingle();
-
-      // Se houve erro de acesso (ex: RLS bloqueou usuário anônimo) OU sala não existe
-      if (salaError) {
-        console.error('[SIGNUP] Erro ao buscar sala:', salaError);
-        throw new Error('Erro ao verificar a sala. Tente novamente em instantes.');
-      }
-
-      if (!sala) {
-        throw new Error('Sala não encontrada. Verifique o número informado.');
-      }
-
-      // 2. Validar se o nome corresponde ao responsável 1 ou 2
-      const nomeNormalizado = formData.nomeCompleto.trim().toLowerCase();
-      const responsavel1 = (sala.responsavel1 || sala.nome || '').trim().toLowerCase();
-      const responsavel2 = (sala.responsavel2 || '').trim().toLowerCase();
-
-      const nomeValido =
-        nomeNormalizado === responsavel1 ||
-        nomeNormalizado === responsavel2 ||
-        responsavel1.includes(nomeNormalizado) ||
-        nomeNormalizado.includes(responsavel1) ||
-        responsavel2.includes(nomeNormalizado) ||
-        (responsavel2 && nomeNormalizado.includes(responsavel2));
-
-      if (!nomeValido && responsavel1) {
-        throw new Error(
-          `Nome não corresponde aos responsáveis cadastrados para a sala ${formData.salaNumero}. ` +
-          `Verifique com a administração se seus dados estão corretos.`
-        );
-      }
-
-      // 3. Verificar se já existe usuário para esta sala (maybeSingle: não lança erro se não achar)
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('sala_numero', formData.salaNumero.trim())
-        .maybeSingle();
-
-      if (existingProfile) {
-        throw new Error(
-          `Já existe um usuário cadastrado para a sala ${formData.salaNumero}. ` +
-          `Se você esqueceu sua senha, use a opção "Esqueceu sua senha?" na tela de login.`
-        );
-      }
-
-      // 4. Criar usuário no Supabase Auth
-      const sanitizedEmail = formData.email.trim().toLowerCase();
-
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: sanitizedEmail,
-        password: formData.senha,
-        options: {
-          data: {
-            full_name: formData.nomeCompleto,
-            name: formData.nomeCompleto,
-            role: 'sala',
-            sala_numero: formData.salaNumero,
-            permissions: ['encomendas', 'agendamentos', 'documentos', 'empresas', 'support', 'avisos']
-          },
-          emailRedirectTo: `${window.location.origin}/login`
+      // A validação real (sala existe / nome bate com o responsável / ainda não
+      // há usuário para a sala) roda na Edge Function `signup-morador`, com
+      // service_role. Quando essas checagens ficavam aqui, bastava chamar
+      // /auth/v1/signup direto no navegador para pular todas elas e ainda
+      // escolher o próprio `role`.
+      const { data, error: fnError } = await supabase.functions.invoke('signup-morador', {
+        body: {
+          salaNumero: formData.salaNumero.trim(),
+          nomeCompleto: formData.nomeCompleto.trim(),
+          email: formData.email.trim().toLowerCase(),
+          senha: formData.senha
         }
       });
 
-      if (authError) throw authError;
+      // functions.invoke() devolve FunctionsHttpError sem o corpo em respostas
+      // 4xx, então lemos a mensagem do servidor a partir da própria resposta.
+      if (fnError) {
+        const detalhe = await (fnError as any)?.context?.json?.().catch(() => null);
+        throw new Error(detalhe?.error || 'Erro ao realizar cadastro. Tente novamente.');
+      }
 
-      console.log('✅ [SIGNUP] Usuário criado com sucesso:', authData.user?.id);
+      if (data?.error) throw new Error(data.error);
+
       setSuccess(
-        '🚀 CADASTRO REALIZADO! \n\n' +
-        'IMPORTANTE: Você recebeu um e-mail de confirmação AGORA. ' +
-        'Você PRECISA clicar no link dentro do e-mail para ativar sua conta, caso contrário não conseguirá logar.'
+        'CADASTRO REALIZADO!\n\n' +
+        'Sua conta já está ativa. Você será redirecionado para a tela de login.'
       );
 
       setTimeout(() => {
         window.location.href = '/login';
-      }, 5000);
+      }, 3000);
 
     } catch (err: any) {
       console.error('Erro no cadastro:', err);

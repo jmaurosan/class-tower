@@ -20,7 +20,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isFetchingRef = React.useRef<string | null>(null);
 
   const fetchProfile = async (id: string, retryCount = 0) => {
-    const MAX_RETRIES = 5;
+    // 3 tentativas (0,5s + 1s + 2s). Antes eram 5, somando ~15s de espera —
+    // o retry existia por causa do atraso da trigger de criação de perfil, que
+    // deixou de ser uma corrida agora que o cadastro passa pela Edge Function
+    // e só retorna depois de gravar o perfil.
+    const MAX_RETRIES = 3;
 
     // Evitar buscas duplicadas para o mesmo ID ao mesmo tempo
     if (isFetchingRef.current === id && retryCount === 0 && user) {
@@ -86,10 +90,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    // Rede de segurança: se o Supabase estiver inacessível, onAuthStateChange
+    // pode nunca disparar e a tela ficaria presa em "Verificando acesso".
+    // Antes isso era tratado no index.html com um localStorage.clear() após
+    // 20s, que junto levava a fila de sincronização offline do usuário.
+    const timeoutId = setTimeout(() => {
+      setLoading(prev => {
+        if (prev) console.warn('⚠️ [AUTH] Sem resposta do Supabase. Liberando a tela de login.');
+        return false;
+      });
+    }, 10000);
+
     // onAuthStateChange já lida com a sessão inicial (evento INITIAL_SESSION)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log(`🔔 [AUTH] Evento: ${event}`, session?.user?.email);
-      
+      clearTimeout(timeoutId);
+
       if (session?.user) {
         await fetchProfile(session.user.id);
       } else {
@@ -99,7 +115,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(timeoutId);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const logout = async () => {

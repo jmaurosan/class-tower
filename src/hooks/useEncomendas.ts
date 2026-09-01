@@ -10,10 +10,7 @@ export const useEncomendas = (salaFilter?: string, includeHistory: boolean = fal
 
   const fetchEncomendas = useCallback(async () => {
     try {
-      let data = await encomendasService.getAll(includeHistory);
-      if (salaFilter) {
-        data = data.filter(e => e.sala_id === salaFilter);
-      }
+      const data = await encomendasService.getAll(includeHistory, salaFilter);
       setEncomendas(data);
     } catch (error) {
       console.error('Error fetching encomendas:', error);

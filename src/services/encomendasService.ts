@@ -3,11 +3,20 @@ import { Encomenda } from '../types';
 import { supabase } from './supabase';
 
 export const encomendasService = {
-  async getAll(includeHistory: boolean = false) {
+  async getAll(includeHistory: boolean = false, salaFilter?: string) {
     let query = supabase
       .from('encomendas')
       .select('*')
       .order('created_at', { ascending: false });
+
+    // Filtro por unidade aplicado no servidor. Antes ele era feito em
+    // JavaScript depois de baixar a tabela inteira, então qualquer morador
+    // via as encomendas do prédio todo pela aba Network.
+    // A garantia real é a policy RLS `encomendas_select`; este filtro apenas
+    // evita trazer linhas que já seriam descartadas.
+    if (salaFilter) {
+      query = query.eq('sala_id', salaFilter);
+    }
 
     if (!includeHistory) {
       const sixtyDaysAgo = new Date();

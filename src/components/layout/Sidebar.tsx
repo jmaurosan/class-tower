@@ -72,7 +72,10 @@ const Sidebar: React.FC<SidebarProps> = ({ user, isOpen, onClose }) => {
         titulo: '🚨 ALERTA DE EMERGÊNCIA / SOS 🚨',
         conteudo: `Emergência acionada fisicamente pela portaria/gestão. Por favor, verifiquem imediatamente as instalações ou acionem o suporte de segurança caso não haja resposta.`,
         prioridade: 'Critica',
-        criado_por: user.name,
+        // avisos.criado_por é uuid e referencia auth.users. Passar user.name
+        // aqui fazia o insert falhar com "invalid input syntax for type uuid",
+        // então o botão de pânico nunca chegava a publicar o alerta.
+        criado_por: user.id,
         status: 'Ativo'
       });
 
