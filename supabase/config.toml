@@ -1,0 +1,28 @@
+project_id = "xddmtbuuqairndciiepn"
+
+# ============================================================================
+# Edge Functions
+# ============================================================================
+# As funções estavam publicadas com verify_jwt = false, o que faz o gateway
+# aceitar requisições SEM nenhum header Authorization — nem a anon key. Como o
+# código antigo de create-user só checava um FUNCTION_SECRET opcional que o
+# frontend nunca enviava, a função ficou aberta à internet.
+#
+# Declarar aqui garante que o valor não dependa de quem rodou o último deploy.
+
+[functions.signup-morador]
+# Chamada por visitante não logado, mas o supabase-js envia a anon key como
+# Bearer — o que satisfaz a verificação. A validação de sala e responsável
+# acontece dentro da função, com service_role.
+verify_jwt = true
+
+[functions.create-user]
+# Exige admin autenticado (requireAdmin no _shared/auth.ts).
+verify_jwt = true
+
+[functions.delete-user]
+verify_jwt = true
+
+[functions.onesignal-push]
+# Exige equipe autenticada (requireStaff).
+verify_jwt = true
