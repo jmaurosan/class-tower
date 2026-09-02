@@ -95,7 +95,7 @@ const ResponsibilityTerm: React.FC = () => {
               <ul className="space-y-4">
                 <li className="flex gap-4">
                   <span className="material-symbols-outlined text-orange-500 shrink-0">package_2</span>
-                  <span>Retirar encomendas registradas em seu nome ou unidade no prazo máximo de 48 horas.</span>
+                  <span>Retirar encomendas registradas em seu nome ou unidade no prazo máximo de 10 dias.</span>
                 </li>
                 <li className="flex gap-4">
                   <span className="material-symbols-outlined text-orange-500 shrink-0">history_edu</span>

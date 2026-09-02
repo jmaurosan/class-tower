@@ -31,6 +31,7 @@ export const encomendasService = {
     return data.map((item: any) => ({
       ...item,
       dataEntrada: new Date(item.created_at).toLocaleString('pt-BR'),
+      createdAt: item.created_at,
       fotoUrl: item.foto_url,
       dataRetirada: item.data_retirada ? new Date(item.data_retirada).toLocaleString('pt-BR') : undefined,
       quemRetirou: item.quem_retirou,

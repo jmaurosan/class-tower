@@ -8,6 +8,19 @@ interface EncomendasProps {
   user: User;
 }
 
+// Prazo de permanencia na portaria, alinhado ao Termo de Responsabilidade e
+// aos lembretes automaticos em 20260901210000_prazo_retirada_encomendas.sql.
+const PRAZO_RETIRADA_DIAS = 10;
+
+/** Dias restantes ate o fim do prazo. Negativo = vencido. */
+const diasAteVencer = (createdAt?: string): number | null => {
+  if (!createdAt) return null;
+  const entrada = new Date(createdAt).getTime();
+  if (Number.isNaN(entrada)) return null;
+  const decorridos = Math.floor((Date.now() - entrada) / 86400000);
+  return PRAZO_RETIRADA_DIAS - decorridos;
+};
+
 const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
   const { showToast } = useToast();
   const isResident = user.role === 'sala';
@@ -377,6 +390,19 @@ const Encomendas: React.FC<EncomendasProps> = ({ user }) => {
                   <div className="text-[9px] font-bold text-slate-400 space-y-0.5">
                     <p>ENTRADA: {enc.dataEntrada}</p>
                     {enc.dataRetirada && <p className="text-emerald-500">RETIRADA: {enc.dataRetirada} por {enc.quemRetirou}</p>}
+                    {enc.status === 'Pendente' && (() => {
+                      const restantes = diasAteVencer(enc.createdAt);
+                      if (restantes === null || restantes > 2) return null;
+                      return restantes > 0 ? (
+                        <p className="text-amber-600 dark:text-amber-500">
+                          VENCE EM {restantes} {restantes === 1 ? 'DIA' : 'DIAS'}
+                        </p>
+                      ) : (
+                        <p className="text-red-500">
+                          PRAZO VENCIDO HÁ {Math.abs(restantes)} {Math.abs(restantes) === 1 ? 'DIA' : 'DIAS'}
+                        </p>
+                      );
+                    })()}
                   </div>
                   {enc.status === 'Pendente' && canManage && (
                     <div className="flex gap-2 shrink-0">

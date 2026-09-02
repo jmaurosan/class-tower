@@ -57,6 +57,8 @@ export interface DocumentoVencimento {
 export interface Encomenda {
   id: string;
   dataEntrada: string;
+  /** created_at em ISO, para calcular o prazo de retirada. */
+  createdAt?: string;
   dataRetirada?: string;
   destinatario: string;
   remetente: string;
